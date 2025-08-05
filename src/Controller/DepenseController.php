@@ -54,4 +54,16 @@ class DepenseController extends AbstractController
             'errors' => $errors,
         ], Response::HTTP_BAD_REQUEST);
     }
+
+    #[Route('/{id}', methods: ['DELETE'])]
+    public function supprimer(
+        Depense $depense,
+        EntityManagerInterface $em,
+    ): Response
+    {
+        $em->remove($depense);
+        $em->flush();
+
+        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+    }
 }
