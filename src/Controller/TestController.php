@@ -20,7 +20,7 @@ class TestController extends AbstractController
     ): Response
     {
         dump($user);
-        return new JsonResponse(['test' => 'OK']);
+        return new JsonResponse(['user' => $user]);
     }
 
 }
