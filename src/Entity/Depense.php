@@ -32,6 +32,7 @@ class Depense
         #[ORM\Column(length: 255)]
         public string $titre,
 
+        // 'parts' ou 'montants'
         #[ORM\Column(length: 255)]
         public string $partage,
     ) {
