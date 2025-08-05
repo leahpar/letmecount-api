@@ -1,0 +1,18 @@
+
+http:
+    port: 8017 # Force the port that will be used to run the server
+    allow_http: true # Prevent auto-redirection from HTTP to HTTPS
+    no_tls: true # Use HTTP instead of HTTPS
+    daemon: true # Run the server in the background
+    #allow_all_ip: true # Allow access from any IP address
+
+# https://symfony.com/doc/current/setup/symfony_server.html#configuring-workers
+workers:
+    # ...
+
+    # https://symfony.com/bundles/TailwindBundle/current/index.html#symfony-cli
+#    tailwind:
+#        cmd: ['symfony', 'console', 'tailwind:build', '--watch']
+
+#    workers:
+#        cmd: ['symfony', 'console', 'messenger:consume', 'timeline']
