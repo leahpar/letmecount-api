@@ -1,0 +1,21 @@
+
+@apiUrl = http://localhost:8888/api
+#@token = eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3NTQzODE2MjksImV4cCI6MTc1NDM4NTIyOSwicm9sZXMiOlsiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoidGVzdCJ9.ZaP0-2snwUPKBv51sXoUt4MPFDw7SYZ6ECZl2Y-kGOd792S56dfFOHwT4tiORHKvykQQR-sBtDXOJO8AxqnULWmvUVEBQ0vd4J5DGIXlbmxRCpUhqS-WpPp4CBY84CoSHpmtpbHcaAx0OuYKLeui74gJbo6JSwmR176-t6uXtTxVvvSCLAZO3Y4AaH-_3oPb8nQReHiJNdEC0_PwOhAkGjlHs8zPAtZ5y8c3StOHSRkSRgYGEnCdBc8ifRcNQ2vLAybY62G2jx0uQrQFotKsduVtp6zYvC0khM2Z4dQojst-fGJ5n8ab7PSwcAqVYrlLu_bX2gtms_ARUcX7ZbMhhw
+
+### Login
+POST {{apiUrl}}/login_check
+Content-Type: application/json
+
+{
+    "username": "test",
+    "password": "test"
+}
+> {%
+    const token = response.body.token
+    client.global.set("token", `${token}`)
+    console.log(`token: ${token}`)
+%}
+
+### test
+GET {{apiUrl}}/test/
+Authorization: Bearer {{token}}

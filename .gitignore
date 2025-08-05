@@ -19,3 +19,7 @@ phpstan.neon
 
 .idea
 .editorconfig
+
+###> lexik/jwt-authentication-bundle ###
+/config/jwt/*.pem
+###< lexik/jwt-authentication-bundle ###
