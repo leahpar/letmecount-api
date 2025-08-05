@@ -17,12 +17,15 @@ use Symfony\Component\Routing\Attribute\Route;
 class DepenseController extends AbstractController
 {
     #[Route('', methods: ['POST'])]
+    #[Route('/{id}', methods: ['PUT'])]
     public function creer(
         Request $request,
         EntityManagerInterface $em,
+        ?Depense $depense = null,
     ): Response
     {
-        $form = $this->createForm(DepenseType::class);
+        $isCreation = $depense === null;
+        $form = $this->createForm(DepenseType::class, $depense);
 
         $data = json_decode($request->getContent(), true);
         $form->submit($data);
@@ -31,13 +34,14 @@ class DepenseController extends AbstractController
 
             /** @var Depense $depense */
             $depense = $form->getData();
+
             $em->persist($depense);
             $em->flush();
 
             return new JsonResponse([
                 'success' => true,
                 'depense' => $depense,
-            ], Response::HTTP_CREATED);
+            ], $isCreation ? Response::HTTP_CREATED : Response::HTTP_OK);
         }
 
         $errors = [];
