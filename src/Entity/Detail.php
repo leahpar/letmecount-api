@@ -15,7 +15,7 @@ class Detail
     #[ORM\Column]
     public ?int $id = null;
 
-    #[ORM\ManyToOne(inversedBy: 'details')]
+    #[ORM\ManyToOne(inversedBy: 'details', cascade: ['persist'])]
     #[ORM\JoinColumn(nullable: false)]
     public ?Depense $depense = null;
 

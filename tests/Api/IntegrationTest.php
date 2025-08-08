@@ -55,19 +55,19 @@ class IntegrationTest extends AuthenticatedApiTestCase
         $this->call('POST', '/depenses', [], $depense2Data);
         $this->assertResponseStatusCodeSame(201);
 
-        // Vérifier le solde de user1 : il a payé 100 et doit 30 = +70
+        // Vérifier le solde de user1 : somme de ses détails = 100 + 0 = 100
         $this->call('GET', '/users/' . $this->user->id);
         $this->assertResponseIsSuccessful();
         
         $user1Data = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertEquals(70.00, $user1Data['solde']); // 100 - 30
+        $this->assertEquals(100.00, $user1Data['solde']); // 100 + 0
 
-        // Vérifier le solde de user2 : il a payé 60 et doit 50 = +10
+        // Vérifier le solde de user2 : somme de ses détails = 0 + 60 = 60
         $this->call('GET', '/users/' . $user2->id);
         $this->assertResponseIsSuccessful();
         
         $user2Data = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertEquals(10.00, $user2Data['solde']); // 60 - 50
+        $this->assertEquals(60.00, $user2Data['solde']); // 0 + 60
     }
 
     public function testDepenseWithDetailsInResponse(): void

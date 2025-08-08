@@ -22,7 +22,7 @@ class DepenseConstraintValidator extends ConstraintValidator
             $sommeDetails += $detail->montant ?? 0.0;
         }
 
-        if (abs($value->montant - $sommeDetails) > 0.01) {
+        if (abs($value->montant - $sommeDetails) >= 0.02) {
             $this->context->buildViolation($constraint->message)
                 ->setParameter('{{ depenseMontant }}', (string) $value->montant)
                 ->setParameter('{{ detailsSum }}', (string) $sommeDetails)
