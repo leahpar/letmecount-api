@@ -12,15 +12,36 @@ class AuthenticatedApiTestCase extends WebTestCase
 {
     protected KernelBrowser $client;
     protected ?EntityManagerInterface $em;
+    protected User $user;
 
     protected function setUp(): void
     {
         $this->client = static::createClient();
+        // Set defailt headers for the client (content type and accept headers)
+        $this->client->setServerParameter('HTTP_CONTENT_TYPE', 'application/ld+json');
+        $this->client->setServerParameter('HTTP_ACCEPT', 'application/ld+json');
+
         $this->em = static::getContainer()->get(EntityManagerInterface::class);
-        $this->createUserAndLogin();
+        $this->user = $this->createUser('testuser');
+        $this->loginUser('testuser');
     }
 
-    protected function createUserAndLogin(string $username = 'testuser', string $password = 'password'): void
+    protected function call(
+        string $method,
+        string $uri,
+        ?array $parameters = [],
+        ?array $content = null
+    ): void {
+        $this->client->request(
+            $method,
+            '/api' . $uri,
+            $parameters ?? [],
+            [],
+            ['CONTENT_TYPE' => 'application/ld+json', 'ACCEPT' => 'application/ld+json'],
+            json_encode($content));
+    }
+
+    protected function createUser(string $username, ?string $password = 'password'): User
     {
         $container = static::getContainer();
 
@@ -32,10 +53,14 @@ class AuthenticatedApiTestCase extends WebTestCase
         $user->setPassword($passwordHasher->hashPassword($user, $password));
         $this->em->persist($user);
         $this->em->flush();
+        return $user;
+    }
 
+    protected function loginUser(string $username, ?string $password = 'password'): void
+    {
         $this->client->request(
             'POST',
-            '/api/login_check',
+            '/auth',
             [],
             [],
             ['CONTENT_TYPE' => 'application/json', 'ACCEPT' => 'application/json'],

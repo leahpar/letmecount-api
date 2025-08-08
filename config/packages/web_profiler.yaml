@@ -9,5 +9,9 @@ when@dev:
 when@test:
     framework:
         profiler:
-            collect: false
-            collect_serializer_data: true
+            # Pour collecter les données dans le profiler de dev (si besoin de debug)
+            # Note: activer le mode debug APP_DEBUG=true dans phpunit.xml
+            enabled: true
+            collect: true
+            only_exceptions: false
+            dsn: 'file:%kernel.project_dir%/var/cache/dev/profiler'

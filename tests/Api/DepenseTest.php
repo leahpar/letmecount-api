@@ -2,32 +2,27 @@
 
 namespace App\Tests\Api;
 
-use App\Entity\User;
-
 class DepenseTest extends AuthenticatedApiTestCase
 {
     public function testCreateDepense(): void
     {
-        $user = $this->em->getRepository(User::class)->findOneBy(['username' => 'testuser']);
-
-        $this->client->request(
+        $this->call(
             'POST',
-            '/api/depenses',
-            [],
-            [],
-            ['CONTENT_TYPE' => 'application/json', 'ACCEPT' => 'application/json'],
-            json_encode([
+            '/depenses',
+            null,
+            [
                 'titre' => 'Test Dépense',
                 'montant' => 100.0,
                 'date' => '2025-08-08',
-                'partage' => 'parts',
+                'partage' => 'montant',
                 'details' => [
                     [
-                        'user' => '/api/users/' . $user->id,
+                        'user' => '/api/users/' . $this->user->id,
+                        'parts' => 1,
                         'montant' => 100.0,
                     ],
                 ],
-            ])
+            ]
         );
 
         $this->assertResponseIsSuccessful();

@@ -4,8 +4,8 @@
 
 ### Login
 POST {{baseUrl}}/auth
-Content-Type: application/json
-Accept: application/json
+Content-Type: application/ld+json
+Accept: application/ld+json
 
 {
     "username": "test",
@@ -23,8 +23,8 @@ Authorization: Bearer {{token}}
 
 ### Créer une dépense
 POST {{apiUrl}}/depenses
-Content-Type: application/json
-Accept: application/json
+Content-Type: application/ld+json
+Accept: application/ld+json
 Authorization: Bearer {{token}}
 
 {
@@ -48,7 +48,7 @@ Authorization: Bearer {{token}}
 
 ### Modifier une dépense
 PUT {{apiUrl}}/depenses/1
-Content-Type: application/json
+Content-Type: application/ld+json
 Authorization: Bearer {{token}}
 
 {
