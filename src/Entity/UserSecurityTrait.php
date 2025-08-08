@@ -4,10 +4,12 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Ignore;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 trait UserSecurityTrait
 {
     #[ORM\Column(length: 180)]
+    #[Groups(['user:read'])]
     private ?string $username = null;
 
     /**

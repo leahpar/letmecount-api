@@ -1,9 +1,11 @@
 
+@baseUrl = http://localhost:8888
 @apiUrl = http://localhost:8888/api
 
 ### Login
-POST {{apiUrl}}/login_check
+POST {{baseUrl}}/auth
 Content-Type: application/json
+Accept: application/json
 
 {
     "username": "test",
@@ -26,18 +28,18 @@ Accept: application/json
 Authorization: Bearer {{token}}
 
 {
-    "date": "2024-01-15",
+    "date": "2024-01-15T00:00:00+00:00",
     "montant": 50.00,
     "titre": "Restaurant",
     "partage": "parts",
     "details": [
         {
-            "user": 1,
+            "user": "/api/users/1",
             "parts": 2,
             "montant": 25.00
         },
         {
-            "user": 2,
+            "user": "/api/users/2",
             "parts": 1,
             "montant": 25.00
         }
@@ -50,18 +52,18 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-    "date": "2024-01-16",
+    "date": "2024-01-16T00:00:00+00:00",
     "montant": 60.00,
     "titre": "Restaurant modifié",
     "partage": "montants",
     "details": [
         {
-            "user": 1,
+            "user": "/api/users/1",
             "parts": 1,
             "montant": 30.00
         },
         {
-            "user": 2,
+            "user": "/api/users/2",
             "parts": 1,
             "montant": 30.00
         }
@@ -78,4 +80,16 @@ Authorization: Bearer {{token}}
 
 ### Lister les utilisateurs avec recherche
 GET {{apiUrl}}/users?username=test
+Authorization: Bearer {{token}}
+
+### Récupérer un utilisateur spécifique
+GET {{apiUrl}}/users/1
+Authorization: Bearer {{token}}
+
+### Lister toutes les dépenses
+GET {{apiUrl}}/depenses
+Authorization: Bearer {{token}}
+
+### Récupérer une dépense spécifique
+GET {{apiUrl}}/depenses/1
 Authorization: Bearer {{token}}
