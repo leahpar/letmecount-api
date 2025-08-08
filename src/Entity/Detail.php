@@ -15,7 +15,7 @@ class Detail
     #[ORM\Column]
     public ?int $id = null;
 
-    #[ORM\ManyToOne(inversedBy: 'details', cascade: ['persist'])]
+    #[ORM\ManyToOne(cascade: ['persist'], inversedBy: 'details')]
     #[ORM\JoinColumn(nullable: false)]
     public ?Depense $depense = null;
 
@@ -25,11 +25,21 @@ class Detail
     #[Assert\NotBlank]
     public User $user;
 
+    /**
+     * Nombre de parts pour ce détail.<br>
+     * Utilisé uniquement pour l'affichage dans le cas la répartition par parts.
+     */
     #[ORM\Column]
     #[Groups(['depense:read', 'depense:write'])]
     #[Assert\NotBlank]
+    #[Assert\GreaterThanOrEqual(0)]
     public int $parts;
 
+    /**
+     * Montant réel en euros pour ce détail.<br>
+     * Le montant est arrondi à deux décimales.<br>
+     * Le montant est obligatoire peu importe le mode de répartition.
+     */
     #[ORM\Column]
     #[Groups(['depense:read', 'depense:write'])]
     #[Assert\NotBlank]

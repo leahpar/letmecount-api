@@ -11,6 +11,6 @@ class AuthTest extends AuthenticatedApiTestCase
 
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertArrayHasKey('@context', $data);
-        $this->assertEquals('/api/contexts/User', $data['@context']);
+        $this->assertEquals('/contexts/User', $data['@context']);
     }
 }

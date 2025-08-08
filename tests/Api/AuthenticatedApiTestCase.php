@@ -34,7 +34,7 @@ class AuthenticatedApiTestCase extends WebTestCase
     ): void {
         $this->client->request(
             $method,
-            '/api' . $uri,
+            $uri,
             $parameters ?? [],
             [],
             ['CONTENT_TYPE' => 'application/ld+json', 'ACCEPT' => 'application/ld+json'],

@@ -16,7 +16,7 @@ class DepenseApiTest extends AuthenticatedApiTestCase
 
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertArrayHasKey('@context', $data);
-        $this->assertEquals('/api/contexts/Depense', $data['@context']);
+        $this->assertEquals('/contexts/Depense', $data['@context']);
     }
 
     public function testCreateDepense(): void
@@ -28,7 +28,7 @@ class DepenseApiTest extends AuthenticatedApiTestCase
             'partage' => 'parts',
             'details' => [
                 [
-                    'user' => '/api/users/' . $this->user->id,
+                    'user' => '/users/' . $this->user->id,
                     'parts' => 1,
                     'montant' => 50.00
                 ]
@@ -54,7 +54,7 @@ class DepenseApiTest extends AuthenticatedApiTestCase
             'partage' => 'parts',
             'details' => [
                 [
-                    'user' => '/api/users/' . $this->user->id,
+                    'user' => '/users/' . $this->user->id,
                     'parts' => 1,
                     'montant' => 30.00 // Montant incorrect
                 ]
@@ -77,7 +77,7 @@ class DepenseApiTest extends AuthenticatedApiTestCase
             'partage' => 'montants',
             'details' => [
                 [
-                    'user' => '/api/users/' . $this->user->id,
+                    'user' => '/users/' . $this->user->id,
                     'parts' => 1,
                     'montant' => 60.00
                 ]

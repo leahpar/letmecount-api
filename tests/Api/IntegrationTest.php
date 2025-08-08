@@ -17,12 +17,12 @@ class IntegrationTest extends AuthenticatedApiTestCase
             'partage' => 'parts',
             'details' => [
                 [
-                    'user' => '/api/users/' . $this->user->id,
+                    'user' => '/users/' . $this->user->id,
                     'parts' => 1,
                     'montant' => 100.00 // user1 paye tout
                 ],
                 [
-                    'user' => '/api/users/' . $user2->id,
+                    'user' => '/users/' . $user2->id,
                     'parts' => 1,
                     'montant' => 0.00 // user2 ne paye rien mais doit 50
                 ]
@@ -40,12 +40,12 @@ class IntegrationTest extends AuthenticatedApiTestCase
             'partage' => 'parts',
             'details' => [
                 [
-                    'user' => '/api/users/' . $this->user->id,
+                    'user' => '/users/' . $this->user->id,
                     'parts' => 1,
                     'montant' => 0.00 // user1 ne paye rien mais doit 30
                 ],
                 [
-                    'user' => '/api/users/' . $user2->id,
+                    'user' => '/users/' . $user2->id,
                     'parts' => 1,
                     'montant' => 60.00 // user2 paye tout
                 ]
@@ -58,14 +58,14 @@ class IntegrationTest extends AuthenticatedApiTestCase
         // Vérifier le solde de user1 : somme de ses détails = 100 + 0 = 100
         $this->call('GET', '/users/' . $this->user->id);
         $this->assertResponseIsSuccessful();
-        
+
         $user1Data = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertEquals(100.00, $user1Data['solde']); // 100 + 0
 
         // Vérifier le solde de user2 : somme de ses détails = 0 + 60 = 60
         $this->call('GET', '/users/' . $user2->id);
         $this->assertResponseIsSuccessful();
-        
+
         $user2Data = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertEquals(60.00, $user2Data['solde']); // 0 + 60
     }
@@ -81,12 +81,12 @@ class IntegrationTest extends AuthenticatedApiTestCase
             'partage' => 'montants',
             'details' => [
                 [
-                    'user' => '/api/users/' . $this->user->id,
+                    'user' => '/users/' . $this->user->id,
                     'parts' => 1,
                     'montant' => 30.00
                 ],
                 [
-                    'user' => '/api/users/' . $user2->id,
+                    'user' => '/users/' . $user2->id,
                     'parts' => 1,
                     'montant' => 50.00
                 ]
@@ -95,20 +95,20 @@ class IntegrationTest extends AuthenticatedApiTestCase
 
         $this->call('POST', '/depenses', [], $depenseData);
         $this->assertResponseStatusCodeSame(201);
-        
+
         $responseData = json_decode($this->client->getResponse()->getContent(), true);
         $depenseId = $responseData['id'];
 
         // Récupérer la dépense et vérifier que les détails sont inclus
         $this->call('GET', '/depenses/' . $depenseId);
         $this->assertResponseIsSuccessful();
-        
+
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertEquals('Courses', $data['titre']);
         $this->assertEquals(80.00, $data['montant']);
         $this->assertArrayHasKey('details', $data);
         $this->assertCount(2, $data['details']);
-        
+
         // Vérifier que chaque détail contient les bonnes informations
         $details = $data['details'];
         $this->assertArrayHasKey('user', $details[0]);

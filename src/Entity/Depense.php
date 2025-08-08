@@ -56,18 +56,24 @@ class Depense
     #[ORM\Column]
     #[Groups(['depense:read', 'depense:write'])]
     #[Assert\NotBlank]
+    #[Assert\GreaterThanOrEqual(0)]
     public float $montant;
 
     #[ORM\Column(length: 255)]
     #[Groups(['depense:read', 'depense:write'])]
     #[Assert\NotBlank]
+    #[Assert\Length(max: 255)]
     public string $titre;
 
-    // 'parts' ou 'montants'
+    /**
+     * Mode de partage de la dépense.<br>
+     * - Si "parts" : les parts dans les détails servent à calculer la répartition proportionnelle<br>
+     * - Si "montants" : les montants des détails doivent être exacts et valides
+     */
     #[ORM\Column(length: 255)]
     #[Groups(['depense:read', 'depense:write'])]
-    #[Assert\Choice(choices: ['parts', 'montants'])]
     #[Assert\NotBlank]
+    #[Assert\Choice(choices: ['parts', 'montants'])]
     public string $partage;
 
     public function __construct(
