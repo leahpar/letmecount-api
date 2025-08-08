@@ -34,7 +34,6 @@ Authorization: Bearer {{token}}
     "partage": "parts",
     "details": [
         {
-            "user": "/api/users/1",
             "parts": 2,
             "montant": 25.00
         },
