@@ -18,7 +18,6 @@ class DetailType extends AbstractType
         $builder
             ->add('user', EntityType::class, [
                 'class' => User::class,
-                'choice_label' => 'username',
                 'required' => true,
             ])
             ->add('parts', IntegerType::class, [

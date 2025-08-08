@@ -13,15 +13,15 @@ class JsonExceptionSubscriber implements EventSubscriberInterface
     public function onKernelException(ExceptionEvent $event): void
     {
         $request = $event->getRequest();
-        
+
         // Only for API routes or Accept: application/json
-        if (!str_starts_with($request->getPathInfo(), '/api') && 
+        if (!str_starts_with($request->getPathInfo(), '/api') &&
             !$request->headers->contains('Accept', 'application/json')) {
             return;
         }
 
         $exception = $event->getThrowable();
-        
+
         // Get appropriate status code
         $statusCode = 500;
         if ($exception instanceof HttpExceptionInterface) {
@@ -39,7 +39,7 @@ class JsonExceptionSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents(): array
     {
         return [
-            KernelEvents::EXCEPTION => 'onKernelException',
+//            KernelEvents::EXCEPTION => 'onKernelException',
         ];
     }
 }

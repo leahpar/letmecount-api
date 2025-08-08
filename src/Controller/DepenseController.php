@@ -35,13 +35,18 @@ class DepenseController extends AbstractController
             /** @var Depense $depense */
             $depense = $form->getData();
 
-            $em->persist($depense);
-            $em->flush();
+            try {
+                $em->persist($depense);
+                $em->flush();
+            }
+            catch (\Exception $e) {
+                return $this->json(
+                    ['error' => $e->getMessage()],
+                    Response::HTTP_BAD_REQUEST
+                );
+            }
 
-            return new JsonResponse([
-                'success' => true,
-                'depense' => $depense,
-            ], $isCreation ? Response::HTTP_CREATED : Response::HTTP_OK);
+            return $this->json($depense, $isCreation ? Response::HTTP_CREATED : Response::HTTP_OK);
         }
 
         $errors = [];
@@ -64,6 +69,6 @@ class DepenseController extends AbstractController
         $em->remove($depense);
         $em->flush();
 
-        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+        return $this->json(null, Response::HTTP_NO_CONTENT);
     }
 }

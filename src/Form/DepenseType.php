@@ -29,8 +29,8 @@ class DepenseType extends AbstractType
             ])
             ->add('partage', ChoiceType::class, [
                 'choices' => [
-                    'Parts' => 'parts',
-                    'Montants' => 'montants',
+                    'parts',
+                    'montants',
                 ],
                 'required' => true,
             ])

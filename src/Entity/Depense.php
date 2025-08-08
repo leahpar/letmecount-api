@@ -19,34 +19,42 @@ class Depense
     /**
      * @var Collection<int, Detail>
      */
-    #[ORM\OneToMany(targetEntity: Detail::class, mappedBy: 'depense', orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: Detail::class, mappedBy: 'depense', cascade: ['persist'], orphanRemoval: true)]
     public Collection $details;
 
+    #[ORM\Column]
+    public \DateTime $date;
+
+    #[ORM\Column]
+    public float $montant;
+
+    #[ORM\Column(length: 255)]
+    public string $titre;
+
+    // 'parts' ou 'montants'
+    #[ORM\Column(length: 255)]
+    public string $partage;
+
     public function __construct(
-        #[ORM\Column]
-        public \DateTime $date,
-
-        #[ORM\Column]
-        public float $montant,
-
-        #[ORM\Column(length: 255)]
-        public string $titre,
-
-        // 'parts' ou 'montants'
-        #[ORM\Column(length: 255)]
-        public string $partage,
     ) {
         $this->details = new ArrayCollection();
     }
 
-    public function addDetail(
-        User $user,
-        ?int $parts,
-        float $montant,
-    ): void
+    public function addDetail(Detail $detail): self
     {
-        $detail = new Detail($this, $user, $parts, $montant);
-        $this->details[] = $detail;
+        if (!$this->details->contains($detail)) {
+            $this->details[] = $detail;
+            $detail->depense = $this;
+        }
+        return $this;
+    }
+
+    public function removeDetail(Detail $detail): self
+    {
+        if ($this->details->removeElement($detail)) {
+            $detail->depense = null;
+        }
+        return $this;
     }
 
     #[ORM\PrePersist]

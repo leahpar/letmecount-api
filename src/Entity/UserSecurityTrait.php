@@ -41,6 +41,7 @@ trait UserSecurityTrait
      *
      * @see UserInterface
      */
+    #[Ignore]
     public function getUserIdentifier(): string
     {
         return (string) $this->username;

@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation as JMS;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Attribute\Ignore;
@@ -25,12 +26,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var Collection<int, Detail>
      */
     #[ORM\OneToMany(targetEntity: Detail::class, mappedBy: 'user', orphanRemoval: true)]
+    #[Ignore]
     public Collection $details;
 
     /**
      * Retourne le solde de l'utilisateur.
      * C'est-à-dire la somme des montants de ses détails.
      */
+    #[JMS\VirtualProperty('solde')]
     public function getSolde(): float
     {
         $solde = 0.0;

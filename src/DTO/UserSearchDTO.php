@@ -2,7 +2,7 @@
 
 namespace App\DTO;
 
-class UserSearchInputDTO
+class UserSearchDTO
 {
     public ?string $username = null;
 }

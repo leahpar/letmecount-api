@@ -19,8 +19,7 @@ class TestController extends AbstractController
         #[CurrentUser] ?User $user
     ): Response
     {
-        dump($user);
-        return new JsonResponse(['user' => $user]);
+        return $this->json($user);
     }
 
 }
