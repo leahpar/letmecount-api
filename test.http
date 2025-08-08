@@ -1,9 +1,8 @@
 
-@baseUrl = http://localhost:8888
-@apiUrl = http://localhost:8888/api
+@apiUrl = http://localhost:8888
 
 ### Login
-POST {{baseUrl}}/auth
+POST {{apiUrl}}/auth
 Content-Type: application/ld+json
 Accept: application/ld+json
 
@@ -12,10 +11,32 @@ Accept: application/ld+json
     "password": "test"
 }
 > {%
-    const token = response.body.token
-    client.global.set("token", `${token}`)
-    console.log(`token: ${token}`)
+    client.global.set("token", `${response.body.token}`)
+    client.global.set("refresh_token", `${response.body.refresh_token}`)
 %}
+
+### Refresh Token
+POST {{apiUrl}}/auth/refresh
+Content-Type: application/ld+json
+Accept: application/ld+json
+Authorization: Bearer {{token}}
+
+{
+    "refresh_token": "{{refresh_token}}"
+}
+> {%
+    client.global.set("token", `${response.body.token}`)
+    client.global.set("refresh_token", `${response.body.refresh_token}`)
+%}
+
+### Logout
+POST {{apiUrl}}/auth/logout
+Content-Type: application/ld+json
+Authorization: Bearer {{token}}
+
+{
+    "refresh_token": "{{refresh_token}}"
+}
 
 ### test
 GET {{apiUrl}}/test/
