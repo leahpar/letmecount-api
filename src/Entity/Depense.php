@@ -8,6 +8,8 @@ use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Put;
 use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\ApiFilter;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
 use App\Repository\DepenseRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -18,10 +20,14 @@ use App\Validator\DepenseConstraint;
 
 #[ORM\Entity(repositoryClass: DepenseRepository::class)]
 #[DepenseConstraint]
+#[ApiFilter(SearchFilter::class, properties: ['details.user' => 'exact'])]
 #[ApiResource(
     operations: [
         new Get(normalizationContext: ['groups' => ['depense:read']]),
-        new GetCollection(normalizationContext: ['groups' => ['depense:read']]),
+        new GetCollection(
+            normalizationContext: ['groups' => ['depense:read']],
+            order: ['date' => 'DESC']
+        ),
         new Post(
             normalizationContext: ['groups' => ['depense:read']],
             denormalizationContext: ['groups' => ['depense:write']]

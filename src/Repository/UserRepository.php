@@ -2,7 +2,6 @@
 
 namespace App\Repository;
 
-use App\DTO\UserSearchDTO;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -34,16 +33,5 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $this->getEntityManager()->flush();
     }
 
-    public function search(UserSearchDTO $searchInput): array
-    {
-        $qb = $this->createQueryBuilder('u');
-
-        if ($searchInput->username) {
-            $qb->andWhere('u.username LIKE :username')
-               ->setParameter('username', '%' . $searchInput->username . '%');
-        }
-
-        return $qb->getQuery()->getResult();
-    }
 
 }

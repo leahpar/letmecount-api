@@ -1,0 +1,1424 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Hello API Platform",
+        "description": "",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "/",
+            "description": ""
+        }
+    ],
+    "paths": {
+        "/depenses": {
+            "get": {
+                "operationId": "api_depenses_get_collection",
+                "tags": [
+                    "Depense"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Depense collection",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "member": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Depense.jsonld-depense.read"
+                                            }
+                                        },
+                                        "totalItems": {
+                                            "type": "integer",
+                                            "minimum": 0
+                                        },
+                                        "view": {
+                                            "type": "object",
+                                            "properties": {
+                                                "@id": {
+                                                    "type": "string",
+                                                    "format": "iri-reference"
+                                                },
+                                                "@type": {
+                                                    "type": "string"
+                                                },
+                                                "first": {
+                                                    "type": "string",
+                                                    "format": "iri-reference"
+                                                },
+                                                "last": {
+                                                    "type": "string",
+                                                    "format": "iri-reference"
+                                                },
+                                                "previous": {
+                                                    "type": "string",
+                                                    "format": "iri-reference"
+                                                },
+                                                "next": {
+                                                    "type": "string",
+                                                    "format": "iri-reference"
+                                                }
+                                            },
+                                            "example": {
+                                                "@id": "string",
+                                                "type": "string",
+                                                "first": "string",
+                                                "last": "string",
+                                                "previous": "string",
+                                                "next": "string"
+                                            }
+                                        },
+                                        "search": {
+                                            "type": "object",
+                                            "properties": {
+                                                "@type": {
+                                                    "type": "string"
+                                                },
+                                                "template": {
+                                                    "type": "string"
+                                                },
+                                                "variableRepresentation": {
+                                                    "type": "string"
+                                                },
+                                                "mapping": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "@type": {
+                                                                "type": "string"
+                                                            },
+                                                            "variable": {
+                                                                "type": "string"
+                                                            },
+                                                            "property": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "required": {
+                                                                "type": "boolean"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "member"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Retrieves the collection of Depense resources.",
+                "description": "Retrieves the collection of Depense resources.",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "The collection page number",
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": true,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        },
+                        "style": "form",
+                        "explode": false,
+                        "allowReserved": false
+                    },
+                    {
+                        "name": "details.user",
+                        "in": "query",
+                        "description": "",
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "style": "form",
+                        "explode": false,
+                        "allowReserved": false
+                    },
+                    {
+                        "name": "details.user[]",
+                        "in": "query",
+                        "description": "",
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "style": "form",
+                        "explode": true,
+                        "allowReserved": false
+                    }
+                ],
+                "deprecated": false
+            },
+            "post": {
+                "operationId": "api_depenses_post",
+                "tags": [
+                    "Depense"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Depense resource created",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Depense.jsonld-depense.read"
+                                }
+                            }
+                        },
+                        "links": {}
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error.jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "links": {}
+                    },
+                    "422": {
+                        "description": "An error occurred",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConstraintViolation.jsonld-jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConstraintViolation-json"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConstraintViolation-json"
+                                }
+                            }
+                        },
+                        "links": {}
+                    }
+                },
+                "summary": "Creates a Depense resource.",
+                "description": "Creates a Depense resource.",
+                "parameters": [],
+                "requestBody": {
+                    "description": "The new Depense resource",
+                    "content": {
+                        "application/ld+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Depense.jsonld-depense.write"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "deprecated": false
+            }
+        },
+        "/depenses/{id}": {
+            "get": {
+                "operationId": "api_depenses_id_get",
+                "tags": [
+                    "Depense"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Depense resource",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Depense.jsonld-depense.read"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error.jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "links": {}
+                    }
+                },
+                "summary": "Retrieves a Depense resource.",
+                "description": "Retrieves a Depense resource.",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Depense identifier",
+                        "required": true,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "style": "simple",
+                        "explode": false,
+                        "allowReserved": false
+                    }
+                ],
+                "deprecated": false
+            },
+            "put": {
+                "operationId": "api_depenses_id_put",
+                "tags": [
+                    "Depense"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Depense resource updated",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Depense.jsonld-depense.read"
+                                }
+                            }
+                        },
+                        "links": {}
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error.jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "links": {}
+                    },
+                    "422": {
+                        "description": "An error occurred",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConstraintViolation.jsonld-jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConstraintViolation-json"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConstraintViolation-json"
+                                }
+                            }
+                        },
+                        "links": {}
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error.jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "links": {}
+                    }
+                },
+                "summary": "Replaces the Depense resource.",
+                "description": "Replaces the Depense resource.",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Depense identifier",
+                        "required": true,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "style": "simple",
+                        "explode": false,
+                        "allowReserved": false
+                    }
+                ],
+                "requestBody": {
+                    "description": "The updated Depense resource",
+                    "content": {
+                        "application/ld+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Depense.jsonld-depense.write"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "deprecated": false
+            },
+            "delete": {
+                "operationId": "api_depenses_id_delete",
+                "tags": [
+                    "Depense"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Depense resource deleted"
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error.jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "links": {}
+                    }
+                },
+                "summary": "Removes the Depense resource.",
+                "description": "Removes the Depense resource.",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Depense identifier",
+                        "required": true,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "style": "simple",
+                        "explode": false,
+                        "allowReserved": false
+                    }
+                ],
+                "deprecated": false
+            }
+        },
+        "/auth": {
+            "post": {
+                "operationId": "login_check_post",
+                "tags": [
+                    "Login Check"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User token created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "token": {
+                                            "readOnly": true,
+                                            "type": "string",
+                                            "nullable": false
+                                        }
+                                    },
+                                    "required": [
+                                        "token"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Creates a user token.",
+                "description": "Creates a user token.",
+                "requestBody": {
+                    "description": "The login data",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "username": {
+                                        "type": "string",
+                                        "nullable": false
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "nullable": false
+                                    }
+                                },
+                                "required": [
+                                    "username",
+                                    "password"
+                                ]
+                            }
+                        }
+                    },
+                    "required": true
+                }
+            }
+        },
+        "/users": {
+            "get": {
+                "operationId": "api_users_get_collection",
+                "tags": [
+                    "User"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User collection",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "member": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/User.jsonld-user.read"
+                                            }
+                                        },
+                                        "totalItems": {
+                                            "type": "integer",
+                                            "minimum": 0
+                                        },
+                                        "view": {
+                                            "type": "object",
+                                            "properties": {
+                                                "@id": {
+                                                    "type": "string",
+                                                    "format": "iri-reference"
+                                                },
+                                                "@type": {
+                                                    "type": "string"
+                                                },
+                                                "first": {
+                                                    "type": "string",
+                                                    "format": "iri-reference"
+                                                },
+                                                "last": {
+                                                    "type": "string",
+                                                    "format": "iri-reference"
+                                                },
+                                                "previous": {
+                                                    "type": "string",
+                                                    "format": "iri-reference"
+                                                },
+                                                "next": {
+                                                    "type": "string",
+                                                    "format": "iri-reference"
+                                                }
+                                            },
+                                            "example": {
+                                                "@id": "string",
+                                                "type": "string",
+                                                "first": "string",
+                                                "last": "string",
+                                                "previous": "string",
+                                                "next": "string"
+                                            }
+                                        },
+                                        "search": {
+                                            "type": "object",
+                                            "properties": {
+                                                "@type": {
+                                                    "type": "string"
+                                                },
+                                                "template": {
+                                                    "type": "string"
+                                                },
+                                                "variableRepresentation": {
+                                                    "type": "string"
+                                                },
+                                                "mapping": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "@type": {
+                                                                "type": "string"
+                                                            },
+                                                            "variable": {
+                                                                "type": "string"
+                                                            },
+                                                            "property": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "required": {
+                                                                "type": "boolean"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "member"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Retrieves the collection of User resources.",
+                "description": "Retrieves the collection of User resources.",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "The collection page number",
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": true,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        },
+                        "style": "form",
+                        "explode": false,
+                        "allowReserved": false
+                    },
+                    {
+                        "name": "username",
+                        "in": "query",
+                        "description": "",
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "style": "form",
+                        "explode": false,
+                        "allowReserved": false
+                    }
+                ],
+                "deprecated": false
+            }
+        },
+        "/users/{id}": {
+            "get": {
+                "operationId": "api_users_id_get",
+                "tags": [
+                    "User"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User resource",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User.jsonld-user.read"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error.jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "links": {}
+                    }
+                },
+                "summary": "Retrieves a User resource.",
+                "description": "Retrieves a User resource.",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "User identifier",
+                        "required": true,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "style": "simple",
+                        "explode": false,
+                        "allowReserved": false
+                    }
+                ],
+                "deprecated": false
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ConstraintViolation-json": {
+                "type": "object",
+                "description": "Unprocessable entity",
+                "deprecated": false,
+                "properties": {
+                    "status": {
+                        "default": 422,
+                        "example": 422,
+                        "type": "integer"
+                    },
+                    "violations": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "propertyPath": {
+                                    "type": "string",
+                                    "description": "The property path of the violation"
+                                },
+                                "message": {
+                                    "type": "string",
+                                    "description": "The message associated with the violation"
+                                }
+                            }
+                        }
+                    },
+                    "detail": {
+                        "readOnly": true,
+                        "type": "string"
+                    },
+                    "type": {
+                        "readOnly": true,
+                        "type": "string"
+                    },
+                    "title": {
+                        "readOnly": true,
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "instance": {
+                        "readOnly": true,
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                }
+            },
+            "ConstraintViolation.jsonld-jsonld": {
+                "type": "object",
+                "description": "Unprocessable entity",
+                "deprecated": false,
+                "properties": {
+                    "@context": {
+                        "readOnly": true,
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "@vocab": {
+                                        "type": "string"
+                                    },
+                                    "hydra": {
+                                        "type": "string",
+                                        "enum": [
+                                            "http://www.w3.org/ns/hydra/core#"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "@vocab",
+                                    "hydra"
+                                ],
+                                "additionalProperties": true
+                            }
+                        ]
+                    },
+                    "@id": {
+                        "readOnly": true,
+                        "type": "string"
+                    },
+                    "@type": {
+                        "readOnly": true,
+                        "type": "string"
+                    },
+                    "status": {
+                        "default": 422,
+                        "example": 422,
+                        "type": "integer"
+                    },
+                    "violations": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "propertyPath": {
+                                    "type": "string",
+                                    "description": "The property path of the violation"
+                                },
+                                "message": {
+                                    "type": "string",
+                                    "description": "The message associated with the violation"
+                                }
+                            }
+                        }
+                    },
+                    "detail": {
+                        "readOnly": true,
+                        "type": "string"
+                    },
+                    "description": {
+                        "readOnly": true,
+                        "type": "string"
+                    },
+                    "type": {
+                        "readOnly": true,
+                        "type": "string"
+                    },
+                    "title": {
+                        "readOnly": true,
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "instance": {
+                        "readOnly": true,
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                }
+            },
+            "Depense.jsonld": {
+                "type": "object",
+                "description": "",
+                "deprecated": false,
+                "properties": {
+                    "@context": {
+                        "readOnly": true,
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "@vocab": {
+                                        "type": "string"
+                                    },
+                                    "hydra": {
+                                        "type": "string",
+                                        "enum": [
+                                            "http://www.w3.org/ns/hydra/core#"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "@vocab",
+                                    "hydra"
+                                ],
+                                "additionalProperties": true
+                            }
+                        ]
+                    },
+                    "@id": {
+                        "readOnly": true,
+                        "type": "string"
+                    },
+                    "@type": {
+                        "readOnly": true,
+                        "type": "string"
+                    },
+                    "id": {
+                        "readOnly": true,
+                        "type": "integer"
+                    },
+                    "details": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Detail.jsonld"
+                        }
+                    },
+                    "date": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "montant": {
+                        "minimum": 0,
+                        "type": "number"
+                    },
+                    "titre": {
+                        "maxLength": 255,
+                        "type": "string"
+                    },
+                    "partage": {
+                        "enum": [
+                            "parts",
+                            "montants"
+                        ],
+                        "description": "Mode de partage de la d\u00e9pense.<br>\n- Si \"parts\" : les parts dans les d\u00e9tails servent \u00e0 calculer la r\u00e9partition proportionnelle<br>\n- Si \"montants\" : les montants des d\u00e9tails doivent \u00eatre exacts et valides",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "date",
+                    "montant",
+                    "titre",
+                    "partage"
+                ]
+            },
+            "Depense.jsonld-depense.read": {
+                "type": "object",
+                "description": "",
+                "deprecated": false,
+                "properties": {
+                    "@context": {
+                        "readOnly": true,
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "@vocab": {
+                                        "type": "string"
+                                    },
+                                    "hydra": {
+                                        "type": "string",
+                                        "enum": [
+                                            "http://www.w3.org/ns/hydra/core#"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "@vocab",
+                                    "hydra"
+                                ],
+                                "additionalProperties": true
+                            }
+                        ]
+                    },
+                    "@id": {
+                        "readOnly": true,
+                        "type": "string"
+                    },
+                    "@type": {
+                        "readOnly": true,
+                        "type": "string"
+                    },
+                    "id": {
+                        "readOnly": true,
+                        "type": "integer"
+                    },
+                    "details": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Detail.jsonld-depense.read"
+                        }
+                    },
+                    "date": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "montant": {
+                        "minimum": 0,
+                        "type": "number"
+                    },
+                    "titre": {
+                        "maxLength": 255,
+                        "type": "string"
+                    },
+                    "partage": {
+                        "enum": [
+                            "parts",
+                            "montants"
+                        ],
+                        "description": "Mode de partage de la d\u00e9pense.<br>\n- Si \"parts\" : les parts dans les d\u00e9tails servent \u00e0 calculer la r\u00e9partition proportionnelle<br>\n- Si \"montants\" : les montants des d\u00e9tails doivent \u00eatre exacts et valides",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "date",
+                    "montant",
+                    "titre",
+                    "partage"
+                ]
+            },
+            "Depense.jsonld-depense.write": {
+                "type": "object",
+                "description": "",
+                "deprecated": false,
+                "properties": {
+                    "details": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Detail.jsonld-depense.write"
+                        }
+                    },
+                    "date": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "montant": {
+                        "minimum": 0,
+                        "type": "number"
+                    },
+                    "titre": {
+                        "maxLength": 255,
+                        "type": "string"
+                    },
+                    "partage": {
+                        "enum": [
+                            "parts",
+                            "montants"
+                        ],
+                        "description": "Mode de partage de la d\u00e9pense.<br>\n- Si \"parts\" : les parts dans les d\u00e9tails servent \u00e0 calculer la r\u00e9partition proportionnelle<br>\n- Si \"montants\" : les montants des d\u00e9tails doivent \u00eatre exacts et valides",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "date",
+                    "montant",
+                    "titre",
+                    "partage"
+                ]
+            },
+            "Detail.jsonld": {
+                "type": "object",
+                "description": "",
+                "deprecated": false,
+                "properties": {
+                    "@context": {
+                        "readOnly": true,
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "@vocab": {
+                                        "type": "string"
+                                    },
+                                    "hydra": {
+                                        "type": "string",
+                                        "enum": [
+                                            "http://www.w3.org/ns/hydra/core#"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "@vocab",
+                                    "hydra"
+                                ],
+                                "additionalProperties": true
+                            }
+                        ]
+                    },
+                    "@id": {
+                        "readOnly": true,
+                        "type": "string"
+                    },
+                    "@type": {
+                        "readOnly": true,
+                        "type": "string"
+                    },
+                    "id": {
+                        "readOnly": true,
+                        "type": "integer"
+                    },
+                    "depense": {
+                        "type": "string",
+                        "format": "iri-reference",
+                        "example": "https://example.com/"
+                    },
+                    "user": {
+                        "type": "string",
+                        "format": "iri-reference",
+                        "example": "https://example.com/"
+                    },
+                    "parts": {
+                        "minimum": 0,
+                        "description": "Nombre de parts pour ce d\u00e9tail.<br>\nUtilis\u00e9 uniquement pour l'affichage dans le cas la r\u00e9partition par parts.",
+                        "type": "integer"
+                    },
+                    "montant": {
+                        "description": "Montant r\u00e9el en euros pour ce d\u00e9tail.<br>\nLe montant est arrondi \u00e0 deux d\u00e9cimales.<br>\nLe montant est obligatoire peu importe le mode de r\u00e9partition.",
+                        "type": "number"
+                    }
+                },
+                "required": [
+                    "user",
+                    "parts",
+                    "montant"
+                ]
+            },
+            "Detail.jsonld-depense.read": {
+                "type": "object",
+                "description": "",
+                "deprecated": false,
+                "required": [
+                    "user",
+                    "parts",
+                    "montant"
+                ],
+                "properties": {
+                    "@context": {
+                        "readOnly": true,
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "@vocab": {
+                                        "type": "string"
+                                    },
+                                    "hydra": {
+                                        "type": "string",
+                                        "enum": [
+                                            "http://www.w3.org/ns/hydra/core#"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "@vocab",
+                                    "hydra"
+                                ],
+                                "additionalProperties": true
+                            }
+                        ]
+                    },
+                    "@id": {
+                        "readOnly": true,
+                        "type": "string"
+                    },
+                    "@type": {
+                        "readOnly": true,
+                        "type": "string"
+                    },
+                    "user": {
+                        "type": "string",
+                        "format": "iri-reference",
+                        "example": "https://example.com/"
+                    },
+                    "parts": {
+                        "minimum": 0,
+                        "description": "Nombre de parts pour ce d\u00e9tail.<br>\nUtilis\u00e9 uniquement pour l'affichage dans le cas la r\u00e9partition par parts.",
+                        "type": "integer"
+                    },
+                    "montant": {
+                        "description": "Montant r\u00e9el en euros pour ce d\u00e9tail.<br>\nLe montant est arrondi \u00e0 deux d\u00e9cimales.<br>\nLe montant est obligatoire peu importe le mode de r\u00e9partition.",
+                        "type": "number"
+                    }
+                }
+            },
+            "Detail.jsonld-depense.write": {
+                "type": "object",
+                "description": "",
+                "deprecated": false,
+                "required": [
+                    "user",
+                    "parts",
+                    "montant"
+                ],
+                "properties": {
+                    "user": {
+                        "type": "string",
+                        "format": "iri-reference",
+                        "example": "https://example.com/"
+                    },
+                    "parts": {
+                        "minimum": 0,
+                        "description": "Nombre de parts pour ce d\u00e9tail.<br>\nUtilis\u00e9 uniquement pour l'affichage dans le cas la r\u00e9partition par parts.",
+                        "type": "integer"
+                    },
+                    "montant": {
+                        "description": "Montant r\u00e9el en euros pour ce d\u00e9tail.<br>\nLe montant est arrondi \u00e0 deux d\u00e9cimales.<br>\nLe montant est obligatoire peu importe le mode de r\u00e9partition.",
+                        "type": "number"
+                    }
+                }
+            },
+            "Error": {
+                "type": "object",
+                "description": "A representation of common errors.",
+                "deprecated": false,
+                "properties": {
+                    "title": {
+                        "readOnly": true,
+                        "description": "A short, human-readable summary of the problem.",
+                        "type": "string"
+                    },
+                    "detail": {
+                        "readOnly": true,
+                        "description": "A human-readable explanation specific to this occurrence of the problem.",
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "number",
+                        "examples": [
+                            404
+                        ],
+                        "default": 400
+                    },
+                    "instance": {
+                        "readOnly": true,
+                        "description": "A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "type": {
+                        "readOnly": true,
+                        "description": "A URI reference that identifies the problem type",
+                        "type": "string"
+                    }
+                }
+            },
+            "Error.jsonld": {
+                "type": "object",
+                "description": "A representation of common errors.",
+                "deprecated": false,
+                "properties": {
+                    "@context": {
+                        "readOnly": true,
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "@vocab": {
+                                        "type": "string"
+                                    },
+                                    "hydra": {
+                                        "type": "string",
+                                        "enum": [
+                                            "http://www.w3.org/ns/hydra/core#"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "@vocab",
+                                    "hydra"
+                                ],
+                                "additionalProperties": true
+                            }
+                        ]
+                    },
+                    "@id": {
+                        "readOnly": true,
+                        "type": "string"
+                    },
+                    "@type": {
+                        "readOnly": true,
+                        "type": "string"
+                    },
+                    "title": {
+                        "readOnly": true,
+                        "description": "A short, human-readable summary of the problem.",
+                        "type": "string"
+                    },
+                    "detail": {
+                        "readOnly": true,
+                        "description": "A human-readable explanation specific to this occurrence of the problem.",
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "number",
+                        "examples": [
+                            404
+                        ],
+                        "default": 400
+                    },
+                    "instance": {
+                        "readOnly": true,
+                        "description": "A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "type": {
+                        "readOnly": true,
+                        "description": "A URI reference that identifies the problem type",
+                        "type": "string"
+                    },
+                    "description": {
+                        "readOnly": true,
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                }
+            },
+            "User.jsonld-user.read": {
+                "type": "object",
+                "description": "",
+                "deprecated": false,
+                "properties": {
+                    "@id": {
+                        "readOnly": true,
+                        "type": "string"
+                    },
+                    "@type": {
+                        "readOnly": true,
+                        "type": "string"
+                    },
+                    "@context": {
+                        "readOnly": true,
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "@vocab": {
+                                        "type": "string"
+                                    },
+                                    "hydra": {
+                                        "type": "string",
+                                        "enum": [
+                                            "http://www.w3.org/ns/hydra/core#"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "@vocab",
+                                    "hydra"
+                                ],
+                                "additionalProperties": true
+                            }
+                        ]
+                    },
+                    "id": {
+                        "readOnly": true,
+                        "type": "integer"
+                    },
+                    "username": {
+                        "type": "string"
+                    },
+                    "solde": {
+                        "readOnly": true,
+                        "description": "Retourne le solde de l'utilisateur.",
+                        "type": "number"
+                    }
+                }
+            }
+        },
+        "responses": {},
+        "parameters": {},
+        "examples": {},
+        "requestBodies": {},
+        "headers": {},
+        "securitySchemes": {
+            "JWT": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+            }
+        }
+    },
+    "security": [
+        {
+            "JWT": []
+        }
+    ],
+    "tags": [
+        {
+            "name": "Depense"
+        },
+        {
+            "name": "User"
+        }
+    ],
+    "webhooks": {}
+}

@@ -19,7 +19,6 @@ Accept: application/ld+json
 POST {{apiUrl}}/auth/refresh
 Content-Type: application/ld+json
 Accept: application/ld+json
-Authorization: Bearer {{token}}
 
 {
     "refresh_token": "{{refresh_token}}"
@@ -106,8 +105,8 @@ Authorization: Bearer {{token}}
 GET {{apiUrl}}/users/1
 Authorization: Bearer {{token}}
 
-### Lister toutes les dépenses
-GET {{apiUrl}}/depenses
+### Lister toutes les dépenses d'un user
+GET {{apiUrl}}/depenses?details.user=1
 Authorization: Bearer {{token}}
 
 ### Récupérer une dépense spécifique

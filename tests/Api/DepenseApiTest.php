@@ -118,6 +118,41 @@ class DepenseApiTest extends AuthenticatedApiTestCase
         $this->assertCount(1, $data['details']);
     }
 
+    public function testFilterDepensesByUser(): void
+    {
+        // Créer une dépense pour l'utilisateur authentifié
+        $depense1 = $this->createTestDepense();
+
+        // Créer un autre utilisateur et une dépense pour lui
+        $otherUser = $this->createUser('other@example.com', 'password', 'otheruser');
+        $depense2 = new Depense();
+        $depense2->date = new DateTime('2024-01-16');
+        $depense2->montant = 75.00;
+        $depense2->titre = 'Other User Depense';
+        $depense2->partage = 'parts';
+
+        $detail2 = new Detail();
+        $detail2->user = $otherUser;
+        $detail2->parts = 1;
+        $detail2->montant = 75.00;
+        $depense2->addDetail($detail2);
+
+        $this->em->persist($depense2);
+        $this->em->flush();
+
+        // Tester le filtre par utilisateur
+        $this->call('GET', '/depenses?details.user=' . $this->user->id);
+        $this->assertResponseIsSuccessful();
+
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertArrayHasKey('member', $data);
+        
+        // Vérifier qu'on ne récupère que les dépenses de l'utilisateur authentifié
+        $depensesTitres = array_column($data['member'], 'titre');
+        $this->assertContains('Test Depense', $depensesTitres);
+        $this->assertNotContains('Other User Depense', $depensesTitres);
+    }
+
     private function createTestDepense(): Depense
     {
         $depense = new Depense();
