@@ -153,6 +153,41 @@ class DepenseApiTest extends AuthenticatedApiTestCase
         $this->assertNotContains('Other User Depense', $depensesTitres);
     }
 
+    public function testFilterDepensesByTag(): void
+    {
+        // Créer des tags
+        $tagRestaurant = $this->createTestTag('Restaurant');
+        $tagTransport = $this->createTestTag('Transport');
+
+        // Créer des dépenses avec différents tags
+        $depense1 = $this->createTestDepenseWithTag($tagRestaurant, 'Dépense Restaurant');
+        $depense2 = $this->createTestDepenseWithTag($tagTransport, 'Dépense Transport');
+        $depense3 = $this->createTestDepense(); // Sans tag
+
+        // Tester le filtre par tag restaurant
+        $this->call('GET', '/depenses?tag=' . $tagRestaurant->id);
+        $this->assertResponseIsSuccessful();
+
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertArrayHasKey('member', $data);
+        
+        // Vérifier qu'on ne récupère que les dépenses avec le tag restaurant
+        $depensesTitres = array_column($data['member'], 'titre');
+        $this->assertContains('Dépense Restaurant', $depensesTitres);
+        $this->assertNotContains('Dépense Transport', $depensesTitres);
+        $this->assertNotContains('Test Depense', $depensesTitres);
+
+        // Tester le filtre par tag transport
+        $this->call('GET', '/depenses?tag=' . $tagTransport->id);
+        $this->assertResponseIsSuccessful();
+
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+        $depensesTitres = array_column($data['member'], 'titre');
+        $this->assertContains('Dépense Transport', $depensesTitres);
+        $this->assertNotContains('Dépense Restaurant', $depensesTitres);
+        $this->assertNotContains('Test Depense', $depensesTitres);
+    }
+
     private function createTestDepense(): Depense
     {
         $depense = new Depense();
@@ -160,6 +195,39 @@ class DepenseApiTest extends AuthenticatedApiTestCase
         $depense->montant = 50.00;
         $depense->titre = 'Test Depense';
         $depense->partage = 'parts';
+
+        $detail = new Detail();
+        $detail->user = $this->user;
+        $detail->parts = 1;
+        $detail->montant = 50.00;
+
+        $depense->addDetail($detail);
+
+        $this->em->persist($depense);
+        $this->em->flush();
+
+        return $depense;
+    }
+
+    private function createTestTag(string $libelle): \App\Entity\Tag
+    {
+        $tag = new \App\Entity\Tag();
+        $tag->libelle = $libelle;
+
+        $this->em->persist($tag);
+        $this->em->flush();
+
+        return $tag;
+    }
+
+    private function createTestDepenseWithTag(\App\Entity\Tag $tag, string $titre = 'Test Depense avec Tag'): Depense
+    {
+        $depense = new Depense();
+        $depense->date = new DateTime('2024-01-15');
+        $depense->montant = 50.00;
+        $depense->titre = $titre;
+        $depense->partage = 'parts';
+        $depense->tag = $tag;
 
         $detail = new Detail();
         $detail->user = $this->user;
