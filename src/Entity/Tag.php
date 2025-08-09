@@ -40,7 +40,7 @@ class Tag
     public ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['tag:read', 'tag:write', 'depense:read'])]
+    #[Groups(['tag:read', 'tag:write'])]
     #[Assert\NotBlank]
     #[Assert\Length(max: 255)]
     public string $libelle;

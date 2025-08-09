@@ -44,7 +44,7 @@ class DepenseApiTest extends AuthenticatedApiTestCase
         $this->assertEquals(50.00, $data['montant']);
         $this->assertEquals('parts', $data['partage']);
         $this->assertArrayHasKey('payePar', $data);
-        $this->assertEquals($this->user->id, $data['payePar']['id']);
+        $this->assertEquals('/users/' . $this->user->id, $data['payePar']);
         $this->assertCount(1, $data['details']);
     }
 

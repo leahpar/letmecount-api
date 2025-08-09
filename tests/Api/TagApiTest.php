@@ -98,7 +98,7 @@ class TagApiTest extends AuthenticatedApiTestCase
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertEquals('Restaurant avec tag', $data['titre']);
         $this->assertArrayHasKey('tag', $data);
-        $this->assertEquals($tag->libelle, $data['tag']['libelle']);
+        $this->assertEquals('/tags/' . $tag->id, $data['tag']);
     }
 
     public function testUpdateDepenseTag(): void
@@ -128,7 +128,7 @@ class TagApiTest extends AuthenticatedApiTestCase
         $this->assertResponseIsSuccessful();
 
         $data = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertEquals($tag2->libelle, $data['tag']['libelle']);
+        $this->assertEquals('/tags/' . $tag2->id, $data['tag']);
     }
 
     private function createTestTag(string $libelle = 'Restaurant'): Tag
