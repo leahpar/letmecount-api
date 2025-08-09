@@ -118,7 +118,7 @@ class DepenseApiTest extends AuthenticatedApiTestCase
         $this->assertCount(1, $data['details']);
     }
 
-    public function testFilterDepensesByUser(): void
+    public function testUserOnlySeesOwnDepenses(): void
     {
         // Créer une dépense pour l'utilisateur authentifié
         $depense1 = $this->createTestDepense();
@@ -140,8 +140,8 @@ class DepenseApiTest extends AuthenticatedApiTestCase
         $this->em->persist($depense2);
         $this->em->flush();
 
-        // Tester le filtre par utilisateur
-        $this->call('GET', '/depenses?details.user=' . $this->user->id);
+        // Récupérer toutes les dépenses - ne doit retourner que celles de l'utilisateur connecté
+        $this->call('GET', '/depenses');
         $this->assertResponseIsSuccessful();
 
         $data = json_decode($this->client->getResponse()->getContent(), true);
@@ -151,6 +151,10 @@ class DepenseApiTest extends AuthenticatedApiTestCase
         $depensesTitres = array_column($data['member'], 'titre');
         $this->assertContains('Test Depense', $depensesTitres);
         $this->assertNotContains('Other User Depense', $depensesTitres);
+        
+        // Vérifier qu'on ne peut pas accéder à une dépense d'un autre utilisateur
+        $this->call('GET', '/depenses/' . $depense2->id);
+        $this->assertResponseStatusCodeSame(404);
     }
 
     public function testFilterDepensesByTag(): void

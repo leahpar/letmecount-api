@@ -20,7 +20,7 @@ use App\Validator\DepenseConstraint;
 
 #[ORM\Entity(repositoryClass: DepenseRepository::class)]
 #[DepenseConstraint]
-#[ApiFilter(SearchFilter::class, properties: ['details.user' => 'exact', 'tag' => 'exact'])]
+#[ApiFilter(SearchFilter::class, properties: ['tag' => 'exact'])]
 #[ApiResource(
     operations: [
         new Get(normalizationContext: ['groups' => ['depense:read']]),
