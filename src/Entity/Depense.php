@@ -82,6 +82,11 @@ class Depense
     #[Assert\Choice(choices: ['parts', 'montants'])]
     public string $partage;
 
+    #[ORM\ManyToOne(targetEntity: Tag::class, inversedBy: 'depenses')]
+    #[ORM\JoinColumn(nullable: true)]
+    #[Groups(['depense:read', 'depense:write'])]
+    public ?Tag $tag = null;
+
     public function __construct(
     ) {
         $this->details = new ArrayCollection();
