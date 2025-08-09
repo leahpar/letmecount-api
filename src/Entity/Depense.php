@@ -87,6 +87,12 @@ class Depense
     #[Groups(['depense:read', 'depense:write'])]
     public ?Tag $tag = null;
 
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[Groups(['depense:read', 'depense:write'])]
+    #[Assert\NotBlank]
+    public User $payePar;
+
     public function __construct(
     ) {
         $this->details = new ArrayCollection();

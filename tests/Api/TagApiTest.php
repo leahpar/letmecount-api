@@ -81,6 +81,7 @@ class TagApiTest extends AuthenticatedApiTestCase
             'montant' => 50.00,
             'titre' => 'Restaurant avec tag',
             'partage' => 'parts',
+            'payePar' => '/users/' . $this->user->id,
             'tag' => '/tags/' . $tag->id,
             'details' => [
                 [
@@ -112,6 +113,7 @@ class TagApiTest extends AuthenticatedApiTestCase
             'montant' => 60.00,
             'titre' => 'Dépense mise à jour',
             'partage' => 'parts',
+            'payePar' => '/users/' . $this->user->id,
             'tag' => '/tags/' . $tag2->id,
             'details' => [
                 [
@@ -148,6 +150,7 @@ class TagApiTest extends AuthenticatedApiTestCase
         $depense->titre = 'Test Depense avec Tag';
         $depense->partage = 'parts';
         $depense->tag = $tag;
+        $depense->payePar = $this->user;
 
         $detail = new Detail();
         $detail->user = $this->user;

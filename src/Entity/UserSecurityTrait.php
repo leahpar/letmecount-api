@@ -9,7 +9,7 @@ use Symfony\Component\Serializer\Attribute\Groups;
 trait UserSecurityTrait
 {
     #[ORM\Column(length: 180)]
-    #[Groups(['user:read'])]
+    #[Groups(['user:read', 'depense:read'])]
     private ?string $username = null;
 
     /**

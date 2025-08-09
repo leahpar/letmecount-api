@@ -35,7 +35,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['user:read'])]
+    #[Groups(['user:read', 'depense:read'])]
     public ?int $id = null;
 
     /**

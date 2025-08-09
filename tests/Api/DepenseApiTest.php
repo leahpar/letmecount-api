@@ -26,6 +26,7 @@ class DepenseApiTest extends AuthenticatedApiTestCase
             'montant' => 50.00,
             'titre' => 'Test Restaurant',
             'partage' => 'parts',
+            'payePar' => '/users/' . $this->user->id,
             'details' => [
                 [
                     'user' => '/users/' . $this->user->id,
@@ -42,6 +43,8 @@ class DepenseApiTest extends AuthenticatedApiTestCase
         $this->assertEquals('Test Restaurant', $data['titre']);
         $this->assertEquals(50.00, $data['montant']);
         $this->assertEquals('parts', $data['partage']);
+        $this->assertArrayHasKey('payePar', $data);
+        $this->assertEquals($this->user->id, $data['payePar']['id']);
         $this->assertCount(1, $data['details']);
     }
 
@@ -52,6 +55,7 @@ class DepenseApiTest extends AuthenticatedApiTestCase
             'montant' => 50.00,
             'titre' => 'Test Invalid',
             'partage' => 'parts',
+            'payePar' => '/users/' . $this->user->id,
             'details' => [
                 [
                     'user' => '/users/' . $this->user->id,
@@ -75,6 +79,7 @@ class DepenseApiTest extends AuthenticatedApiTestCase
             'montant' => 60.00,
             'titre' => 'Updated Restaurant',
             'partage' => 'montants',
+            'payePar' => '/users/' . $this->user->id,
             'details' => [
                 [
                     'user' => '/users/' . $this->user->id,
@@ -130,6 +135,7 @@ class DepenseApiTest extends AuthenticatedApiTestCase
         $depense2->montant = 75.00;
         $depense2->titre = 'Other User Depense';
         $depense2->partage = 'parts';
+        $depense2->payePar = $otherUser;
 
         $detail2 = new Detail();
         $detail2->user = $otherUser;
@@ -199,6 +205,7 @@ class DepenseApiTest extends AuthenticatedApiTestCase
         $depense->montant = 50.00;
         $depense->titre = 'Test Depense';
         $depense->partage = 'parts';
+        $depense->payePar = $this->user;
 
         $detail = new Detail();
         $detail->user = $this->user;
@@ -232,6 +239,7 @@ class DepenseApiTest extends AuthenticatedApiTestCase
         $depense->titre = $titre;
         $depense->partage = 'parts';
         $depense->tag = $tag;
+        $depense->payePar = $this->user;
 
         $detail = new Detail();
         $detail->user = $this->user;

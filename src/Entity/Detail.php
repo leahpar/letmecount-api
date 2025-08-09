@@ -16,11 +16,11 @@ class Detail
     public ?int $id = null;
 
     #[ORM\ManyToOne(cascade: ['persist'], inversedBy: 'details')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     public ?Depense $depense = null;
 
     #[ORM\ManyToOne(inversedBy: 'details')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     #[Groups(['depense:read', 'depense:write'])]
     #[Assert\NotBlank]
     public User $user;

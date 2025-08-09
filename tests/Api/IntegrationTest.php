@@ -15,6 +15,7 @@ class IntegrationTest extends AuthenticatedApiTestCase
             'montant' => 100.00,
             'titre' => 'Restaurant 1',
             'partage' => 'parts',
+            'payePar' => '/users/' . $this->user->id,
             'details' => [
                 [
                     'user' => '/users/' . $this->user->id,
@@ -38,6 +39,7 @@ class IntegrationTest extends AuthenticatedApiTestCase
             'montant' => 60.00,
             'titre' => 'Restaurant 2',
             'partage' => 'parts',
+            'payePar' => '/users/' . $user2->id,
             'details' => [
                 [
                     'user' => '/users/' . $this->user->id,
@@ -79,6 +81,7 @@ class IntegrationTest extends AuthenticatedApiTestCase
             'montant' => 80.00,
             'titre' => 'Courses',
             'partage' => 'montants',
+            'payePar' => '/users/' . $this->user->id,
             'details' => [
                 [
                     'user' => '/users/' . $this->user->id,

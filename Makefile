@@ -19,4 +19,11 @@ tests: ## Lance l'ensemble des tests
 stan: ## Analyse statique du code
 	XDEBUG_MODE=off $(PHP_MAX) ./vendor/bin/phpstan analyse --no-progress --no-interaction
 
-.PHONY: sfstart sfstop tests stan
+doc: ## Génération de la documentation
+	$(PHP) ./bin/console api:openapi:export -o doc/openapi.json
+	# if ../front exists, copy the OpenAPI file there
+	if [ -d ../front ]; then \
+		cp -f doc/openapi.json ../front/openapi.json; \
+	fi
+
+.PHONY: sfstart sfstop tests stan doc

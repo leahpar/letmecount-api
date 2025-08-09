@@ -137,7 +137,7 @@
                         "allowReserved": false
                     },
                     {
-                        "name": "details.user",
+                        "name": "tag",
                         "in": "query",
                         "description": "",
                         "required": false,
@@ -151,7 +151,7 @@
                         "allowReserved": false
                     },
                     {
-                        "name": "details.user[]",
+                        "name": "tag[]",
                         "in": "query",
                         "description": "",
                         "required": false,
@@ -527,6 +527,433 @@
                 }
             }
         },
+        "/tags": {
+            "get": {
+                "operationId": "api_tags_get_collection",
+                "tags": [
+                    "Tag"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tag collection",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "member": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Tag.jsonld-tag.read"
+                                            }
+                                        },
+                                        "totalItems": {
+                                            "type": "integer",
+                                            "minimum": 0
+                                        },
+                                        "view": {
+                                            "type": "object",
+                                            "properties": {
+                                                "@id": {
+                                                    "type": "string",
+                                                    "format": "iri-reference"
+                                                },
+                                                "@type": {
+                                                    "type": "string"
+                                                },
+                                                "first": {
+                                                    "type": "string",
+                                                    "format": "iri-reference"
+                                                },
+                                                "last": {
+                                                    "type": "string",
+                                                    "format": "iri-reference"
+                                                },
+                                                "previous": {
+                                                    "type": "string",
+                                                    "format": "iri-reference"
+                                                },
+                                                "next": {
+                                                    "type": "string",
+                                                    "format": "iri-reference"
+                                                }
+                                            },
+                                            "example": {
+                                                "@id": "string",
+                                                "type": "string",
+                                                "first": "string",
+                                                "last": "string",
+                                                "previous": "string",
+                                                "next": "string"
+                                            }
+                                        },
+                                        "search": {
+                                            "type": "object",
+                                            "properties": {
+                                                "@type": {
+                                                    "type": "string"
+                                                },
+                                                "template": {
+                                                    "type": "string"
+                                                },
+                                                "variableRepresentation": {
+                                                    "type": "string"
+                                                },
+                                                "mapping": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "@type": {
+                                                                "type": "string"
+                                                            },
+                                                            "variable": {
+                                                                "type": "string"
+                                                            },
+                                                            "property": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "required": {
+                                                                "type": "boolean"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "member"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Retrieves the collection of Tag resources.",
+                "description": "Retrieves the collection of Tag resources.",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "The collection page number",
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": true,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        },
+                        "style": "form",
+                        "explode": false,
+                        "allowReserved": false
+                    }
+                ],
+                "deprecated": false
+            },
+            "post": {
+                "operationId": "api_tags_post",
+                "tags": [
+                    "Tag"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Tag resource created",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Tag.jsonld-tag.read"
+                                }
+                            }
+                        },
+                        "links": {}
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error.jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "links": {}
+                    },
+                    "422": {
+                        "description": "An error occurred",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConstraintViolation.jsonld-jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConstraintViolation-json"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConstraintViolation-json"
+                                }
+                            }
+                        },
+                        "links": {}
+                    }
+                },
+                "summary": "Creates a Tag resource.",
+                "description": "Creates a Tag resource.",
+                "parameters": [],
+                "requestBody": {
+                    "description": "The new Tag resource",
+                    "content": {
+                        "application/ld+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Tag.jsonld-tag.write"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "deprecated": false
+            }
+        },
+        "/tags/{id}": {
+            "get": {
+                "operationId": "api_tags_id_get",
+                "tags": [
+                    "Tag"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tag resource",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Tag.jsonld-tag.read"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error.jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "links": {}
+                    }
+                },
+                "summary": "Retrieves a Tag resource.",
+                "description": "Retrieves a Tag resource.",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Tag identifier",
+                        "required": true,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "style": "simple",
+                        "explode": false,
+                        "allowReserved": false
+                    }
+                ],
+                "deprecated": false
+            },
+            "put": {
+                "operationId": "api_tags_id_put",
+                "tags": [
+                    "Tag"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tag resource updated",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Tag.jsonld-tag.read"
+                                }
+                            }
+                        },
+                        "links": {}
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error.jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "links": {}
+                    },
+                    "422": {
+                        "description": "An error occurred",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConstraintViolation.jsonld-jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConstraintViolation-json"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConstraintViolation-json"
+                                }
+                            }
+                        },
+                        "links": {}
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error.jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "links": {}
+                    }
+                },
+                "summary": "Replaces the Tag resource.",
+                "description": "Replaces the Tag resource.",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Tag identifier",
+                        "required": true,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "style": "simple",
+                        "explode": false,
+                        "allowReserved": false
+                    }
+                ],
+                "requestBody": {
+                    "description": "The updated Tag resource",
+                    "content": {
+                        "application/ld+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Tag.jsonld-tag.write"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "deprecated": false
+            },
+            "delete": {
+                "operationId": "api_tags_id_delete",
+                "tags": [
+                    "Tag"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Tag resource deleted"
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error.jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "links": {}
+                    }
+                },
+                "summary": "Removes the Tag resource.",
+                "description": "Removes the Tag resource.",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Tag identifier",
+                        "required": true,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "style": "simple",
+                        "explode": false,
+                        "allowReserved": false
+                    }
+                ],
+                "deprecated": false
+            }
+        },
         "/users": {
             "get": {
                 "operationId": "api_users_get_collection",
@@ -666,6 +1093,51 @@
                         "allowReserved": false
                     }
                 ],
+                "deprecated": false
+            }
+        },
+        "/users/me": {
+            "get": {
+                "operationId": "api_usersme_get",
+                "tags": [
+                    "User"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User resource",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User.jsonld-user.read"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error.jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "links": {}
+                    }
+                },
+                "summary": "Retrieves a User resource.",
+                "description": "Retrieves a User resource.",
+                "parameters": [],
                 "deprecated": false
             }
         },
@@ -940,13 +1412,27 @@
                         ],
                         "description": "Mode de partage de la d\u00e9pense.<br>\n- Si \"parts\" : les parts dans les d\u00e9tails servent \u00e0 calculer la r\u00e9partition proportionnelle<br>\n- Si \"montants\" : les montants des d\u00e9tails doivent \u00eatre exacts et valides",
                         "type": "string"
+                    },
+                    "tag": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "iri-reference",
+                        "example": "https://example.com/"
+                    },
+                    "payePar": {
+                        "type": "string",
+                        "format": "iri-reference",
+                        "example": "https://example.com/"
                     }
                 },
                 "required": [
                     "date",
                     "montant",
                     "titre",
-                    "partage"
+                    "partage",
+                    "payePar"
                 ]
             },
             "Depense.jsonld-depense.read": {
@@ -1018,13 +1504,29 @@
                         ],
                         "description": "Mode de partage de la d\u00e9pense.<br>\n- Si \"parts\" : les parts dans les d\u00e9tails servent \u00e0 calculer la r\u00e9partition proportionnelle<br>\n- Si \"montants\" : les montants des d\u00e9tails doivent \u00eatre exacts et valides",
                         "type": "string"
+                    },
+                    "tag": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/Tag.jsonld-depense.read"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "payePar": {
+                        "type": "string",
+                        "format": "iri-reference",
+                        "example": "https://example.com/"
                     }
                 },
                 "required": [
                     "date",
                     "montant",
                     "titre",
-                    "partage"
+                    "partage",
+                    "payePar"
                 ]
             },
             "Depense.jsonld-depense.write": {
@@ -1057,13 +1559,27 @@
                         ],
                         "description": "Mode de partage de la d\u00e9pense.<br>\n- Si \"parts\" : les parts dans les d\u00e9tails servent \u00e0 calculer la r\u00e9partition proportionnelle<br>\n- Si \"montants\" : les montants des d\u00e9tails doivent \u00eatre exacts et valides",
                         "type": "string"
+                    },
+                    "tag": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "iri-reference",
+                        "example": "https://example.com/"
+                    },
+                    "payePar": {
+                        "type": "string",
+                        "format": "iri-reference",
+                        "example": "https://example.com/"
                     }
                 },
                 "required": [
                     "date",
                     "montant",
                     "titre",
-                    "partage"
+                    "partage",
+                    "payePar"
                 ]
             },
             "Detail.jsonld": {
@@ -1339,6 +1855,191 @@
                     }
                 }
             },
+            "Tag.jsonld": {
+                "type": "object",
+                "description": "",
+                "deprecated": false,
+                "properties": {
+                    "@context": {
+                        "readOnly": true,
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "@vocab": {
+                                        "type": "string"
+                                    },
+                                    "hydra": {
+                                        "type": "string",
+                                        "enum": [
+                                            "http://www.w3.org/ns/hydra/core#"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "@vocab",
+                                    "hydra"
+                                ],
+                                "additionalProperties": true
+                            }
+                        ]
+                    },
+                    "@id": {
+                        "readOnly": true,
+                        "type": "string"
+                    },
+                    "@type": {
+                        "readOnly": true,
+                        "type": "string"
+                    },
+                    "id": {
+                        "readOnly": true,
+                        "type": "integer"
+                    },
+                    "libelle": {
+                        "maxLength": 255,
+                        "type": "string"
+                    },
+                    "depenses": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "format": "iri-reference",
+                            "example": "https://example.com/"
+                        }
+                    }
+                },
+                "required": [
+                    "libelle"
+                ]
+            },
+            "Tag.jsonld-depense.read": {
+                "type": "object",
+                "description": "",
+                "deprecated": false,
+                "required": [
+                    "libelle"
+                ],
+                "properties": {
+                    "@context": {
+                        "readOnly": true,
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "@vocab": {
+                                        "type": "string"
+                                    },
+                                    "hydra": {
+                                        "type": "string",
+                                        "enum": [
+                                            "http://www.w3.org/ns/hydra/core#"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "@vocab",
+                                    "hydra"
+                                ],
+                                "additionalProperties": true
+                            }
+                        ]
+                    },
+                    "@id": {
+                        "readOnly": true,
+                        "type": "string"
+                    },
+                    "@type": {
+                        "readOnly": true,
+                        "type": "string"
+                    },
+                    "libelle": {
+                        "maxLength": 255,
+                        "type": "string"
+                    }
+                }
+            },
+            "Tag.jsonld-tag.read": {
+                "type": "object",
+                "description": "",
+                "deprecated": false,
+                "properties": {
+                    "@context": {
+                        "readOnly": true,
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "@vocab": {
+                                        "type": "string"
+                                    },
+                                    "hydra": {
+                                        "type": "string",
+                                        "enum": [
+                                            "http://www.w3.org/ns/hydra/core#"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "@vocab",
+                                    "hydra"
+                                ],
+                                "additionalProperties": true
+                            }
+                        ]
+                    },
+                    "@id": {
+                        "readOnly": true,
+                        "type": "string"
+                    },
+                    "@type": {
+                        "readOnly": true,
+                        "type": "string"
+                    },
+                    "id": {
+                        "readOnly": true,
+                        "type": "integer"
+                    },
+                    "libelle": {
+                        "maxLength": 255,
+                        "type": "string"
+                    },
+                    "depenses": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "format": "iri-reference",
+                            "example": "https://example.com/"
+                        }
+                    }
+                },
+                "required": [
+                    "libelle"
+                ]
+            },
+            "Tag.jsonld-tag.write": {
+                "type": "object",
+                "description": "",
+                "deprecated": false,
+                "required": [
+                    "libelle"
+                ],
+                "properties": {
+                    "libelle": {
+                        "maxLength": 255,
+                        "type": "string"
+                    }
+                }
+            },
             "User.jsonld-user.read": {
                 "type": "object",
                 "description": "",
@@ -1415,6 +2116,9 @@
     "tags": [
         {
             "name": "Depense"
+        },
+        {
+            "name": "Tag"
         },
         {
             "name": "User"
