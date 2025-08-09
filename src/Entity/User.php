@@ -46,6 +46,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public Collection $details;
 
     /**
+     * @var Collection<int, Depense>
+     */
+    #[ORM\OneToMany(targetEntity: Depense::class, mappedBy: 'payePar', orphanRemoval: true)]
+    #[Ignore]
+    public Collection $depenses;
+
+    /**
      * Retourne le solde de l'utilisateur.
      * C'est-à-dire la somme des montants de ses détails.
      */
@@ -54,8 +61,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getSolde(): float
     {
         $solde = 0.0;
+        foreach ($this->depenses as $depense) {
+            $solde += $depense->montant ?? 0.0;
+        }
         foreach ($this->details as $detail) {
-            $solde += $detail->montant ?? 0.0;
+            $solde -= $detail->montant ?? 0.0;
         }
         return $solde;
     }

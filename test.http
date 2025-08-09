@@ -51,14 +51,17 @@ Authorization: Bearer {{token}}
     "date": "2024-01-15T00:00:00+00:00",
     "montant": 50.00,
     "titre": "Restaurant",
+    "tag": "/tags/1",
     "partage": "parts",
+    "payePar": "/users/1",
     "details": [
         {
+            "user": "/users/1",
             "parts": 2,
             "montant": 25.00
         },
         {
-            "user": "/api/users/2",
+            "user": "/users/2",
             "parts": 1,
             "montant": 25.00
         }
@@ -74,15 +77,17 @@ Authorization: Bearer {{token}}
     "date": "2024-01-16T00:00:00+00:00",
     "montant": 60.00,
     "titre": "Restaurant modifié",
+    "tag": "/tags/1",
     "partage": "montants",
+    "payePar": "/users/1",
     "details": [
         {
-            "user": "/api/users/1",
+            "user": "/users/1",
             "parts": 1,
             "montant": 30.00
         },
         {
-            "user": "/api/users/2",
+            "user": "/users/2",
             "parts": 1,
             "montant": 30.00
         }
@@ -109,10 +114,43 @@ Authorization: Bearer {{token}}
 GET {{apiUrl}}/users/1
 Authorization: Bearer {{token}}
 
-### Lister toutes les dépenses d'un user
-GET {{apiUrl}}/depenses?details.user=1
+### Lister toutes les dépenses (filtrage automatique par utilisateur connecté)
+GET {{apiUrl}}/depenses
 Authorization: Bearer {{token}}
 
 ### Récupérer une dépense spécifique
 GET {{apiUrl}}/depenses/1
+Authorization: Bearer {{token}}
+
+### === TAGS ===
+
+### Créer un tag
+POST {{apiUrl}}/tags
+Content-Type: application/ld+json
+Accept: application/ld+json
+Authorization: Bearer {{token}}
+
+{
+    "libelle": "Les filles"
+}
+
+### Lister tous les tags
+GET {{apiUrl}}/tags
+Authorization: Bearer {{token}}
+
+### Modifier un tag
+PUT {{apiUrl}}/tags/1
+Content-Type: application/ld+json
+Authorization: Bearer {{token}}
+
+{
+    "libelle": "Restaurant & Sorties"
+}
+
+### Supprimer un tag
+DELETE {{apiUrl}}/tags/1
+Authorization: Bearer {{token}}
+
+### Filtrer les dépenses par tag
+GET {{apiUrl}}/depenses?tag=1
 Authorization: Bearer {{token}}
