@@ -23,7 +23,6 @@ class TagApiTest extends AuthenticatedApiTestCase
     public function testCreateTag(): void
     {
         $tagData = [
-            'slug' => 'restaurant',
             'libelle' => 'Restaurant'
         ];
 
@@ -31,40 +30,16 @@ class TagApiTest extends AuthenticatedApiTestCase
         $this->assertResponseStatusCodeSame(201);
 
         $data = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertEquals('restaurant', $data['slug']);
         $this->assertEquals('Restaurant', $data['libelle']);
     }
 
-    public function testCreateTagWithInvalidSlug(): void
-    {
-        $tagData = [
-            'slug' => 'Restaurant avec ESPACES',
-            'libelle' => 'Restaurant'
-        ];
 
-        $this->call('POST', '/tags', [], $tagData);
-        $this->assertResponseStatusCodeSame(422);
-    }
-
-    public function testCreateDuplicateTag(): void
-    {
-        $tag = $this->createTestTag();
-        
-        $tagData = [
-            'slug' => $tag->slug,
-            'libelle' => 'Autre libellé'
-        ];
-
-        $this->call('POST', '/tags', [], $tagData);
-        $this->assertResponseStatusCodeSame(422);
-    }
 
     public function testUpdateTag(): void
     {
         $tag = $this->createTestTag();
 
         $updatedData = [
-            'slug' => 'loisirs',
             'libelle' => 'Loisirs et sorties'
         ];
 
@@ -72,7 +47,6 @@ class TagApiTest extends AuthenticatedApiTestCase
         $this->assertResponseIsSuccessful();
 
         $data = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertEquals('loisirs', $data['slug']);
         $this->assertEquals('Loisirs et sorties', $data['libelle']);
     }
 
@@ -95,7 +69,6 @@ class TagApiTest extends AuthenticatedApiTestCase
         $this->assertResponseIsSuccessful();
 
         $data = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertEquals($tag->slug, $data['slug']);
         $this->assertEquals($tag->libelle, $data['libelle']);
     }
 
@@ -124,14 +97,13 @@ class TagApiTest extends AuthenticatedApiTestCase
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertEquals('Restaurant avec tag', $data['titre']);
         $this->assertArrayHasKey('tag', $data);
-        $this->assertEquals($tag->slug, $data['tag']['slug']);
         $this->assertEquals($tag->libelle, $data['tag']['libelle']);
     }
 
     public function testUpdateDepenseTag(): void
     {
         $tag1 = $this->createTestTag();
-        $tag2 = $this->createTestTag('transport', 'Transport');
+        $tag2 = $this->createTestTag('Transport');
         
         $depense = $this->createTestDepenseWithTag($tag1);
 
@@ -154,14 +126,12 @@ class TagApiTest extends AuthenticatedApiTestCase
         $this->assertResponseIsSuccessful();
 
         $data = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertEquals($tag2->slug, $data['tag']['slug']);
         $this->assertEquals($tag2->libelle, $data['tag']['libelle']);
     }
 
-    private function createTestTag(string $slug = 'restaurant', string $libelle = 'Restaurant'): Tag
+    private function createTestTag(string $libelle = 'Restaurant'): Tag
     {
         $tag = new Tag();
-        $tag->slug = $slug;
         $tag->libelle = $libelle;
 
         $this->em->persist($tag);

@@ -14,10 +14,8 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 #[ORM\Entity(repositoryClass: TagRepository::class)]
-#[UniqueEntity('slug')]
 #[ApiResource(
     operations: [
         new Get(normalizationContext: ['groups' => ['tag:read']]),
@@ -40,13 +38,6 @@ class Tag
     #[ORM\Column]
     #[Groups(['tag:read'])]
     public ?int $id = null;
-
-    #[ORM\Column(length: 100, unique: true)]
-    #[Groups(['tag:read', 'tag:write', 'depense:read'])]
-    #[Assert\NotBlank]
-    #[Assert\Length(max: 100)]
-    #[Assert\Regex(pattern: '/^[a-z0-9-]+$/', message: 'Le slug ne peut contenir que des lettres minuscules, des chiffres et des tirets')]
-    public string $slug;
 
     #[ORM\Column(length: 255)]
     #[Groups(['tag:read', 'tag:write', 'depense:read'])]
