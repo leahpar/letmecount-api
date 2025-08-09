@@ -25,8 +25,8 @@ use App\Validator\DepenseConstraint;
     operations: [
         new Get(normalizationContext: ['groups' => ['depense:read']]),
         new GetCollection(
-            normalizationContext: ['groups' => ['depense:read']],
-            order: ['date' => 'DESC']
+            order: ['date' => 'DESC'],
+            normalizationContext: ['groups' => ['depense:read']]
         ),
         new Post(
             normalizationContext: ['groups' => ['depense:read']],

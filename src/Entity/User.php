@@ -7,6 +7,7 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use App\Provider\CurrentUserProvider;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -20,7 +21,8 @@ use Symfony\Component\Serializer\Attribute\Groups;
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_USERNAME', fields: ['username'])]
 #[ApiResource(
     operations: [
-        new Get(),
+        new Get(uriTemplate: '/users/{id}', requirements: ['id' => '\d+']),
+        new Get(uriTemplate: '/users/me', provider: CurrentUserProvider::class),
         new GetCollection()
     ],
     normalizationContext: ['groups' => ['user:read']]

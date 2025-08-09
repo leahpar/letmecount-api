@@ -101,6 +101,10 @@ Authorization: Bearer {{token}}
 GET {{apiUrl}}/users?username=test
 Authorization: Bearer {{token}}
 
+### Récupérer l'utilisateur courant
+GET {{apiUrl}}/users/me
+Authorization: Bearer {{token}}
+
 ### Récupérer un utilisateur spécifique
 GET {{apiUrl}}/users/1
 Authorization: Bearer {{token}}
