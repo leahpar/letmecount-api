@@ -48,22 +48,22 @@ Accept: application/ld+json
 Authorization: Bearer {{token}}
 
 {
-    "date": "2024-01-15T00:00:00+00:00",
-    "montant": 50.00,
+    "date": "2024-01-16T00:00:00+00:00",
+    "montant": 30.00,
     "titre": "Restaurant",
     "tag": "/tags/1",
     "partage": "parts",
-    "payePar": "/users/1",
+    "payePar": "/users/2",
     "details": [
         {
             "user": "/users/1",
-            "parts": 2,
-            "montant": 25.00
+            "parts": 1,
+            "montant": 15.00
         },
         {
             "user": "/users/2",
             "parts": 1,
-            "montant": 25.00
+            "montant": 15.00
         }
     ]
 }

@@ -32,12 +32,13 @@ class AuthenticatedApiTestCase extends WebTestCase
         ?array $parameters = [],
         ?array $content = null
     ): void {
+        $contentType = $method === 'PATCH' ? 'application/merge-patch+json' : 'application/ld+json';
         $this->client->request(
             $method,
             $uri,
             $parameters ?? [],
             [],
-            ['CONTENT_TYPE' => 'application/ld+json', 'ACCEPT' => 'application/ld+json'],
+            ['CONTENT_TYPE' => $contentType, 'ACCEPT' => 'application/ld+json'],
             json_encode($content));
     }
 

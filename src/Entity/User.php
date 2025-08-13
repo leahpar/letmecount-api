@@ -62,10 +62,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $solde = 0.0;
         foreach ($this->depenses as $depense) {
-            $solde += $depense->montant ?? 0.0;
+            $solde += $depense->montant;
         }
         foreach ($this->details as $detail) {
-            $solde -= $detail->montant ?? 0.0;
+            $solde -= $detail->montant;
         }
         return $solde;
     }

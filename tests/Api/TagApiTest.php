@@ -43,7 +43,7 @@ class TagApiTest extends AuthenticatedApiTestCase
             'libelle' => 'Loisirs et sorties'
         ];
 
-        $this->call('PUT', '/tags/' . $tag->id, [], $updatedData);
+        $this->call('PATCH', '/tags/' . $tag->id, [], $updatedData);
         $this->assertResponseIsSuccessful();
 
         $data = json_decode($this->client->getResponse()->getContent(), true);
@@ -75,7 +75,7 @@ class TagApiTest extends AuthenticatedApiTestCase
     public function testCreateDepenseWithTag(): void
     {
         $tag = $this->createTestTag();
-        
+
         $depenseData = [
             'date' => '2024-01-15T00:00:00+00:00',
             'montant' => 50.00,
@@ -105,7 +105,7 @@ class TagApiTest extends AuthenticatedApiTestCase
     {
         $tag1 = $this->createTestTag();
         $tag2 = $this->createTestTag('Transport');
-        
+
         $depense = $this->createTestDepenseWithTag($tag1);
 
         $updatedData = [
@@ -124,7 +124,7 @@ class TagApiTest extends AuthenticatedApiTestCase
             ]
         ];
 
-        $this->call('PUT', '/depenses/' . $depense->id, [], $updatedData);
+        $this->call('PATCH', '/depenses/' . $depense->id, [], $updatedData);
         $this->assertResponseIsSuccessful();
 
         $data = json_decode($this->client->getResponse()->getContent(), true);

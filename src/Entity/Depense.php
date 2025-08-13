@@ -5,8 +5,8 @@ namespace App\Entity;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
-use ApiPlatform\Metadata\Put;
 use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
@@ -32,7 +32,7 @@ use App\Validator\DepenseConstraint;
             normalizationContext: ['groups' => ['depense:read']],
             denormalizationContext: ['groups' => ['depense:write']]
         ),
-        new Put(
+        new Patch(
             normalizationContext: ['groups' => ['depense:read']],
             denormalizationContext: ['groups' => ['depense:write']]
         ),
@@ -50,8 +50,16 @@ class Depense
     /**
      * @var Collection<int, Detail>
      */
-    #[ORM\OneToMany(targetEntity: Detail::class, mappedBy: 'depense', cascade: ['persist'], orphanRemoval: true)]
+    #[ORM\OneToMany(
+        targetEntity: Detail::class,
+        mappedBy: 'depense',
+        cascade: ['persist', 'remove'],
+        fetch: 'EAGER',
+        orphanRemoval: true
+    )]
     #[Groups(['depense:read', 'depense:write'])]
+    #[Assert\Valid]  // Valide aussi les détails imbriqués
+    #[Assert\Count(min: 1)] // Au moins un détail requis
     public Collection $details;
 
     #[ORM\Column]

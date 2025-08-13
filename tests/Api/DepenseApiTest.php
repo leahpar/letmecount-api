@@ -73,6 +73,10 @@ class DepenseApiTest extends AuthenticatedApiTestCase
     {
         // Créer une dépense d'abord
         $depense = $this->createTestDepense();
+        $this->em->refresh($depense);
+        $detail = $depense->details->first();
+
+        $initialDepenseCount = count($this->em->getRepository(Depense::class)->findAll());
 
         $updatedData = [
             'date' => '2024-01-16T00:00:00+00:00',
@@ -82,6 +86,7 @@ class DepenseApiTest extends AuthenticatedApiTestCase
             'payePar' => '/users/' . $this->user->id,
             'details' => [
                 [
+                    'id' => $detail->id,
                     'user' => '/users/' . $this->user->id,
                     'parts' => 1,
                     'montant' => 60.00
@@ -89,13 +94,16 @@ class DepenseApiTest extends AuthenticatedApiTestCase
             ]
         ];
 
-        $this->call('PUT', '/depenses/' . $depense->id, [], $updatedData);
+        $this->call('PATCH', '/depenses/' . $depense->id, [], $updatedData);
         $this->assertResponseIsSuccessful();
 
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertEquals('Updated Restaurant', $data['titre']);
         $this->assertEquals(60.00, $data['montant']);
         $this->assertEquals('montants', $data['partage']);
+
+        $finalDepenseCount = count($this->em->getRepository(Depense::class)->findAll());
+        $this->assertEquals($initialDepenseCount, $finalDepenseCount, "Le nombre de dépenses ne devrait pas augmenter lors d'une mise à jour.");
     }
 
     public function testDeleteDepense(): void
@@ -152,12 +160,12 @@ class DepenseApiTest extends AuthenticatedApiTestCase
 
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertArrayHasKey('member', $data);
-        
+
         // Vérifier qu'on ne récupère que les dépenses de l'utilisateur authentifié
         $depensesTitres = array_column($data['member'], 'titre');
         $this->assertContains('Test Depense', $depensesTitres);
         $this->assertNotContains('Other User Depense', $depensesTitres);
-        
+
         // Vérifier qu'on ne peut pas accéder à une dépense d'un autre utilisateur
         $this->call('GET', '/depenses/' . $depense2->id);
         $this->assertResponseStatusCodeSame(404);
@@ -180,7 +188,7 @@ class DepenseApiTest extends AuthenticatedApiTestCase
 
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertArrayHasKey('member', $data);
-        
+
         // Vérifier qu'on ne récupère que les dépenses avec le tag restaurant
         $depensesTitres = array_column($data['member'], 'titre');
         $this->assertContains('Dépense Restaurant', $depensesTitres);

@@ -5,8 +5,8 @@ namespace App\Entity;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
-use ApiPlatform\Metadata\Put;
 use ApiPlatform\Metadata\Delete;
 use App\Repository\TagRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -24,7 +24,7 @@ use Symfony\Component\Validator\Constraints as Assert;
             normalizationContext: ['groups' => ['tag:read']],
             denormalizationContext: ['groups' => ['tag:write']]
         ),
-        new Put(
+        new Patch(
             normalizationContext: ['groups' => ['tag:read']],
             denormalizationContext: ['groups' => ['tag:write']]
         ),
