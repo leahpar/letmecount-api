@@ -306,8 +306,59 @@
                 ],
                 "deprecated": false
             },
-            "put": {
-                "operationId": "api_depenses_id_put",
+            "delete": {
+                "operationId": "api_depenses_id_delete",
+                "tags": [
+                    "Depense"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Depense resource deleted"
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error.jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "links": {}
+                    }
+                },
+                "summary": "Removes the Depense resource.",
+                "description": "Removes the Depense resource.",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Depense identifier",
+                        "required": true,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "style": "simple",
+                        "explode": false,
+                        "allowReserved": false
+                    }
+                ],
+                "deprecated": false
+            },
+            "patch": {
+                "operationId": "api_depenses_id_patch",
                 "tags": [
                     "Depense"
                 ],
@@ -387,8 +438,8 @@
                         "links": {}
                     }
                 },
-                "summary": "Replaces the Depense resource.",
-                "description": "Replaces the Depense resource.",
+                "summary": "Updates the Depense resource.",
+                "description": "Updates the Depense resource.",
                 "parameters": [
                     {
                         "name": "id",
@@ -408,65 +459,14 @@
                 "requestBody": {
                     "description": "The updated Depense resource",
                     "content": {
-                        "application/ld+json": {
+                        "application/merge-patch+json": {
                             "schema": {
-                                "$ref": "#/components/schemas/Depense.jsonld-depense.write"
+                                "$ref": "#/components/schemas/Depense-depense.write"
                             }
                         }
                     },
                     "required": true
                 },
-                "deprecated": false
-            },
-            "delete": {
-                "operationId": "api_depenses_id_delete",
-                "tags": [
-                    "Depense"
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Depense resource deleted"
-                    },
-                    "404": {
-                        "description": "Not found",
-                        "content": {
-                            "application/ld+json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error.jsonld"
-                                }
-                            },
-                            "application/problem+json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error"
-                                }
-                            },
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error"
-                                }
-                            }
-                        },
-                        "links": {}
-                    }
-                },
-                "summary": "Removes the Depense resource.",
-                "description": "Removes the Depense resource.",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "Depense identifier",
-                        "required": true,
-                        "deprecated": false,
-                        "allowEmptyValue": false,
-                        "schema": {
-                            "type": "string"
-                        },
-                        "style": "simple",
-                        "explode": false,
-                        "allowReserved": false
-                    }
-                ],
                 "deprecated": false
             }
         },
@@ -790,8 +790,59 @@
                 ],
                 "deprecated": false
             },
-            "put": {
-                "operationId": "api_tags_id_put",
+            "delete": {
+                "operationId": "api_tags_id_delete",
+                "tags": [
+                    "Tag"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Tag resource deleted"
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error.jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "links": {}
+                    }
+                },
+                "summary": "Removes the Tag resource.",
+                "description": "Removes the Tag resource.",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Tag identifier",
+                        "required": true,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "style": "simple",
+                        "explode": false,
+                        "allowReserved": false
+                    }
+                ],
+                "deprecated": false
+            },
+            "patch": {
+                "operationId": "api_tags_id_patch",
                 "tags": [
                     "Tag"
                 ],
@@ -871,8 +922,8 @@
                         "links": {}
                     }
                 },
-                "summary": "Replaces the Tag resource.",
-                "description": "Replaces the Tag resource.",
+                "summary": "Updates the Tag resource.",
+                "description": "Updates the Tag resource.",
                 "parameters": [
                     {
                         "name": "id",
@@ -892,65 +943,14 @@
                 "requestBody": {
                     "description": "The updated Tag resource",
                     "content": {
-                        "application/ld+json": {
+                        "application/merge-patch+json": {
                             "schema": {
-                                "$ref": "#/components/schemas/Tag.jsonld-tag.write"
+                                "$ref": "#/components/schemas/Tag-tag.write"
                             }
                         }
                     },
                     "required": true
                 },
-                "deprecated": false
-            },
-            "delete": {
-                "operationId": "api_tags_id_delete",
-                "tags": [
-                    "Tag"
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Tag resource deleted"
-                    },
-                    "404": {
-                        "description": "Not found",
-                        "content": {
-                            "application/ld+json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error.jsonld"
-                                }
-                            },
-                            "application/problem+json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error"
-                                }
-                            },
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error"
-                                }
-                            }
-                        },
-                        "links": {}
-                    }
-                },
-                "summary": "Removes the Tag resource.",
-                "description": "Removes the Tag resource.",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "Tag identifier",
-                        "required": true,
-                        "deprecated": false,
-                        "allowEmptyValue": false,
-                        "schema": {
-                            "type": "string"
-                        },
-                        "style": "simple",
-                        "explode": false,
-                        "allowReserved": false
-                    }
-                ],
                 "deprecated": false
             }
         },
@@ -1343,6 +1343,60 @@
                     }
                 }
             },
+            "Depense-depense.write": {
+                "type": "object",
+                "description": "",
+                "deprecated": false,
+                "properties": {
+                    "details": {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Detail-depense.write"
+                        }
+                    },
+                    "date": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "montant": {
+                        "minimum": 0,
+                        "type": "number"
+                    },
+                    "titre": {
+                        "maxLength": 255,
+                        "type": "string"
+                    },
+                    "partage": {
+                        "enum": [
+                            "parts",
+                            "montants"
+                        ],
+                        "description": "Mode de partage de la d\u00e9pense.<br>\n- Si \"parts\" : les parts dans les d\u00e9tails servent \u00e0 calculer la r\u00e9partition proportionnelle<br>\n- Si \"montants\" : les montants des d\u00e9tails doivent \u00eatre exacts et valides",
+                        "type": "string"
+                    },
+                    "tag": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "iri-reference",
+                        "example": "https://example.com/"
+                    },
+                    "payePar": {
+                        "type": "string",
+                        "format": "iri-reference",
+                        "example": "https://example.com/"
+                    }
+                },
+                "required": [
+                    "date",
+                    "montant",
+                    "titre",
+                    "partage",
+                    "payePar"
+                ]
+            },
             "Depense.jsonld": {
                 "type": "object",
                 "description": "",
@@ -1388,6 +1442,7 @@
                         "type": "integer"
                     },
                     "details": {
+                        "minItems": 1,
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/Detail.jsonld"
@@ -1480,6 +1535,7 @@
                         "type": "integer"
                     },
                     "details": {
+                        "minItems": 1,
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/Detail.jsonld-depense.read"
@@ -1533,6 +1589,7 @@
                 "deprecated": false,
                 "properties": {
                     "details": {
+                        "minItems": 1,
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/Detail.jsonld-depense.write"
@@ -1579,6 +1636,32 @@
                     "partage",
                     "payePar"
                 ]
+            },
+            "Detail-depense.write": {
+                "type": "object",
+                "description": "",
+                "deprecated": false,
+                "required": [
+                    "user",
+                    "parts",
+                    "montant"
+                ],
+                "properties": {
+                    "user": {
+                        "type": "string",
+                        "format": "iri-reference",
+                        "example": "https://example.com/"
+                    },
+                    "parts": {
+                        "minimum": 0,
+                        "description": "Nombre de parts pour ce d\u00e9tail.<br>\nUtilis\u00e9 uniquement pour l'affichage dans le cas la r\u00e9partition par parts.",
+                        "type": "integer"
+                    },
+                    "montant": {
+                        "description": "Montant r\u00e9el en euros pour ce d\u00e9tail.<br>\nLe montant est arrondi \u00e0 deux d\u00e9cimales.<br>\nLe montant est obligatoire peu importe le mode de r\u00e9partition.",
+                        "type": "number"
+                    }
+                }
             },
             "Detail.jsonld": {
                 "type": "object",
@@ -1850,6 +1933,20 @@
                             "string",
                             "null"
                         ]
+                    }
+                }
+            },
+            "Tag-tag.write": {
+                "type": "object",
+                "description": "",
+                "deprecated": false,
+                "required": [
+                    "libelle"
+                ],
+                "properties": {
+                    "libelle": {
+                        "maxLength": 255,
+                        "type": "string"
                     }
                 }
             },
