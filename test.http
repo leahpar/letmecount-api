@@ -7,7 +7,7 @@ Content-Type: application/ld+json
 Accept: application/ld+json
 
 {
-    "username": "test",
+    "username": "raphael",
     "password": "test"
 }
 > {%
@@ -154,3 +154,14 @@ Authorization: Bearer {{token}}
 ### Filtrer les dépenses par tag
 GET {{apiUrl}}/depenses?tag=1
 Authorization: Bearer {{token}}
+
+### Ajouter un user à un tag
+PATCH {{apiUrl}}/tags/1
+Content-Type: application/merge-patch+json
+Authorization: Bearer {{token}}
+
+{
+    "users": [
+        "/users/1"
+    ]
+}

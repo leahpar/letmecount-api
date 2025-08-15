@@ -49,12 +49,19 @@ class Tag
      * @var Collection<int, Depense>
      */
     #[ORM\OneToMany(targetEntity: Depense::class, mappedBy: 'tag')]
-    #[Groups(['tag:read'])]
     public Collection $depenses;
+
+    /**
+     * @var Collection<int, User>
+     */
+    #[ORM\ManyToMany(targetEntity: User::class, mappedBy: 'tags')]
+    #[Groups(['tag:read', 'tag:write'])]
+    public Collection $users;
 
     public function __construct()
     {
         $this->depenses = new ArrayCollection();
+        $this->users = new ArrayCollection();
     }
 
     public function addDepense(Depense $depense): self
@@ -70,6 +77,23 @@ class Tag
     {
         if ($this->depenses->removeElement($depense)) {
             $depense->tag = null;
+        }
+        return $this;
+    }
+
+    public function addUser(User $user): self
+    {
+        if (!$this->users->contains($user)) {
+            $this->users[] = $user;
+            $user->addTag($this);
+        }
+        return $this;
+    }
+
+    public function removeUser(User $user): self
+    {
+        if ($this->users->removeElement($user)) {
+            $user->removeTag($this);
         }
         return $this;
     }

@@ -9,6 +9,7 @@ use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
 use App\Provider\CurrentUserProvider;
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as JMS;
@@ -53,6 +54,33 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public Collection $depenses;
 
     /**
+     * @var Collection<int, Tag>
+     */
+    #[ORM\ManyToMany(targetEntity: Tag::class, inversedBy: 'users')]
+    #[ORM\JoinTable(name: 'user_tag')]
+    #[Groups(['user:read'])]
+    public Collection $tags;
+
+    public function __construct()
+    {
+        $this->tags = new ArrayCollection();
+    }
+
+    public function addTag(Tag $tag): self
+    {
+        if (!$this->tags->contains($tag)) {
+            $this->tags[] = $tag;
+        }
+        return $this;
+    }
+
+    public function removeTag(Tag $tag): self
+    {
+        $this->tags->removeElement($tag);
+        return $this;
+    }
+
+    /**
      * Retourne le solde de l'utilisateur.
      * C'est-à-dire la somme des montants de ses détails.
      */
@@ -67,7 +95,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         foreach ($this->details as $detail) {
             $solde -= $detail->montant;
         }
-        return $solde;
+        return round($solde, 2);
     }
 
 }
