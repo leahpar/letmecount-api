@@ -1947,6 +1947,14 @@
                     "libelle": {
                         "maxLength": 255,
                         "type": "string"
+                    },
+                    "users": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "format": "iri-reference",
+                            "example": "https://example.com/"
+                        }
                     }
                 }
             },
@@ -1999,6 +2007,14 @@
                         "type": "string"
                     },
                     "depenses": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "format": "iri-reference",
+                            "example": "https://example.com/"
+                        }
+                    },
+                    "users": {
                         "type": "array",
                         "items": {
                             "type": "string",
@@ -2059,7 +2075,7 @@
                         "maxLength": 255,
                         "type": "string"
                     },
-                    "depenses": {
+                    "users": {
                         "type": "array",
                         "items": {
                             "type": "string",
@@ -2083,6 +2099,14 @@
                     "libelle": {
                         "maxLength": 255,
                         "type": "string"
+                    },
+                    "users": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "format": "iri-reference",
+                            "example": "https://example.com/"
+                        }
                     }
                 }
             },
@@ -2129,6 +2153,14 @@
                     "id": {
                         "readOnly": true,
                         "type": "integer"
+                    },
+                    "tags": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "format": "iri-reference",
+                            "example": "https://example.com/"
+                        }
                     },
                     "username": {
                         "type": "string"

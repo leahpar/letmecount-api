@@ -6,6 +6,9 @@ Ce serveur MCP (Model Context Protocol) permet d'interagir avec l'API Let-me-cou
 
 1. Installer les dépendances :
 ```bash
+python3 -m venv mcp-server
+cd mcp-server
+source bin/activate
 pip install -r requirements-mcp.txt
 ```
 
@@ -26,17 +29,27 @@ Ajoutez cette configuration dans votre fichier `claude_desktop_config.json` :
 
 ```json
 {
-  "mcpServers": {
-    "letmecount-api": {
-      "command": "python",
-      "args": ["/chemin/vers/votre/mcp-server.py"],
-      "env": {
-        "LETMECOUNT_API_URL": "http://localhost:8000"
-      }
+    "mcpServers": {
+        "letmecount-api": {
+            "command": "/home/raphael/projets/letmecount/api/mcp-server/bin/python",
+            "args": ["/home/raphael/projets/letmecount/api/mcp-server/mcp-server.py"],
+            "env": {
+                "LETMECOUNT_API_URL": "http://localhost:8888"
+            }
+        }
     }
-  }
 }
 ```
+
+```bash
+claude mcp add-json letmecount '{
+"command": "/home/raphael/projets/letmecount/api/mcp-server/bin/python",
+"args": ["/home/raphael/projets/letmecount/api/mcp-server/mcp-server.py"],
+"env": {
+"LETMECOUNT_API_URL": "http://localhost:8888"
+}}'
+```
+
 
 ## Utilisation
 
