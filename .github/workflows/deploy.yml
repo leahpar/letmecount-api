@@ -1,0 +1,31 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Deploy to server
+      uses: appleboy/ssh-action@v1.0.3
+      env:
+        APP_ENV: prod
+        API_URL: https://unescopilot.com/api
+      with:
+        host: ${{ secrets.DEPLOY_HOST }}
+        username: ${{ secrets.DEPLOY_USER }}
+        key: ${{ secrets.DEPLOY_KEY }}
+        port: ${{ secrets.DEPLOY_PORT }}
+        envs: APP_ENV, API_URL
+        script: |
+          cd ${{ secrets.DEPLOY_PATH }}
+          git pull origin master
+          composer install --no-dev --optimize-autoloader
+          php bin/console cache:clear --env=prod
+          php bin/console doctrine:schema:update --force
+          npm ci
+          npm run build
+          npm run tailwind
