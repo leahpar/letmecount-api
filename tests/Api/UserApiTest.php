@@ -158,23 +158,19 @@ class UserApiTest extends AuthenticatedApiTestCase
         $content = $this->client->getResponse()->getContent();
         $data = json_decode($content, true);
         
-        // API Platform retourne une collection avec les données dans 'member'
-        $this->assertArrayHasKey('member', $data);
-        $this->assertCount(4, $data['member']);
+        // Maintenant la réponse est l'User avec le token
+        $this->assertArrayHasKey('token', $data);
+        $this->assertArrayHasKey('id', $data);
+        $this->assertArrayHasKey('username', $data);
+        $this->assertArrayHasKey('solde', $data);
         
-        $token = $data['member'][0];
-        $userId = $data['member'][1];
-        $username = $data['member'][2];
-        $message = $data['member'][3];
-        
-        $this->assertNotEmpty($token);
-        $this->assertEquals($this->user->id, $userId);
-        $this->assertEquals($this->user->getUsername(), $username);
-        $this->assertEquals('Token généré avec succès', $message);
+        $this->assertNotEmpty($data['token']);
+        $this->assertEquals($this->user->id, $data['id']);
+        $this->assertEquals($this->user->getUsername(), $data['username']);
 
         // Vérifier que le token a été sauvé en base
         $updatedUser = $this->em->getRepository(User::class)->find($this->user->id);
-        $this->assertEquals($token, $updatedUser->getToken());
+        $this->assertEquals($data['token'], $updatedUser->getToken());
     }
 
     public function testGenerateTokenForNonExistentUser(): void

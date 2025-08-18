@@ -43,6 +43,7 @@ use Symfony\Component\Serializer\Attribute\Groups;
         new Get(
             uriTemplate: '/users/{id}/token',
             requirements: ['id' => '\d+'],
+            normalizationContext: ['groups' => ['user:read', 'user:token']],
             security: "is_granted('ROLE_ADMIN')",
             provider: GenerateTokenProvider::class
         )

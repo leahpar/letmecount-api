@@ -20,7 +20,7 @@ class GenerateTokenProvider implements ProviderInterface
     public function provide(Operation $operation, array $uriVariables = [], array $context = []): object|array|null
     {
         $userId = $uriVariables['id'] ?? null;
-        
+
         if (!$userId) {
             throw new NotFoundHttpException('Utilisateur non trouvé');
         }
@@ -33,14 +33,9 @@ class GenerateTokenProvider implements ProviderInterface
         // Générer un token unique
         $token = bin2hex(random_bytes(32));
         $user->setToken($token);
-        
+
         $this->em->flush();
 
-        return [
-            'token' => $token,
-            'user_id' => $user->id,
-            'username' => $user->getUsername(),
-            'message' => 'Token généré avec succès'
-        ];
+        return $user;
     }
 }

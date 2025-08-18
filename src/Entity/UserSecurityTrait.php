@@ -16,6 +16,7 @@ trait UserSecurityTrait
      * @var list<string> The user roles
      */
     #[ORM\Column]
+    #[Groups(['user:read'])]
     private array $roles = [];
 
     /**
@@ -25,6 +26,7 @@ trait UserSecurityTrait
     private ?string $password = null;
 
     #[ORM\Column(nullable: true)]
+    #[Groups(['user:token'])]
     private ?string $token = null;
 
     public function getUsername(): ?string
