@@ -138,13 +138,17 @@ Authorization: Bearer {{token}}
 GET {{apiUrl}}/tags
 Authorization: Bearer {{token}}
 
+### Récupérer un tag spécifique
+GET {{apiUrl}}/tags/2
+Authorization: Bearer {{token}}
+
 ### Modifier un tag
-PUT {{apiUrl}}/tags/1
-Content-Type: application/ld+json
+PATCH {{apiUrl}}/tags/1
+Content-Type: application/merge-patch+json
 Authorization: Bearer {{token}}
 
 {
-    "libelle": "Restaurant & Sorties"
+    "libelle": "La soirée filles"
 }
 
 ### Supprimer un tag
