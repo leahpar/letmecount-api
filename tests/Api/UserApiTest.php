@@ -42,4 +42,36 @@ class UserApiTest extends AuthenticatedApiTestCase
         $this->assertCount(1, $users);
         $this->assertEquals('searchuser', $users[0]['username']);
     }
+
+    public function testCreateUserWithoutAdminRole(): void
+    {
+        $userData = [
+            'username' => 'newuser',
+            'password' => 'password123',
+            'roles' => ['ROLE_USER']
+        ];
+
+        $this->call('POST', '/users', [], $userData);
+        $this->assertResponseStatusCodeSame(403);
+    }
+
+    public function testCreateUserWithAdminRole(): void
+    {
+        // Donner le rôle ADMIN à l'utilisateur de test
+        $this->user->setRoles(['ROLE_ADMIN']);
+        $this->em->flush();
+
+        $userData = [
+            'username' => 'newadminuser',
+            'password' => 'password123',
+            'roles' => ['ROLE_USER']
+        ];
+
+        $this->call('POST', '/users', [], $userData);
+        $this->assertResponseStatusCodeSame(201);
+
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertEquals('newadminuser', $data['username']);
+        $this->assertArrayHasKey('id', $data);
+    }
 }

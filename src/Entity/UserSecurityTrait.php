@@ -9,21 +9,19 @@ use Symfony\Component\Serializer\Attribute\Groups;
 trait UserSecurityTrait
 {
     #[ORM\Column(length: 180)]
-    #[Groups(['user:read'])]
+    #[Groups(['user:read', 'user:write'])]
     private ?string $username = null;
 
     /**
      * @var list<string> The user roles
      */
     #[ORM\Column]
-    #[Ignore]
     private array $roles = [];
 
     /**
      * @var string The hashed password
      */
     #[ORM\Column]
-    #[Ignore]
     private ?string $password = null;
 
     public function getUsername(): ?string

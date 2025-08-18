@@ -30,7 +30,7 @@ Let-me-count est une application web pour la gestion des comptes entre amis.
 - 
 - `php bin/console lint:yaml /config/xxx`: Lint YAML files
 - `make stan`: PhpStan static analysis
-- `make tests`: Run PHPUnit tests
+- `make tests`: Run PHPUnit tests.
 
 ## Ressources utiles
 

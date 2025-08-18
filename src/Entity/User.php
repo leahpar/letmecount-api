@@ -5,6 +5,7 @@ namespace App\Entity;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
 use App\Provider\CurrentUserProvider;
@@ -24,7 +25,11 @@ use Symfony\Component\Serializer\Attribute\Groups;
     operations: [
         new Get(uriTemplate: '/users/{id}', requirements: ['id' => '\d+']),
         new Get(uriTemplate: '/users/me', provider: CurrentUserProvider::class),
-        new GetCollection()
+        new GetCollection(),
+        new Post(
+            denormalizationContext: ['groups' => ['user:write']],
+            security: "is_granted('ROLE_ADMIN')"
+        )
     ],
     normalizationContext: ['groups' => ['user:read']]
 )]
@@ -64,6 +69,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function __construct()
     {
         $this->tags = new ArrayCollection();
+        $this->password = 'someuselessrandomstring';
     }
 
     public function addTag(Tag $tag): self

@@ -114,6 +114,17 @@ Authorization: Bearer {{token}}
 GET {{apiUrl}}/users/1
 Authorization: Bearer {{token}}
 
+### Ajouter un utilisateur
+POST {{apiUrl}}/users
+Content-Type: application/ld+json
+Accept: application/ld+json
+Authorization: Bearer {{token}}
+
+{
+    "username": "newuser"
+}
+
+
 ### Lister toutes les dépenses (filtrage automatique par utilisateur connecté)
 GET {{apiUrl}}/depenses
 Authorization: Bearer {{token}}

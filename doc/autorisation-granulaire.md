@@ -1,5 +1,7 @@
 # Implémentation de l'Autorisation Granulaire - Let-me-count API
 
+> NE PAS TENIR COMPTE DE CE FICHIER POUR LE MOMENT
+
 **Priorité :** CRITIQUE  
 **Statut :** À implémenter  
 **Impacte :** Sécurité des données utilisateurs  
