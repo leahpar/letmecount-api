@@ -124,6 +124,20 @@ Authorization: Bearer {{token}}
     "username": "newuser"
 }
 
+### Mise à jour d'un utilisateur
+PATCH {{apiUrl}}/users
+Content-Type: application/merge-patch+json
+
+{
+    "token": "test",
+    "username": "Julie",
+    "password": "test"
+}
+
+### Récupération d'un token user
+GET {{apiUrl}}/users/3/token
+Authorization: Bearer {{token}}
+Accept: application/ld+json
 
 ### Lister toutes les dépenses (filtrage automatique par utilisateur connecté)
 GET {{apiUrl}}/depenses
