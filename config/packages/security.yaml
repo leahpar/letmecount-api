@@ -51,6 +51,7 @@ security:
         - { path: ^/docs, roles: PUBLIC_ACCESS } # Allows accessing the Swagger UI docs
 #        - { path: ^/contexts, roles: PUBLIC_ACCESS } # Allows accessing the Swagger UI contexts
         - { path: ^/auth, roles: PUBLIC_ACCESS }
+        - { path: ^/users, roles: PUBLIC_ACCESS, method: PATCH } # PATCH public pour mettre à jour le mdp (token)
         - { path: ^/_profiler, roles: PUBLIC_ACCESS, ip: '%env(TRUSTED_IPS)%' }
         - { path: ^/_profiler, roles: ROLE_PROFILER }
         - { path: ^/, roles: IS_AUTHENTICATED_FULLY }

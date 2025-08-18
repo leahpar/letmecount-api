@@ -139,4 +139,51 @@ class UserApiTest extends AuthenticatedApiTestCase
 
         $this->assertResponseStatusCodeSame(409);
     }
+
+    public function testGenerateTokenWithoutAdminRole(): void
+    {
+        $this->call('GET', '/users/' . $this->user->id . '/token');
+        $this->assertResponseStatusCodeSame(403);
+    }
+
+    public function testGenerateTokenWithAdminRole(): void
+    {
+        // Donner le rôle ADMIN à l'utilisateur de test
+        $this->user->setRoles(['ROLE_ADMIN']);
+        $this->em->flush();
+
+        $this->call('GET', '/users/' . $this->user->id . '/token');
+        $this->assertResponseIsSuccessful();
+
+        $content = $this->client->getResponse()->getContent();
+        $data = json_decode($content, true);
+        
+        // API Platform retourne une collection avec les données dans 'member'
+        $this->assertArrayHasKey('member', $data);
+        $this->assertCount(4, $data['member']);
+        
+        $token = $data['member'][0];
+        $userId = $data['member'][1];
+        $username = $data['member'][2];
+        $message = $data['member'][3];
+        
+        $this->assertNotEmpty($token);
+        $this->assertEquals($this->user->id, $userId);
+        $this->assertEquals($this->user->getUsername(), $username);
+        $this->assertEquals('Token généré avec succès', $message);
+
+        // Vérifier que le token a été sauvé en base
+        $updatedUser = $this->em->getRepository(User::class)->find($this->user->id);
+        $this->assertEquals($token, $updatedUser->getToken());
+    }
+
+    public function testGenerateTokenForNonExistentUser(): void
+    {
+        // Donner le rôle ADMIN à l'utilisateur de test
+        $this->user->setRoles(['ROLE_ADMIN']);
+        $this->em->flush();
+
+        $this->call('GET', '/users/999/token');
+        $this->assertResponseStatusCodeSame(404);
+    }
 }
