@@ -2,6 +2,8 @@
 
 namespace App\Tests\Api;
 
+use App\Entity\User;
+
 class UserApiTest extends AuthenticatedApiTestCase
 {
     public function testGetUsersCollection(): void
@@ -47,8 +49,7 @@ class UserApiTest extends AuthenticatedApiTestCase
     {
         $userData = [
             'username' => 'newuser',
-            'password' => 'password123',
-            'roles' => ['ROLE_USER']
+            'password' => 'password123'
         ];
 
         $this->call('POST', '/users', [], $userData);
@@ -63,8 +64,7 @@ class UserApiTest extends AuthenticatedApiTestCase
 
         $userData = [
             'username' => 'newadminuser',
-            'password' => 'password123',
-            'roles' => ['ROLE_USER']
+            'password' => 'password123'
         ];
 
         $this->call('POST', '/users', [], $userData);
@@ -73,5 +73,70 @@ class UserApiTest extends AuthenticatedApiTestCase
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertEquals('newadminuser', $data['username']);
         $this->assertArrayHasKey('id', $data);
+    }
+
+    public function testUpdateCredentialsWithValidToken(): void
+    {
+        $token = 'test-token-123';
+        $this->user->setToken($token);
+        $this->em->flush();
+
+        $updateData = [
+            'token' => $token,
+            'username' => 'newusername',
+            'password' => 'newpassword123'
+        ];
+
+        $this->call('PATCH', '/users', [], $updateData);
+
+        $this->assertResponseIsSuccessful();
+
+        $content = $this->client->getResponse()->getContent();
+        $data = json_decode($content, true);
+
+        // Vérifier que les données ont été mises à jour en base
+        $updatedUser = $this->em->getRepository(User::class)->find($this->user->id);
+        $this->assertEquals('newusername', $updatedUser->getUsername());
+    }
+
+    public function testUpdateCredentialsWithInvalidToken(): void
+    {
+        $updateData = [
+            'token' => 'invalid-token',
+            'username' => 'newusername'
+        ];
+
+        $this->call('PATCH', '/users', [], $updateData);
+
+        $this->assertResponseStatusCodeSame(401);
+    }
+
+    public function testUpdateCredentialsWithoutToken(): void
+    {
+        $updateData = [
+            'username' => 'newusername'
+        ];
+
+        $this->call('PATCH', '/users', [], $updateData);
+
+        $this->assertResponseStatusCodeSame(422);
+    }
+
+    public function testUpdateCredentialsWithExistingUsername(): void
+    {
+        $existingUser = $this->createUser('existinguser');
+
+        $token = 'test-token-123';
+        $this->user->setToken($token);
+        $this->em->flush();
+
+        $updateData = [
+            'token' => $token,
+            'username' => 'existinguser'
+        ];
+
+        $this->call('PATCH', '/users', [], $updateData);
+
+        $this->assertResponseStatusCodeSame(409);
     }
 }

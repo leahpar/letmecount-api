@@ -24,6 +24,9 @@ trait UserSecurityTrait
     #[ORM\Column]
     private ?string $password = null;
 
+    #[ORM\Column(nullable: true)]
+    private ?string $token = null;
+
     public function getUsername(): ?string
     {
         return $this->username;
@@ -80,6 +83,18 @@ trait UserSecurityTrait
     public function setPassword(string $password): static
     {
         $this->password = $password;
+
+        return $this;
+    }
+
+    public function getToken(): ?string
+    {
+        return $this->token;
+    }
+
+    public function setToken(?string $token): static
+    {
+        $this->token = $token;
 
         return $this;
     }

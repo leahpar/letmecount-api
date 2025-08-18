@@ -6,9 +6,11 @@ use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
 use App\Provider\CurrentUserProvider;
+use App\State\UserCredentialsProcessor;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -29,6 +31,13 @@ use Symfony\Component\Serializer\Attribute\Groups;
         new Post(
             denormalizationContext: ['groups' => ['user:write']],
             security: "is_granted('ROLE_ADMIN')"
+        ),
+        new Patch(
+            uriTemplate: '/users',
+            denormalizationContext: ['groups' => ['user:credentials']],
+            security: 'true',
+            input: UpdateCredentialsDto::class,
+            processor: UserCredentialsProcessor::class
         )
     ],
     normalizationContext: ['groups' => ['user:read']]
