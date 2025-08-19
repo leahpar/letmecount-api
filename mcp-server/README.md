@@ -1,67 +1,65 @@
-# Serveur MCP pour l'API Let-me-count
+# Serveur HTTP MCP pour l'API Let-me-count
 
-Ce serveur MCP (Model Context Protocol) permet d'interagir avec l'API Let-me-count depuis Claude Desktop ou d'autres clients MCP.
+Ce serveur HTTP expose une API compatible MCP (Model Context Protocol) pour interagir avec l'API Let-me-count. Il utilise FastAPI et FastMCP.
 
 ## Installation
 
-1. Installer les dépendances :
-```bash
-python3 -m venv mcp-server
-cd mcp-server
-source bin/activate
-pip install -r requirements-mcp.txt
-```
-
-2. Rendre le script exécutable :
-```bash
-chmod +x mcp-server.py
-```
+1.  Assurez-vous d'avoir Python 3.11+.
+2.  (Optionnel, mais recommandé) Créez et activez un environnement virtuel :
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate
+    ```
+3.  Installez les dépendances :
+    ```bash
+    pip install -r requirements-mcp.txt
+    ```
 
 ## Configuration
 
-### Variables d'environnement
+Le serveur est configuré via les variables d'environnement suivantes :
 
-- `LETMECOUNT_API_URL` : URL de base de votre API Let-me-count (par défaut : `http://localhost:8000`)
+-   `LETMECOUNT_API_URL` : L'URL de base de votre API Let-me-count (par défaut : `http://localhost:8888`).
+-   `LETMECOUNT_MCP_PORT` : Le port sur lequel le serveur HTTP écoutera (par défaut : `8000`).
 
-### Configuration dans Claude Desktop
+## Lancement du serveur
 
-Ajoutez cette configuration dans votre fichier `claude_desktop_config.json` :
-
-```json
-{
-    "mcpServers": {
-        "letmecount-api": {
-            "command": "/home/raphael/projets/letmecount/api/mcp-server/bin/python",
-            "args": ["/home/raphael/projets/letmecount/api/mcp-server/mcp-server.py"],
-            "env": {
-                "LETMECOUNT_API_URL": "http://localhost:8888"
-            }
-        }
-    }
-}
-```
+Pour démarrer le serveur, exécutez la commande :
 
 ```bash
-claude mcp add-json letmecount '{
-"command": "/home/raphael/projets/letmecount/api/mcp-server/bin/python",
-"args": ["/home/raphael/projets/letmecount/api/mcp-server/mcp-server.py"],
-"env": {
-"LETMECOUNT_API_URL": "http://localhost:8888"
-}}'
+python http_server.py
 ```
 
+Le serveur sera alors accessible à l'adresse `http://localhost:8000` (ou le port que vous avez configuré).
+
+## Point d'accès de l'API
+
+L'API MCP est montée sur le chemin `/api`. Le point d'accès principal pour les clients MCP est donc `http://localhost:8000/api/mcp`.
 
 ## Utilisation
 
+### 0. Installation
+
+**Claude code**
+
+https://docs.anthropic.com/en/docs/claude-code/mcp#option-3%3A-add-a-remote-http-server
+
+```bash
+claude mcp add \
+  --scope user \
+  --transport http \
+  let-me-count \
+  https://letmecountapi.lasoireefille.fr/
+```
+
+
 ### 1. Authentification
 
-Avant d'utiliser les autres outils, vous devez vous authentifier :
-
-```
-Utilisez l'outil auth_login avec votre username et password
-```
+Avant d'utiliser les autres outils, vous devez vous authentifier en utilisant l'outil `auth_login` avec votre nom d'utilisateur et votre mot de passe. Le token JWT sera ensuite automatiquement utilisé pour les appels suivants.
 
 ### 2. Outils disponibles
+
+Le serveur expose les mêmes outils que la version précédente pour interagir avec l'API Let-me-count.
 
 #### Dépenses
 - `depenses_list` : Lister les dépenses avec filtres optionnels
@@ -81,60 +79,7 @@ Utilisez l'outil auth_login avec votre username et password
 - `users_list` : Lister les utilisateurs
 - `users_get` : Récupérer un utilisateur par ID
 - `users_me` : Récupérer ses propres informations
-
-### 3. Exemples d'utilisation
-
-#### Se connecter
-```
-Connecte-toi à l'API avec le username "john" et le password "secret"
-```
-
-#### Créer une dépense
-```
-Crée une nouvelle dépense :
-- Titre: "Restaurant"
-- Montant: 45.50
-- Date: aujourd'hui
-- Mode de partage: "parts"
-- Payé par l'utilisateur avec l'ID 1
-- Détails: utilisateur 1 (2 parts, 30.33€), utilisateur 2 (1 part, 15.17€)
-```
-
-#### Lister les dépenses avec filtre
-```
-Liste les dépenses filtrées par le tag "restaurant"
-```
-
-## Structure des données
-
-### Dépense
-- `titre` : Titre de la dépense (chaîne, max 255 caractères)
-- `montant` : Montant total (nombre, >= 0)
-- `date` : Date au format ISO 8601
-- `partage` : Mode de partage ("parts" ou "montants")
-- `payePar` : IRI de l'utilisateur qui a payé
-- `tag` : IRI du tag (optionnel)
-- `details` : Tableau des détails de répartition
-
-### Détail de dépense
-- `user` : IRI de l'utilisateur
-- `parts` : Nombre de parts (entier >= 0)
-- `montant` : Montant en euros (nombre)
-
-### Tag
-- `libelle` : Nom du tag (chaîne, max 255 caractères)
-- `users` : Tableau d'IRIs des utilisateurs associés
-
-## Gestion des erreurs
-
-Le serveur gère automatiquement :
-- Les erreurs d'authentification
-- Les erreurs HTTP (400, 404, 422, etc.)
-- Les erreurs de validation des données
-- Les erreurs de connexion réseau
-
-## Sécurité
-
-- L'authentification se fait via JWT Bearer token
-- Le token est stocké en mémoire pendant la session
-- Toutes les requêtes API utilisent HTTPS en production
+- `users_create`: Créer un nouvel utilisateur
+- `users_update_credentials`: Mettre à jour les informations d'un utilisateur
+- `users_generate_token`: Générer un token pour un utilisateur
+- 

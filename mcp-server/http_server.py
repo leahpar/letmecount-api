@@ -15,12 +15,7 @@ BASE_URL = os.getenv("LETMECOUNT_API_URL", "http://localhost:8888")
 JWT_TOKEN: Optional[str] = None
 
 # --- FastMCP Server Initialization ---
-mcp = FastMCP(
-    "letmecount-api",
-    title="Let Me Count API",
-    description="An API for managing expenses between friends.",
-    version="2.0.0",
-)
+mcp = FastMCP("letmecount-api")
 
 # --- API Request Helper ---
 async def get_headers() -> Dict[str, str]:
@@ -262,7 +257,12 @@ async def users_generate_token(input: UsersGenerateTokenInput) -> Dict[str, Any]
 
 # --- FastAPI App ---
 mcp_app = mcp.http_app(path="/mcp")
-app = FastAPI(title="LetMeCount MCP Server", lifespan=mcp_app.lifespan)
+app = FastAPI(
+    title="Let Me Count API",
+    description="An API for managing expenses between friends.",
+    version="2.0.0",
+    lifespan=mcp_app.lifespan
+)
 app.mount("/api", mcp_app)
 
 if __name__ == "__main__":
