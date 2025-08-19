@@ -1,7 +1,7 @@
 
-#@apiUrl = http://localhost:8888
-@apiUrl = https://letmecountapi.lasoireefille.fr
-@cors = https://letmecount.lasoireefille.fr
+@apiUrl = http://localhost:8888
+#@apiUrl = https://letmecountapi.lasoireefille.fr
+#@cors = https://letmecount.lasoireefille.fr
 
 ### Login
 POST {{apiUrl}}/auth
@@ -71,8 +71,8 @@ Authorization: Bearer {{token}}
 }
 
 ### Modifier une dépense
-PUT {{apiUrl}}/depenses/1
-Content-Type: application/ld+json
+PATCH {{apiUrl}}/depenses/147
+Content-Type: application/merge-patch+json
 Authorization: Bearer {{token}}
 
 {
