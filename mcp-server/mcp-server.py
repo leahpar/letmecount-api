@@ -223,6 +223,49 @@ class LetMeCountMCPServer:
                         "type": "object",
                         "properties": {}
                     }
+                ),
+
+                # Nouveaux endpoints utilisateurs
+                types.Tool(
+                    name="users_create",
+                    description="Créer un nouvel utilisateur (réservé aux administrateurs)",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "username": {"type": "string", "description": "Nom d'utilisateur"},
+                            "email": {"type": "string", "description": "Adresse email"},
+                            "password": {"type": "string", "description": "Mot de passe"},
+                            "roles": {"type": "array", "items": {"type": "string"}, "description": "Rôles de l'utilisateur (optionnel)"}
+                        },
+                        "required": ["username", "email", "password"]
+                    }
+                ),
+
+                types.Tool(
+                    name="users_update_credentials",
+                    description="Mettre à jour les credentials d'un utilisateur via token",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "token": {"type": "string", "description": "Token de sécurité pour authentification"},
+                            "username": {"type": "string", "description": "Nouveau nom d'utilisateur (optionnel)"},
+                            "email": {"type": "string", "description": "Nouvelle adresse email (optionnel)"},
+                            "password": {"type": "string", "description": "Nouveau mot de passe (optionnel)"}
+                        },
+                        "required": ["token"]
+                    }
+                ),
+
+                types.Tool(
+                    name="users_generate_token",
+                    description="Générer un token pour un utilisateur (réservé aux administrateurs)",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "id": {"type": "string", "description": "ID de l'utilisateur"}
+                        },
+                        "required": ["id"]
+                    }
                 )
             ]
 
@@ -258,6 +301,12 @@ class LetMeCountMCPServer:
                 return await self._handle_users_get(arguments)
             elif name == "users_me":
                 return await self._handle_users_me(arguments)
+            elif name == "users_create":
+                return await self._handle_users_create(arguments)
+            elif name == "users_update_credentials":
+                return await self._handle_users_update_credentials(arguments)
+            elif name == "users_generate_token":
+                return await self._handle_users_generate_token(arguments)
             else:
                 raise ValueError(f"Outil inconnu: {name}")
 
@@ -513,6 +562,56 @@ class LetMeCountMCPServer:
             try:
                 response = await client.get(
                     f"{self.base_url}/users/me",
+                    headers=await self._get_headers()
+                )
+                response.raise_for_status()
+                data = response.json()
+                return [types.TextContent(type="text", text=json.dumps(data, indent=2, ensure_ascii=False))]
+            except httpx.HTTPStatusError as e:
+                return [types.TextContent(type="text", text=f"Erreur HTTP: {e.response.status_code} - {e.response.text}")]
+            except Exception as e:
+                return [types.TextContent(type="text", text=f"Erreur: {str(e)}")]
+
+    async def _handle_users_create(self, arguments: Dict[str, Any]) -> List[types.TextContent]:
+        """Création d'un utilisateur (réservé aux administrateurs)"""
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(
+                    f"{self.base_url}/users",
+                    json=arguments,
+                    headers=await self._get_headers()
+                )
+                response.raise_for_status()
+                data = response.json()
+                return [types.TextContent(type="text", text=json.dumps(data, indent=2, ensure_ascii=False))]
+            except httpx.HTTPStatusError as e:
+                return [types.TextContent(type="text", text=f"Erreur HTTP: {e.response.status_code} - {e.response.text}")]
+            except Exception as e:
+                return [types.TextContent(type="text", text=f"Erreur: {str(e)}")]
+
+    async def _handle_users_update_credentials(self, arguments: Dict[str, Any]) -> List[types.TextContent]:
+        """Mise à jour des credentials via token"""
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.patch(
+                    f"{self.base_url}/users",
+                    json=arguments,
+                    headers={"Content-Type": "application/merge-patch+json"}
+                )
+                response.raise_for_status()
+                data = response.json()
+                return [types.TextContent(type="text", text=json.dumps(data, indent=2, ensure_ascii=False))]
+            except httpx.HTTPStatusError as e:
+                return [types.TextContent(type="text", text=f"Erreur HTTP: {e.response.status_code} - {e.response.text}")]
+            except Exception as e:
+                return [types.TextContent(type="text", text=f"Erreur: {str(e)}")]
+
+    async def _handle_users_generate_token(self, arguments: Dict[str, Any]) -> List[types.TextContent]:
+        """Génération d'un token pour un utilisateur (réservé aux administrateurs)"""
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.get(
+                    f"{self.base_url}/users/{arguments['id']}/token",
                     headers=await self._get_headers()
                 )
                 response.raise_for_status()

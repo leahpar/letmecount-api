@@ -1,5 +1,7 @@
 
-@apiUrl = http://localhost:8888
+#@apiUrl = http://localhost:8888
+@apiUrl = https://letmecountapi.lasoireefille.fr
+@cors = https://letmecount.lasoireefille.fr
 
 ### Login
 POST {{apiUrl}}/auth
