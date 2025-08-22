@@ -59,7 +59,12 @@ class CurrentUserDepenseExtension implements QueryCollectionExtensionInterface, 
             ->andWhere('d1.user = :current_user');
 
         $queryBuilder
-            ->andWhere($queryBuilder->expr()->exists($subQueryBuilder->getDQL()))
+            ->andWhere(
+                $queryBuilder->expr()->orX(
+                    $queryBuilder->expr()->exists($subQueryBuilder->getDQL()),
+                    $queryBuilder->expr()->eq(sprintf('%s.payePar', $rootAlias), ':current_user')
+                )
+            )
             ->setParameter('current_user', $user);
     }
 }
