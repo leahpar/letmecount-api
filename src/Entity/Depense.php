@@ -91,8 +91,9 @@ class Depense
     public string $partage;
 
     #[ORM\ManyToOne(targetEntity: Tag::class, inversedBy: 'depenses')]
-    #[ORM\JoinColumn(nullable: true)]
+    #[ORM\JoinColumn(nullable: false)]
     #[Groups(['depense:read', 'depense:write'])]
+    #[Assert\NotBlank]
     public ?Tag $tag = null;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
