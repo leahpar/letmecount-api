@@ -113,7 +113,7 @@ GET {{apiUrl}}/users/me
 Authorization: Bearer {{token}}
 
 ### Récupérer un utilisateur spécifique
-GET {{apiUrl}}/users/1
+GET {{apiUrl}}/users/2
 Authorization: Bearer {{token}}
 
 ### Ajouter un utilisateur
@@ -127,13 +127,24 @@ Authorization: Bearer {{token}}
 }
 
 ### Mise à jour d'un utilisateur
-PATCH {{apiUrl}}/users
+PATCH {{apiUrl}}/users/3
 Content-Type: application/merge-patch+json
+Accept: application/ld+json
+Authorization: Bearer {{token}}
 
 {
-    "token": "test",
     "username": "Julie",
     "password": "test"
+}
+
+### Mise à jour d'un utilisateur (compte joint)
+PATCH {{apiUrl}}/users/4
+Content-Type: application/merge-patch+json
+Accept: application/ld+json
+Authorization: Bearer {{token}}
+
+{
+    "conjoint": "/users/2"
 }
 
 ### Récupération d'un token user

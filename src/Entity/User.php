@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
@@ -21,6 +22,7 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Attribute\Ignore;
 use Symfony\Component\Serializer\Attribute\Groups;
+use Symfony\Component\Serializer\Attribute\MaxDepth;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_USERNAME', fields: ['username'])]
@@ -31,6 +33,12 @@ use Symfony\Component\Serializer\Attribute\Groups;
         new GetCollection(),
         new Post(
             denormalizationContext: ['groups' => ['user:write']],
+            security: "is_granted('ROLE_ADMIN')"
+        ),
+        new Patch(
+            uriTemplate: '/users/{id}',
+            requirements: ['id' => '\d+'],
+            normalizationContext: ['groups' => ['user:write']],
             security: "is_granted('ROLE_ADMIN')"
         ),
         new Patch(
@@ -48,7 +56,7 @@ use Symfony\Component\Serializer\Attribute\Groups;
             provider: GenerateTokenProvider::class
         )
     ],
-    normalizationContext: ['groups' => ['user:read']]
+    normalizationContext: ['groups' => ['user:read']],
 )]
 #[ApiFilter(SearchFilter::class, properties: ['username' => 'partial'])]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
@@ -83,6 +91,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['user:read'])]
     public Collection $tags;
 
+    #[ORM\OneToOne(targetEntity: self::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    #[Groups(['user:read'])]
+    #[ApiProperty(readableLink: false)]
+    public ?User $conjoint = null;
+
     public function __construct()
     {
         $this->tags = new ArrayCollection();
@@ -105,19 +119,28 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     /**
      * Retourne le solde de l'utilisateur.
-     * C'est-à-dire la somme des montants de ses détails.
+     * Si l'utilisateur a un conjoint, le solde inclut celui du conjoint.
+     * C'est-à-dire la somme des montants de ses détails et de ceux de son conjoint.
      */
     #[JMS\VirtualProperty('solde')]
     #[Groups(['user:read'])]
-    public function getSolde(): float
+    public function getSolde(bool $withConjoint = true): float
     {
         $solde = 0.0;
+
+        // Calcul du solde de l'utilisateur courant
         foreach ($this->depenses as $depense) {
             $solde += $depense->montant;
         }
         foreach ($this->details as $detail) {
             $solde -= $detail->montant;
         }
+
+        // Si l'utilisateur a un conjoint, on ajoute son solde
+        if ($this->conjoint && $withConjoint) {
+            $solde += $this->conjoint->getSolde(false);
+        }
+
         return round($solde, 2);
     }
 

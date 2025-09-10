@@ -3,6 +3,8 @@
 namespace App\Tests\Api;
 
 use App\Entity\User;
+use App\Entity\Depense;
+use App\Entity\Detail;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -73,6 +75,39 @@ class AuthenticatedApiTestCase extends WebTestCase
 
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $this->client->setServerParameter('HTTP_Authorization', sprintf('Bearer %s', $data['token']));
+    }
+
+    protected function createDepense(User $payePar, float $montant, string $titre = 'Test Depense'): Depense
+    {
+        $depense = new Depense();
+        $depense->titre = $titre;
+        $depense->montant = $montant;
+        $depense->date = new \DateTime();
+        $depense->partage = 'montants';
+        $depense->payePar = $payePar;
+        
+        $this->em->persist($depense);
+        $this->em->flush();
+        
+        return $depense;
+    }
+
+    protected function createDetail(User $user, float $montant, ?Depense $depense = null): Detail
+    {
+        if (!$depense) {
+            $depense = $this->createDepense($this->user, $montant);
+        }
+        
+        $detail = new Detail();
+        $detail->user = $user;
+        $detail->montant = $montant;
+        $detail->parts = 1;
+        $detail->depense = $depense;
+        
+        $this->em->persist($detail);
+        $this->em->flush();
+        
+        return $detail;
     }
 
     protected function tearDown(): void

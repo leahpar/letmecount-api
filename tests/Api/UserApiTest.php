@@ -182,4 +182,91 @@ class UserApiTest extends AuthenticatedApiTestCase
         $this->call('GET', '/users/999/token');
         $this->assertResponseStatusCodeSame(404);
     }
+
+    public function testSetConjoint(): void
+    {
+        $conjoint = $this->createUser('conjoint');
+        
+        // Définir la relation conjoint
+        $this->user->setConjoint($conjoint);
+        $this->em->flush();
+
+        // Vérifier que la relation est bidirectionnelle
+        $this->assertEquals($conjoint, $this->user->getConjoint());
+        $this->assertEquals($this->user, $conjoint->getConjoint());
+    }
+
+    public function testSoldeWithConjoint(): void
+    {
+        $conjoint = $this->createUser('conjoint');
+        
+        // Créer des dépenses et détails pour les deux utilisateurs
+        $depense1 = $this->createDepense($this->user, 100.0);
+        $depense2 = $this->createDepense($conjoint, 50.0);
+        
+        $detail1 = $this->createDetail($this->user, 30.0);
+        $detail2 = $this->createDetail($conjoint, 20.0);
+        
+        // Sans conjoint, les soldes sont indépendants
+        $this->assertEquals(70.0, $this->user->getSolde()); // 100 - 30
+        $this->assertEquals(30.0, $conjoint->getSolde()); // 50 - 20
+        
+        // Définir la relation conjoint
+        $this->user->setConjoint($conjoint);
+        $this->em->flush();
+        
+        // Avec conjoint, les soldes sont partagés
+        $expectedSolde = 100.0 + 50.0 - 30.0 - 20.0; // 100
+        $this->assertEquals($expectedSolde, $this->user->getSolde());
+        $this->assertEquals($expectedSolde, $conjoint->getSolde());
+    }
+
+    public function testGetUserIncludesConjoint(): void
+    {
+        $conjoint = $this->createUser('conjoint');
+        $this->user->setConjoint($conjoint);
+        $this->em->flush();
+
+        $this->call('GET', '/users/' . $this->user->id);
+        $this->assertResponseIsSuccessful();
+
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertArrayHasKey('conjoint', $data);
+        $this->assertEquals($conjoint->id, $data['conjoint']['id']);
+        $this->assertEquals($conjoint->getUsername(), $data['conjoint']['username']);
+    }
+
+    public function testRemoveConjoint(): void
+    {
+        $conjoint = $this->createUser('conjoint');
+        
+        // Définir puis supprimer la relation
+        $this->user->setConjoint($conjoint);
+        $this->user->setConjoint(null);
+        $this->em->flush();
+
+        // Vérifier que la relation a été supprimée des deux côtés
+        $this->assertNull($this->user->getConjoint());
+        $this->assertNull($conjoint->getConjoint());
+    }
+
+    public function testChangeConjoint(): void
+    {
+        $conjoint1 = $this->createUser('conjoint1');
+        $conjoint2 = $this->createUser('conjoint2');
+        
+        // Définir la première relation
+        $this->user->setConjoint($conjoint1);
+        $this->assertEquals($conjoint1, $this->user->getConjoint());
+        $this->assertEquals($this->user, $conjoint1->getConjoint());
+        
+        // Changer de conjoint
+        $this->user->setConjoint($conjoint2);
+        $this->em->flush();
+        
+        // Vérifier que l'ancienne relation a été supprimée
+        $this->assertEquals($conjoint2, $this->user->getConjoint());
+        $this->assertEquals($this->user, $conjoint2->getConjoint());
+        $this->assertNull($conjoint1->getConjoint());
+    }
 }
