@@ -144,4 +144,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return round($solde, 2);
     }
 
+    #[JMS\VirtualProperty('soldeIndividuel')]
+    #[Groups(['user:read'])]
+    public function getSoldeIndividuel(): float
+    {
+        return $this->getSolde(false);
+    }
+
 }
