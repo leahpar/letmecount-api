@@ -160,13 +160,6 @@ Authorization: Bearer {{token}}
 GET {{apiUrl}}/depenses/1
 Authorization: Bearer {{token}}
 
-### === LOGS ===
-
-### Lister tous les logs
-GET {{apiUrl}}/logs?page=1&itemsPerPage=1
-Authorization: Bearer {{token}}
-
-
 ### === TAGS ===
 
 ### Créer un tag
@@ -214,3 +207,13 @@ Authorization: Bearer {{token}}
         "/users/1"
     ]
 }
+
+### === Divers ===
+
+### Lister tous les logs
+GET {{apiUrl}}/logs?page=1&itemsPerPage=1
+Authorization: Bearer {{token}}
+
+### Historique
+GET {{apiUrl}}/historique
+Authorization: Bearer {{token}}
