@@ -45,17 +45,19 @@ class Log
     #[Groups(['log:read'])]
     public ?Depense $depense = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
+    #[ORM\Column(length: 255)]
     #[Groups(['log:read'])]
-    public ?string $libelle = null;
+    public string $libelle;
 
-    #[ORM\Column(nullable: true)]
+    #[ORM\Column]
     #[Groups(['log:read'])]
-    public ?float $montant = null;
+    public float $montant;
 
-    public function __construct(Depense $depense)
+    public function __construct(string $action, Depense $depense, User $user)
     {
         $this->date = new \DateTime();
+        $this->action = $action;
+        $this->user = $user;
         $this->depense = $depense;
         $this->libelle = $depense->titre;
         $this->montant = $depense->montant;

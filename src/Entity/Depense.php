@@ -96,7 +96,7 @@ class Depense
     #[Assert\NotBlank]
     public ?Tag $tag = null;
 
-    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'depenses')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     #[Groups(['depense:read', 'depense:write'])]
     #[Assert\NotBlank]

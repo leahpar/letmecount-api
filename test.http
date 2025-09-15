@@ -50,7 +50,7 @@ Accept: application/ld+json
 Authorization: Bearer {{token}}
 
 {
-    "date": "2024-01-16T00:00:00+00:00",
+    "date": "2025-09-15T00:00:00+00:00",
     "montant": 30.00,
     "titre": "Restaurant",
     "tag": "/tags/1",
@@ -153,12 +153,19 @@ Authorization: Bearer {{token}}
 Accept: application/ld+json
 
 ### Lister toutes les dépenses (filtrage automatique par utilisateur connecté)
-GET {{apiUrl}}/depenses
+GET {{apiUrl}}/depenses?page=1&itemsPerPage=1
 Authorization: Bearer {{token}}
 
 ### Récupérer une dépense spécifique
 GET {{apiUrl}}/depenses/1
 Authorization: Bearer {{token}}
+
+### === LOGS ===
+
+### Lister tous les logs
+GET {{apiUrl}}/logs?page=1&itemsPerPage=1
+Authorization: Bearer {{token}}
+
 
 ### === TAGS ===
 
