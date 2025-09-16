@@ -31,12 +31,12 @@ class DepenseLogListener
 
     public function postUpdate(Depense $depense, PostUpdateEventArgs $args): void
     {
-        $this->logAction('DELETE', $depense);
+        $this->logAction('UPDATE', $depense);
     }
 
     public function preRemove(Depense $depense, PreRemoveEventArgs $args): void
     {
-        $this->logAction('UPDATE', $depense);
+        $this->logAction('DELETE', $depense);
     }
 
     private function logAction(string $action, Depense $depense): void
