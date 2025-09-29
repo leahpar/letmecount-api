@@ -35,10 +35,10 @@ security:
             # JWT
             entry_point: jwt
             jwt: ~
-            json_login:
-                check_path: api_login_check
-                success_handler: lexik_jwt_authentication.handler.authentication_success
-                failure_handler: lexik_jwt_authentication.handler.authentication_failure
+#            json_login:
+#                check_path: api_login_check
+#                success_handler: lexik_jwt_authentication.handler.authentication_success
+#                failure_handler: lexik_jwt_authentication.handler.authentication_failure
             refresh_jwt:
                 check_path: api_refresh_token
             logout:

@@ -12,8 +12,8 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 class GenerateTokenProvider implements ProviderInterface
 {
     public function __construct(
-        private UserRepository $userRepository,
-        private EntityManagerInterface $em
+        private readonly UserRepository $userRepository,
+        private readonly EntityManagerInterface $em,
     ) {
     }
 

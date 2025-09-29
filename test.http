@@ -1,9 +1,10 @@
 
 @apiUrl = http://localhost:8888
+@tokenLink = 27878189112429a998486df4773b61d006b7a65407696e1a55cc85f183cdc487
 #@apiUrl = https://letmecountapi.lasoireefille.fr
 #@cors = https://letmecount.lasoireefille.fr
 
-### Login
+### Login (login/pwd)
 POST {{apiUrl}}/auth
 Content-Type: application/ld+json
 Accept: application/ld+json
@@ -16,6 +17,18 @@ Accept: application/ld+json
     client.global.set("token", `${response.body.token}`)
     client.global.set("refresh_token", `${response.body.refresh_token}`)
 %}
+
+### Login (token link)
+GET {{apiUrl}}/auth/{{tokenLink}}
+Content-Type: application/ld+json
+Accept: application/ld+json
+
+> {%
+    client.global.set("token", `${response.body.token}`)
+    client.global.set("refresh_token", `${response.body.refresh_token}`)
+%}
+
+
 
 ### Refresh Token
 POST {{apiUrl}}/auth/refresh
