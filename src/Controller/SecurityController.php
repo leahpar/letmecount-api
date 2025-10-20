@@ -26,6 +26,10 @@ class SecurityController extends AbstractController
         }
 
         $JWTManager->create($user);
+
+        $user->setToken(null); // Invalidate the token after use
+        $em->flush();
+
         return $authenticationSuccessHandler->handleAuthenticationSuccess($user);
     }
 }
