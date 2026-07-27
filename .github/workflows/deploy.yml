@@ -20,8 +20,23 @@ jobs:
         port: ${{ secrets.DEPLOY_PORT }}
         envs: APP_ENV
         script: |
+          # Toute erreur interrompt le déploiement : on ne migre pas sans sauvegarde
+          set -e
           cd ${{ secrets.DEPLOY_PATH }}
           git pull origin master
           composer install --no-dev --optimize-autoloader
           php bin/console cache:clear --env=prod
-          php bin/console doctrine:schema:update --force
+
+          # Sauvegarde de la base avant toute modification de schéma.
+          # Les identifiants sont lus depuis DATABASE_URL et passés par fichier
+          # temporaire, pour ne pas les exposer dans la liste des processus.
+          mkdir -p var
+          php -r 'require "vendor/autoload.php"; (new Symfony\Component\Dotenv\Dotenv())->bootEnv(__DIR__."/.env"); $p = parse_url((string) $_SERVER["DATABASE_URL"]); printf("[client]\nhost=%s\nport=%d\nuser=%s\npassword=\"%s\"\n", $p["host"] ?? "127.0.0.1", $p["port"] ?? 3306, urldecode($p["user"] ?? ""), urldecode($p["pass"] ?? ""));' > var/.mysqldump.cnf
+          chmod 600 var/.mysqldump.cnf
+          DB_NAME=$(php -r 'require "vendor/autoload.php"; (new Symfony\Component\Dotenv\Dotenv())->bootEnv(__DIR__."/.env"); echo ltrim(urldecode((string) parse_url((string) $_SERVER["DATABASE_URL"], PHP_URL_PATH)), "/");')
+          mysqldump --defaults-extra-file=var/.mysqldump.cnf --single-transaction --quick "$DB_NAME" > "var/db-$(date +%Y%m%d).sql"
+          rm -f var/.mysqldump.cnf
+
+          # Migrations Doctrine (et non plus schema:update, qui appliquait des
+          # modifications de schéma sans trace ni possibilité de retour arrière)
+          php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
