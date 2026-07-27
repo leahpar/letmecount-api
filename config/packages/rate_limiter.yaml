@@ -1,0 +1,7 @@
+framework:
+    rate_limiter:
+        # Limite les tentatives de connexion par code à 6 chiffres (GET /auth/{token})
+        auth_code:
+            policy: 'sliding_window'
+            limit: 3
+            interval: '10 minutes'
