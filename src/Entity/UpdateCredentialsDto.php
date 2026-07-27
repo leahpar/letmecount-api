@@ -13,7 +13,4 @@ class UpdateCredentialsDto
 
     #[Groups(['user:credentials'])]
     public ?string $username = null;
-
-    #[Groups(['user:credentials'])]
-    public ?string $password = null;
 }

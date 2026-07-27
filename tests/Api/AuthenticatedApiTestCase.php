@@ -8,7 +8,7 @@ use App\Entity\Detail;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 
 class AuthenticatedApiTestCase extends WebTestCase
 {
@@ -44,37 +44,27 @@ class AuthenticatedApiTestCase extends WebTestCase
             json_encode($content));
     }
 
-    protected function createUser(string $username, ?string $password = 'password'): User
+    protected function createUser(string $username): User
     {
-        $container = static::getContainer();
-
-        /** @var UserPasswordHasherInterface $passwordHasher */
-        $passwordHasher = $container->get(UserPasswordHasherInterface::class);
-
         $user = new User();
         $user->setUsername($username);
-        $user->setPassword($passwordHasher->hashPassword($user, $password));
         $this->em->persist($user);
         $this->em->flush();
         return $user;
     }
 
-    protected function loginUser(string $username, ?string $password = 'password'): void
+    /**
+     * Les utilisateurs n'ont plus de mot de passe : on émet directement le JWT,
+     * comme le font le passkey et le code d'accès.
+     */
+    protected function loginUser(string $username): void
     {
-        $this->client->request(
-            'POST',
-            '/auth',
-            [],
-            [],
-            ['CONTENT_TYPE' => 'application/json', 'ACCEPT' => 'application/json'],
-            json_encode([
-                'username' => $username,
-                'password' => $password,
-            ])
-        );
+        $user = $this->em->getRepository(User::class)->findOneBy(['username' => $username]);
 
-        $data = json_decode($this->client->getResponse()->getContent(), true);
-        $this->client->setServerParameter('HTTP_Authorization', sprintf('Bearer %s', $data['token']));
+        /** @var JWTTokenManagerInterface $jwtManager */
+        $jwtManager = static::getContainer()->get(JWTTokenManagerInterface::class);
+
+        $this->client->setServerParameter('HTTP_Authorization', sprintf('Bearer %s', $jwtManager->create($user)));
     }
 
     protected function createDepense(User $payePar, float $montant, string $titre = 'Test Depense'): Depense

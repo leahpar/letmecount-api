@@ -11,14 +11,12 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class UserCredentialsProcessor implements ProcessorInterface
 {
     public function __construct(
         private UserRepository $userRepository,
-        private EntityManagerInterface $em,
-        private UserPasswordHasherInterface $passwordHasher
+        private EntityManagerInterface $em
     ) {
     }
 
@@ -44,11 +42,6 @@ class UserCredentialsProcessor implements ProcessorInterface
             }
 
             $user->setUsername($data->username);
-        }
-
-        if ($data->password !== null) {
-            $hashedPassword = $this->passwordHasher->hashPassword($user, $data->password);
-            $user->setPassword($hashedPassword);
         }
 
         $user->setToken(null); // Invalidate the token after use

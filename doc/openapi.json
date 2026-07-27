@@ -658,61 +658,418 @@
                 "deprecated": false
             }
         },
-        "/auth": {
-            "post": {
-                "operationId": "login_check_post",
+        "/passkeys": {
+            "get": {
+                "operationId": "api_passkeys_get_collection",
                 "tags": [
-                    "Login Check"
+                    "Passkey"
                 ],
                 "responses": {
                     "200": {
-                        "description": "User token created",
+                        "description": "Passkey collection",
                         "content": {
-                            "application/json": {
+                            "application/ld+json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "token": {
-                                            "readOnly": true,
-                                            "type": "string",
-                                            "nullable": false
+                                        "member": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Passkey.jsonld-passkey.read"
+                                            }
+                                        },
+                                        "totalItems": {
+                                            "type": "integer",
+                                            "minimum": 0
+                                        },
+                                        "view": {
+                                            "type": "object",
+                                            "properties": {
+                                                "@id": {
+                                                    "type": "string",
+                                                    "format": "iri-reference"
+                                                },
+                                                "@type": {
+                                                    "type": "string"
+                                                },
+                                                "first": {
+                                                    "type": "string",
+                                                    "format": "iri-reference"
+                                                },
+                                                "last": {
+                                                    "type": "string",
+                                                    "format": "iri-reference"
+                                                },
+                                                "previous": {
+                                                    "type": "string",
+                                                    "format": "iri-reference"
+                                                },
+                                                "next": {
+                                                    "type": "string",
+                                                    "format": "iri-reference"
+                                                }
+                                            },
+                                            "example": {
+                                                "@id": "string",
+                                                "type": "string",
+                                                "first": "string",
+                                                "last": "string",
+                                                "previous": "string",
+                                                "next": "string"
+                                            }
+                                        },
+                                        "search": {
+                                            "type": "object",
+                                            "properties": {
+                                                "@type": {
+                                                    "type": "string"
+                                                },
+                                                "template": {
+                                                    "type": "string"
+                                                },
+                                                "variableRepresentation": {
+                                                    "type": "string"
+                                                },
+                                                "mapping": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "@type": {
+                                                                "type": "string"
+                                                            },
+                                                            "variable": {
+                                                                "type": "string"
+                                                            },
+                                                            "property": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "required": {
+                                                                "type": "boolean"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
                                         }
                                     },
                                     "required": [
-                                        "token"
+                                        "member"
                                     ]
                                 }
                             }
                         }
                     }
                 },
-                "summary": "Creates a user token.",
-                "description": "Creates a user token.",
+                "summary": "Retrieves the collection of Passkey resources.",
+                "description": "Retrieves the collection of Passkey resources.",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "The collection page number",
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": true,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        },
+                        "style": "form",
+                        "explode": false,
+                        "allowReserved": false
+                    }
+                ],
+                "deprecated": false
+            }
+        },
+        "/passkeys/{id}": {
+            "get": {
+                "operationId": "api_passkeys_id_get",
+                "tags": [
+                    "Passkey"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Passkey resource",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Passkey.jsonld-passkey.read"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error.jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "links": {}
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error.jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "links": {}
+                    }
+                },
+                "summary": "Retrieves a Passkey resource.",
+                "description": "Retrieves a Passkey resource.",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Passkey identifier",
+                        "required": true,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "style": "simple",
+                        "explode": false,
+                        "allowReserved": false
+                    }
+                ],
+                "deprecated": false
+            },
+            "delete": {
+                "operationId": "api_passkeys_id_delete",
+                "tags": [
+                    "Passkey"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Passkey resource deleted"
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error.jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "links": {}
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error.jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "links": {}
+                    }
+                },
+                "summary": "Removes the Passkey resource.",
+                "description": "Removes the Passkey resource.",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Passkey identifier",
+                        "required": true,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "style": "simple",
+                        "explode": false,
+                        "allowReserved": false
+                    }
+                ],
+                "deprecated": false
+            },
+            "patch": {
+                "operationId": "api_passkeys_id_patch",
+                "tags": [
+                    "Passkey"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Passkey resource updated",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Passkey.jsonld-passkey.read"
+                                }
+                            }
+                        },
+                        "links": {}
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error.jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "links": {}
+                    },
+                    "422": {
+                        "description": "An error occurred",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConstraintViolation.jsonld-jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConstraintViolation-json"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConstraintViolation-json"
+                                }
+                            }
+                        },
+                        "links": {}
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error.jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "links": {}
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error.jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "links": {}
+                    }
+                },
+                "summary": "Updates the Passkey resource.",
+                "description": "Updates the Passkey resource.",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Passkey identifier",
+                        "required": true,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "style": "simple",
+                        "explode": false,
+                        "allowReserved": false
+                    }
+                ],
                 "requestBody": {
-                    "description": "The login data",
+                    "description": "The updated Passkey resource",
                     "content": {
-                        "application/json": {
+                        "application/merge-patch+json": {
                             "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "username": {
-                                        "type": "string",
-                                        "nullable": false
-                                    },
-                                    "password": {
-                                        "type": "string",
-                                        "nullable": false
-                                    }
-                                },
-                                "required": [
-                                    "username",
-                                    "password"
-                                ]
+                                "$ref": "#/components/schemas/Passkey-passkey.write"
                             }
                         }
                     },
                     "required": true
-                }
+                },
+                "deprecated": false
             }
         },
         "/tags": {
@@ -2614,6 +2971,82 @@
                     }
                 }
             },
+            "Passkey-passkey.write": {
+                "type": "object",
+                "description": "Un passkey enregistr\u00e9 pour un utilisateur.\n\nLes champs de la c\u00e9r\u00e9monie WebAuthn (cl\u00e9 publique, compteur, aaguid...) sont\nmapp\u00e9s par le bundle, qui d\u00e9clare CredentialRecord en mapped-superclass\n(voir Resources/config/doctrine-mapping/CredentialRecord.orm.xml).\nNe rien y red\u00e9clarer ici : Doctrine refuserait les colonnes en double.",
+                "deprecated": false,
+                "properties": {
+                    "name": {
+                        "description": "Libell\u00e9 affich\u00e9 dans \u00ab Mes appareils \u00bb.",
+                        "default": "Appareil",
+                        "example": "Appareil",
+                        "type": "string"
+                    }
+                }
+            },
+            "Passkey.jsonld-passkey.read": {
+                "type": "object",
+                "description": "Un passkey enregistr\u00e9 pour un utilisateur.\n\nLes champs de la c\u00e9r\u00e9monie WebAuthn (cl\u00e9 publique, compteur, aaguid...) sont\nmapp\u00e9s par le bundle, qui d\u00e9clare CredentialRecord en mapped-superclass\n(voir Resources/config/doctrine-mapping/CredentialRecord.orm.xml).\nNe rien y red\u00e9clarer ici : Doctrine refuserait les colonnes en double.",
+                "deprecated": false,
+                "properties": {
+                    "@context": {
+                        "readOnly": true,
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "@vocab": {
+                                        "type": "string"
+                                    },
+                                    "hydra": {
+                                        "type": "string",
+                                        "enum": [
+                                            "http://www.w3.org/ns/hydra/core#"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "@vocab",
+                                    "hydra"
+                                ],
+                                "additionalProperties": true
+                            }
+                        ]
+                    },
+                    "@id": {
+                        "readOnly": true,
+                        "type": "string"
+                    },
+                    "@type": {
+                        "readOnly": true,
+                        "type": "string"
+                    },
+                    "id": {
+                        "readOnly": true,
+                        "type": "integer"
+                    },
+                    "name": {
+                        "description": "Libell\u00e9 affich\u00e9 dans \u00ab Mes appareils \u00bb.",
+                        "default": "Appareil",
+                        "example": "Appareil",
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "lastUsedAt": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    }
+                }
+            },
             "Tag-tag.write": {
                 "type": "object",
                 "description": "",
@@ -2823,10 +3256,6 @@
                             "type": "string"
                         }
                     },
-                    "password": {
-                        "description": "The hashed password",
-                        "type": "string"
-                    },
                     "token": {
                         "type": [
                             "string",
@@ -2859,12 +3288,6 @@
                         ]
                     },
                     "username": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "password": {
                         "type": [
                             "string",
                             "null"
@@ -3093,9 +3516,10 @@
         "headers": {},
         "securitySchemes": {
             "JWT": {
-                "type": "http",
-                "scheme": "bearer",
-                "bearerFormat": "JWT"
+                "type": "apiKey",
+                "description": "Value for the Authorization header parameter.",
+                "name": "Authorization",
+                "in": "header"
             }
         }
     },
@@ -3116,6 +3540,10 @@
         },
         {
             "name": "User"
+        },
+        {
+            "name": "Passkey",
+            "description": "Un passkey enregistr\u00e9 pour un utilisateur.\n\nLes champs de la c\u00e9r\u00e9monie WebAuthn (cl\u00e9 publique, compteur, aaguid...) sont\nmapp\u00e9s par le bundle, qui d\u00e9clare CredentialRecord en mapped-superclass\n(voir Resources/config/doctrine-mapping/CredentialRecord.orm.xml).\nNe rien y red\u00e9clarer ici : Doctrine refuserait les colonnes en double."
         }
     ],
     "webhooks": {}

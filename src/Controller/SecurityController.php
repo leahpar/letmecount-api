@@ -15,7 +15,7 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class SecurityController extends AbstractController
 {
-    #[Route('/auth/{token}', name: 'auth')]
+    #[Route('/auth/{token}', name: 'auth', requirements: ['token' => '\d{6}'])]
     public function auth(
         Request $request,
         EntityManagerInterface $em,

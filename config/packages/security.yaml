@@ -1,7 +1,8 @@
 security:
-    # https://symfony.com/doc/current/security.html#registering-the-user-hashing-passwords
+    # Les utilisateurs n'ont plus de mot de passe (passkey ou code d'accès).
+    # Seul le compte en mémoire qui protège le profiler en utilise encore un.
     password_hashers:
-        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+        Symfony\Component\Security\Core\User\InMemoryUser: 'auto'
     # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
     providers:
         # used to reload user from session & other features (e.g. switch_user)
@@ -35,10 +36,18 @@ security:
             # JWT
             entry_point: jwt
             jwt: ~
-#            json_login:
-#                check_path: api_login_check
-#                success_handler: lexik_jwt_authentication.handler.authentication_success
-#                failure_handler: lexik_jwt_authentication.handler.authentication_failure
+            # Connexion par passkey : renvoie le même {token, refresh_token} que /auth
+            webauthn:
+                success_handler: lexik_jwt_authentication.handler.authentication_success
+                failure_handler: lexik_jwt_authentication.handler.authentication_failure
+                authentication:
+                    routes:
+                        options_path: /auth/webauthn/login/options
+                        result_path: /auth/webauthn/login
+                # L'enrôlement passe par webauthn.controllers.creation, qui exige
+                # un utilisateur déjà authentifié (voir config/packages/webauthn.yaml)
+                registration:
+                    enabled: false
             refresh_jwt:
                 check_path: api_refresh_token
             logout:
@@ -50,20 +59,10 @@ security:
 #        - { path: ^/$, roles: PUBLIC_ACCESS } # Allows accessing the Swagger UI
         - { path: ^/docs, roles: PUBLIC_ACCESS } # Allows accessing the Swagger UI docs
 #        - { path: ^/contexts, roles: PUBLIC_ACCESS } # Allows accessing the Swagger UI contexts
+        # Enrôler un passkey suppose d'être déjà connecté : à garder AVANT la règle ^/auth
+        - { path: ^/auth/webauthn/register, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/auth, roles: PUBLIC_ACCESS }
-        - { path: ^/users, roles: PUBLIC_ACCESS, method: PATCH } # PATCH public pour mettre à jour le mdp (token)
+        - { path: ^/users, roles: PUBLIC_ACCESS, method: PATCH } # PATCH public pour choisir son username (token)
         - { path: ^/_profiler, roles: PUBLIC_ACCESS, ip: '%env(TRUSTED_IPS)%' }
         - { path: ^/_profiler, roles: ROLE_PROFILER }
         - { path: ^/, roles: IS_AUTHENTICATED_FULLY }
-when@test:
-    security:
-        password_hashers:
-            # By default, password hashers are resource intensive and take time. This is
-            # important to generate secure password hashes. In tests however, secure hashes
-            # are not important, waste resources and increase test times. The following
-            # reduces the work factor to the lowest possible values.
-            Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
-                algorithm: auto
-                cost: 4 # Lowest possible value for bcrypt
-                time_cost: 3 # Lowest possible value for argon
-                memory_cost: 10 # Lowest possible value for argon

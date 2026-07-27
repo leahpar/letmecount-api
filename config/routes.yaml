@@ -1,7 +1,3 @@
-api_login_check:
-    path: /auth
-    methods: [POST]
-
 api_refresh_token:
     path: /auth/refresh
 
@@ -13,3 +9,8 @@ controllers:
         path: ../src/Controller/
         namespace: App\Controller
     type: attribute
+
+# Routes générées par le bundle WebAuthn (recette Flex non appliquée : allow-contrib est à false)
+webauthn:
+    resource: .
+    type: webauthn

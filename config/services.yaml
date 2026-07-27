@@ -18,3 +18,9 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    # Stockage du challenge WebAuthn entre l'appel /options et l'appel /result.
+    # En cache et non en session : le firewall est stateless (JWT).
+    app.webauthn.options_storage:
+        class: Webauthn\Bundle\Security\Storage\CacheStorage
+        arguments: ['@app.webauthn.cache']
