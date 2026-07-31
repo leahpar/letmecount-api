@@ -4,8 +4,10 @@ namespace App\Repository;
 
 use App\Entity\User;
 use App\Entity\WebauthnCredential;
+use App\Service\DeviceNameResolver;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Webauthn\Bundle\Repository\CanSaveCredentialRecord;
 use Webauthn\Bundle\Repository\PublicKeyCredentialSourceRepositoryInterface;
 use Webauthn\CredentialRecord;
@@ -20,8 +22,11 @@ use Webauthn\PublicKeyCredentialUserEntity;
  */
 class WebauthnCredentialRepository extends ServiceEntityRepository implements PublicKeyCredentialSourceRepositoryInterface, CanSaveCredentialRecord
 {
-    public function __construct(ManagerRegistry $registry)
-    {
+    public function __construct(
+        ManagerRegistry $registry,
+        private readonly RequestStack $requestStack,
+        private readonly DeviceNameResolver $deviceNameResolver,
+    ) {
         parent::__construct($registry, WebauthnCredential::class);
     }
 
@@ -52,7 +57,7 @@ class WebauthnCredentialRepository extends ServiceEntityRepository implements Pu
             if (!$user) {
                 return;
             }
-            $credentialRecord = WebauthnCredential::fromRecord($credentialRecord, $user, $this->buildName($user));
+            $credentialRecord = WebauthnCredential::fromRecord($credentialRecord, $user, $this->buildName($credentialRecord));
         } else {
             $credentialRecord->lastUsedAt = new \DateTimeImmutable();
         }
@@ -62,11 +67,14 @@ class WebauthnCredentialRepository extends ServiceEntityRepository implements Pu
     }
 
     /**
-     * Nom par défaut de l'appareil : « Appareil 1 », « Appareil 2 »...
-     * L'utilisateur peut le renommer ensuite.
+     * Nom par défaut de l'appareil, déduit du User-Agent envoyé lors de
+     * l'enregistrement (ex: « Chrome sur Mac »). L'utilisateur peut le
+     * renommer ensuite.
      */
-    private function buildName(User $user): string
+    private function buildName(CredentialRecord $credentialRecord): string
     {
-        return 'Appareil ' . (count($this->findBy(['user' => $user])) + 1);
+        $userAgent = $this->requestStack->getCurrentRequest()?->headers->get('User-Agent');
+
+        return $this->deviceNameResolver->resolve($userAgent, $credentialRecord->transports);
     }
 }
