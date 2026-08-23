@@ -19,9 +19,22 @@ trait UserSecurityTrait
     #[Groups(['user:read'])]
     private array $roles = [];
 
+    /**
+     * Jeton de liaison à usage unique, généré par l'admin.
+     * Sert uniquement à rattacher une identité externe (Google) à ce compte
+     * lors de la première connexion : ce n'est plus un moyen de connexion.
+     */
     #[ORM\Column(nullable: true)]
     #[Groups(['user:token'])]
     private ?string $token = null;
+
+    /**
+     * Identifiant Google (claim `sub`) de l'utilisateur, une fois son compte lié.
+     * Stable et opaque : on ne stocke ni email ni nom (cf. doc/authentification-oauth.md).
+     */
+    #[ORM\Column(length: 255, unique: true, nullable: true)]
+    #[Ignore]
+    private ?string $googleSub = null;
 
     public function getUsername(): ?string
     {
@@ -76,6 +89,18 @@ trait UserSecurityTrait
     public function setToken(?string $token): static
     {
         $this->token = $token;
+
+        return $this;
+    }
+
+    public function getGoogleSub(): ?string
+    {
+        return $this->googleSub;
+    }
+
+    public function setGoogleSub(?string $googleSub): static
+    {
+        $this->googleSub = $googleSub;
 
         return $this;
     }
