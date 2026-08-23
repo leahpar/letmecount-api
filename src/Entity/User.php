@@ -11,7 +11,6 @@ use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
 use App\Provider\CurrentUserProvider;
-use App\State\UserCredentialsProcessor;
 use App\State\GenerateTokenProvider;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -38,13 +37,6 @@ use Symfony\Component\Serializer\Attribute\Groups;
             requirements: ['id' => '\d+'],
             normalizationContext: ['groups' => ['user:write']],
             security: "is_granted('ROLE_ADMIN')"
-        ),
-        new Patch(
-            uriTemplate: '/users',
-            denormalizationContext: ['groups' => ['user:credentials']],
-            security: 'true',
-            input: UpdateCredentialsDto::class,
-            processor: UserCredentialsProcessor::class
         ),
         new Get(
             uriTemplate: '/users/{id}/token',

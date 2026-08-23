@@ -62,7 +62,6 @@ security:
         # Enrôler un passkey suppose d'être déjà connecté : à garder AVANT la règle ^/auth
         - { path: ^/auth/webauthn/register, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/auth, roles: PUBLIC_ACCESS }
-        - { path: ^/users, roles: PUBLIC_ACCESS, method: PATCH } # PATCH public pour choisir son username (token)
         - { path: ^/_profiler, roles: PUBLIC_ACCESS, ip: '%env(TRUSTED_IPS)%' }
         - { path: ^/_profiler, roles: ROLE_PROFILER }
         - { path: ^/, roles: IS_AUTHENTICATED_FULLY }

@@ -1,7 +1,8 @@
 framework:
     rate_limiter:
-        # Limite les tentatives de connexion par code à 6 chiffres (GET /auth/{token})
-        auth_code:
+        # Limite les tentatives de liaison de compte (POST /auth/oauth) par IP.
+        # Le jeton d'invitation ne fait que 6 chiffres : on borne le bruteforce.
+        auth_link:
             policy: 'sliding_window'
-            limit: 3
+            limit: 10
             interval: '10 minutes'

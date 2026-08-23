@@ -30,9 +30,8 @@ class GenerateTokenProvider implements ProviderInterface
             throw new NotFoundHttpException('Utilisateur non trouvé');
         }
 
-        // Générer un token unique (6 caractères numériques)
-        $token = random_int(100000, 999999);
-        $user->setToken($token);
+        // Générer un jeton de liaison unique (6 caractères numériques)
+        $user->setToken((string) random_int(100000, 999999));
 
         $this->em->flush();
 
