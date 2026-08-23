@@ -9,6 +9,8 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class GoogleOAuthProvider implements OAuthProviderInterface
 {
+    use OidcIdTokenTrait;
+
     private const TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token';
 
     /**
@@ -32,18 +34,25 @@ class GoogleOAuthProvider implements OAuthProviderInterface
         return 'google';
     }
 
-    public function fetchSubject(string $code, string $codeVerifier): string
+    public function fetchSubject(string $code, ?string $codeVerifier, ?string $nonce): string
     {
-        $idToken = $this->exchangeCode($code, $codeVerifier);
-        $claims = $this->readClaims($idToken);
-
-        $this->assertClaims($claims);
-
-        if (!isset($claims['sub']) || !is_string($claims['sub']) || '' === $claims['sub']) {
-            throw new BadRequestHttpException('Réponse Google invalide : "sub" manquant');
+        // Google fait du PKCE : c'est le code_verifier qui lie le code à l'onglet
+        // qui l'a demandé. Le nonce ne sert pas ici.
+        if (null === $codeVerifier || '' === $codeVerifier) {
+            throw new BadRequestHttpException('Paramètre "code_verifier" requis pour Google');
         }
 
-        return $claims['sub'];
+        return $this->readSubject($this->exchangeCode($code, $codeVerifier));
+    }
+
+    protected function getIssuers(): array
+    {
+        return self::ISSUERS;
+    }
+
+    protected function getClientId(): string
+    {
+        return $this->clientId;
     }
 
     /**
@@ -74,50 +83,5 @@ class GoogleOAuthProvider implements OAuthProviderInterface
         }
 
         return $data['id_token'];
-    }
-
-    /**
-     * L'id_token vient d'être reçu directement du token endpoint en TLS : OIDC Core
-     * §3.1.3.7 autorise à s'appuyer sur la validation TLS plutôt que sur la signature.
-     * On se contente donc de lire le payload, et on vérifie les claims ci-dessous.
-     *
-     * @return array<string, mixed>
-     */
-    private function readClaims(string $idToken): array
-    {
-        $parts = explode('.', $idToken);
-        if (3 !== count($parts)) {
-            throw new BadRequestHttpException('id_token Google malformé');
-        }
-
-        $payload = base64_decode(strtr($parts[1], '-_', '+/'), true);
-        if (false === $payload) {
-            throw new BadRequestHttpException('id_token Google illisible');
-        }
-
-        $claims = json_decode($payload, true);
-        if (!is_array($claims)) {
-            throw new BadRequestHttpException('id_token Google illisible');
-        }
-
-        return $claims;
-    }
-
-    /**
-     * @param array<string, mixed> $claims
-     */
-    private function assertClaims(array $claims): void
-    {
-        if (!isset($claims['iss']) || !in_array($claims['iss'], self::ISSUERS, true)) {
-            throw new BadRequestHttpException('id_token Google : issuer inattendu');
-        }
-
-        if (!isset($claims['aud']) || $claims['aud'] !== $this->clientId) {
-            throw new BadRequestHttpException('id_token Google : audience inattendue');
-        }
-
-        if (!isset($claims['exp']) || !is_numeric($claims['exp']) || (int) $claims['exp'] <= time()) {
-            throw new BadRequestHttpException('id_token Google expiré');
-        }
     }
 }

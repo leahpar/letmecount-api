@@ -21,8 +21,8 @@ trait UserSecurityTrait
 
     /**
      * Jeton de liaison à usage unique, généré par l'admin.
-     * Sert uniquement à rattacher une identité externe (Google) à ce compte
-     * lors de la première connexion : ce n'est plus un moyen de connexion.
+     * Sert uniquement à rattacher une identité externe (Google ou Apple) à ce
+     * compte lors de la première connexion : ce n'est plus un moyen de connexion.
      */
     #[ORM\Column(nullable: true)]
     #[Groups(['user:token'])]
@@ -35,6 +35,14 @@ trait UserSecurityTrait
     #[ORM\Column(length: 255, unique: true, nullable: true)]
     #[Ignore]
     private ?string $googleSub = null;
+
+    /**
+     * Identifiant Apple (claim `sub`), même rôle que {@see $googleSub}.
+     * Un compte n'est lié qu'à un seul provider (cf. décision D7).
+     */
+    #[ORM\Column(length: 255, unique: true, nullable: true)]
+    #[Ignore]
+    private ?string $appleSub = null;
 
     public function getUsername(): ?string
     {
@@ -103,6 +111,29 @@ trait UserSecurityTrait
         $this->googleSub = $googleSub;
 
         return $this;
+    }
+
+    public function getAppleSub(): ?string
+    {
+        return $this->appleSub;
+    }
+
+    public function setAppleSub(?string $appleSub): static
+    {
+        $this->appleSub = $appleSub;
+
+        return $this;
+    }
+
+    /**
+     * Un compte est « lié » dès qu'une identité externe y est rattachée, quel que
+     * soit le provider : c'est ce qui interdit à un jeton d'invitation fuité de
+     * détourner un compte déjà actif.
+     */
+    #[Ignore]
+    public function isLinked(): bool
+    {
+        return null !== $this->googleSub || null !== $this->appleSub;
     }
 
     #[\Deprecated]
