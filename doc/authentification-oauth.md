@@ -335,6 +335,29 @@ place du compte développeur.
 lcobucci (RFC 7519 §4.1.3 autorise les deux). Une comparaison stricte casse
 toute l'authentification. `JwtAudienceListener` normalise avec `(array)`.
 
+### Fait — Front (dépôt `letmecount-front`, branche `feat/oauth-google`)
+
+- `useOAuth.ts` : PKCE S256 via `crypto.subtle`, `state` vérifié au retour,
+  `sessionStorage` pour l'aller-retour, scope `openid` seul.
+- Route `/auth/callback` + `AuthCallbackView`, en `router.replace` pour ne pas
+  laisser le code d'autorisation dans l'historique.
+- `LoginView` : bouton Google, passkey conservé en premier.
+- `LoginLinkView` : plus d'appel à `GET /auth/{token}`, il porte l'invitation.
+- `CredentialsView` / `useCredentials` : `PATCH /users` authentifié.
+- `UserTokenModal` : **le QR et le lien portent désormais le jeton**. Avant, le
+  QR encodait l'URL de base sans le token — aucun lien d'invitation exploitable
+  n'était donc produit, et le flow de première liaison n'avait pas d'amorce.
+- `deploy.yml` : injection de `VITE_GOOGLE_CLIENT_ID` au build.
+
+### Deux corrections d'intégration
+
+- **Pas d'`Authorization` sur `/auth/oauth`.** L'authenticator Lexik rejette un
+  jeton périmé en 401 avant d'atteindre le contrôleur, même sur une route
+  publique — et l'intercepteur axios aurait brûlé le code d'autorisation Google
+  en tentant un refresh.
+- **Erreurs en JSON.** Sans `defaults: ['_format' => 'json']`, Symfony rend ses
+  erreurs en HTML sur cette route et le front ne pouvait lire aucun message.
+
 ### Reste à faire
 
 - Créer le client OAuth « Web application » dans la Google Cloud Console,
