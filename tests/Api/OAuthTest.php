@@ -111,6 +111,22 @@ class OAuthTest extends WebTestCase
         $this->assertResponseStatusCodeSame(403);
     }
 
+    /**
+     * Le front affiche le message de l'API : il doit arriver en JSON, pas en HTML.
+     */
+    public function testErrorsAreReturnedAsJson(): void
+    {
+        $this->fakeGoogle('google-sub-inconnu');
+
+        $this->postOauth(['provider' => 'google', 'code' => 'c', 'code_verifier' => 'v']);
+
+        $this->assertResponseStatusCodeSame(403);
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($data);
+        $this->assertArrayHasKey('detail', $data);
+        $this->assertStringContainsString('Aucun compte', $data['detail']);
+    }
+
     public function testInvalidInvitationTokenIsRefused(): void
     {
         $this->fakeGoogle('google-sub-3');

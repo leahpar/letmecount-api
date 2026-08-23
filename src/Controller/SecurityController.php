@@ -21,7 +21,9 @@ class SecurityController extends AbstractController
      * Le `link_token` n'est présent qu'à la première connexion, quand
      * l'utilisateur arrive par le lien d'invitation généré par l'admin.
      */
-    #[Route('/auth/oauth', name: 'auth_oauth', methods: ['POST'])]
+    // _format json : sans ça Symfony rend ses erreurs en HTML sur cette route,
+    // et le front ne peut pas récupérer le message.
+    #[Route('/auth/oauth', name: 'auth_oauth', methods: ['POST'], defaults: ['_format' => 'json'])]
     public function oauth(
         Request $request,
         OAuthLoginService $oauthLogin,
