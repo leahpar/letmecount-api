@@ -370,6 +370,20 @@ toute l'authentification. `JwtAudienceListener` normalise avec `(array)`.
 - ~~Créer le client OAuth et faire le premier aller-retour réel.~~ **Fait le
   2026-08-23 : la connexion Google fonctionne de bout en bout en local**, liaison
   du compte comprise. Reste à valider en production, et sur PWA installée iOS.
-- Publier l'écran de consentement pour sortir du mode *Testing*.
+- Publier l'écran de consentement pour sortir du mode *Testing* (plafonné à
+  100 utilisateurs, à lister un par un).
+- Créer la variable de dépôt `VITE_GOOGLE_CLIENT_ID` côté front (Settings >
+  Secrets and variables > Actions > Variables) : le workflow l'injecte dans
+  `.env.production` au build. Le client_id est public, ce n'est pas un secret.
+- **Envoyer leur lien d'invitation aux utilisateurs existants pendant qu'ils
+  sont encore connectés.** Le déploiement ne déconnecte personne (les jetons
+  sans `aud` restent acceptés, cf. `testTokenWithoutAudienceIsStillAccepted`),
+  mais aucun compte existant n'a de `googleSub` : le jour où quelqu'un se
+  déconnecte, vide ses données de site ou change d'appareil, il ne peut plus
+  se reconnecter sans un lien d'invitation — sauf s'il a un passkey enregistré.
+  Un utilisateur déjà authentifié qui ouvre son lien est lié sans friction.
 - Apple, si le compte développeur est pris.
 - Serveur d'autorisation + couche MCP.
+- Dette technique repérée en marge de ce chantier : voir `doc/dette-technique.md`
+  (branche `chore/dette-technique`), dont la disparition de `solde` des réponses
+  de l'API, qui casse l'écran de profil.
