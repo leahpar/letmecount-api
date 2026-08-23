@@ -1,6 +1,7 @@
 # Authentification OAuth (Google / Apple) — note de conception
 
-Statut : **conception validée, non implémentée**. Date : 2026-08-23.
+Statut : **conception validée ; Google implémenté** (branche `feat/oauth-google`, cf. §6).
+Apple et la mise en production restent à faire. Date : 2026-08-23.
 
 Objectif : remplacer le code à 6 chiffres fourni par l'admin par une connexion
 Google / Apple, en conservant les passkeys, et en préparant une future couche MCP
@@ -28,7 +29,7 @@ Nettoyage documentaire uniquement, pas de chantier.
 
 | Chemin     | Entrée                                                                | Sortie                                           |
 |------------|-----------------------------------------------------------------------|--------------------------------------------------|
-| Code admin | `GET /auth/{token}` (`SecurityController`), code uniquqe par l'admin  | `{token, refresh_token}`                         |
+| Code admin | `GET /auth/{token}` (`SecurityController`), code unique par l'admin  | `{token, refresh_token}`                         |
 | Passkey    | firewall `webauthn` (`security.yaml`)                                 | idem, via le même `AuthenticationSuccessHandler` |
 
 Le code a un second usage : `PATCH /users` (`UserCredentialsProcessor`) permet au
@@ -63,7 +64,7 @@ Conséquences :
 - le code disparaît en tant que *moyen de connexion* → la surface de bruteforce à
   6 chiffres disparaît, et le rate limiter `auth_code` devient inutile ;
 - `GET /users/{id}/token` et le QR restent en place, ils changent de signification ;
-- le flow de choix du username (`CredentialsView.vue`) fusionne avec la liaison.
+- le flow de choix du username (`CredentialsView.vue`) disparaît, cf. §6.
 
 Écartées : l'allowlist d'emails (incompatible avec le relais privé Apple, et
 empêche de mélanger les deux providers) et l'inscription libre + validation admin
@@ -74,7 +75,7 @@ empêche de mélanger les deux providers) et l'inscription libre + validation ad
 1. Le front fait un `window.location.assign` vers l'endpoint d'autorisation du
    provider, avec `redirect_uri = https://<front>/auth/callback`.
 2. Le provider renvoie sur le front avec `?code=...&state=...`.
-3. La SPA lit le code et le POSTe à l'API : `POST /auth/oauth {provider, code, link_token?}`.
+3. La SPA lit le code et le POSTe à l'API : `POST /auth/oauth {provider, code, code_verifier, link_token?}`.
 4. L'API échange le code contre l'`id_token` en **serveur-à-serveur** sur le token
    endpoint du provider, lit le `sub`, résout ou lie le compte, et émet le couple
    `{token, refresh_token}` habituel.
@@ -99,7 +100,7 @@ l'échange est serveur-à-serveur.
 ### D3 — Aucun scope : ni email ni nom
 
 Le `sub` est stable et toujours présent : c'est la seule clé d'identité nécessaire.
-Le `username` reste géré par l'application (choisi au moment de la liaison).
+Le `username` reste géré par l'application (posé par l'admin à la création du compte).
 
 Ce que ça élimine :
 
@@ -256,15 +257,16 @@ pas une refonte.
 ### API
 
 - `User` / `UserSecurityTrait` : colonnes d'identité externe (D7) + migration.
-- `OAuthController` (nouveau) : `POST /auth/oauth`, échange du code, résolution ou
-  liaison du compte, émission des tokens.
+- `POST /auth/oauth` : échange du code, résolution ou liaison du compte, émission
+  des tokens. Finalement porté par `SecurityController` plutôt qu'un contrôleur
+  dédié (une seule route).
 - Un service par provider : construction de l'URL d'autorisation et appel du token
   endpoint. Apple ne diffère que par la génération de son `client_secret` — un JWT
   ES256 **généré à la volée à chaque échange avec ~5 min de validité**, à partir du
   `.p8` en env. La clé `.p8` n'expire pas ; la contrainte des 6 mois maximum ne
   s'applique qu'à un secret généré une fois à la main.
 - `SecurityController` : suppression du login par code.
-- `UserCredentialsProcessor` : adaptation au flow de liaison.
+- `UserCredentialsProcessor` : finalement supprimé, cf. §6.
 - `rate_limiter.yaml` : `auth_code` devient inutile.
 - `.env` : `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `APPLE_SERVICES_ID`,
   `APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY`.
@@ -278,7 +280,7 @@ pas une refonte.
 - `useOAuth.ts` (nouveau) : construction de l'URL, `state`/`code_verifier`,
   reprise au retour.
 - Route `/auth/callback` (nouvelle).
-- `LoginLinkView.vue` + `CredentialsView.vue` : flow de liaison.
+- `LoginLinkView.vue` : flow de liaison.
 - `WelcomeView.vue` : textes.
 - `UserTokenModal.vue` : le QR devient une invitation.
 
@@ -307,7 +309,8 @@ place du compte développeur.
   du provider sont les seuls points à toucher pour ajouter Apple.
 - `User.googleSub` (unique, nullable) + migration `Version20260823120000`.
 - Claim `aud` posé et vérifié (`JwtAudienceListener`).
-- `PATCH /users` réservé à l'utilisateur authentifié.
+- `PATCH /users` (choix de son propre pseudo) supprimé, ainsi que
+  `UserCredentialsProcessor` et `UpdateCredentialsDto`.
 - `GET /auth/{token}` supprimé ; rate limiter renommé `auth_link` et appliqué
   aux seules tentatives portant un jeton d'invitation.
 
@@ -329,6 +332,29 @@ place du compte développeur.
 - **Les jetons émis avant l'introduction de `aud` restent acceptés** ; seule une
   audience erronée est rejetée. Évite de déconnecter le parc au déploiement.
 
+### Suites de la revue Copilot (2026-08-23)
+
+- **Le pseudo n'est plus modifiable par l'utilisateur.** `PATCH /users` était
+  cassé par construction : Lexik n'a pas de `user_identity_field` et
+  `app_user_provider` charge par `username`, donc le `sub` du JWT *est* le pseudo.
+  Le renommer invalidait le jeton en cours **et** le refresh token gesdinet —
+  401 sur toutes les requêtes suivantes, vérifié en test. Plutôt que d'émettre un
+  couple de jetons frais dans la réponse du PATCH, on supprime l'opération : le
+  pseudo est posé par l'admin à la création du compte (`POST /users`) et ne change
+  pas. Le parcours de première connexion se réduit d'un écran.
+- **La consommation du jeton d'invitation est atomique** (`OAuthLoginService`) :
+  `UPDATE ... WHERE token = :token AND google_sub IS NULL` et contrôle du nombre
+  de lignes affectées. Le lire-puis-flusher précédent laissait deux requêtes
+  concurrentes lier deux identités Google au même compte, dernier écrit gagnant,
+  les deux repartant avec un JWT.
+- **Collisions de jeton non traitées.** Le jeton à 6 chiffres n'a ni contrôle
+  d'unicité à la génération ni index unique en base. À ~N/900000 pour N invitations
+  actives, l'occurrence est hors de propos à l'échelle du projet ; le coût
+  (migration + boucle de regénération) ne se justifie pas.
+- **Le QR passe toujours par `yaqrgen.com`.** Le jeton transite donc par un tiers.
+  Assumé : le service est de confiance et le jeton est consommé dès la première
+  liaison, ce qui borne la fenêtre.
+
 ### Piège rencontré
 
 `aud` est écrit comme une chaîne à l'encodage mais relu comme un tableau par
@@ -343,7 +369,8 @@ toute l'authentification. `JwtAudienceListener` normalise avec `(array)`.
   laisser le code d'autorisation dans l'historique.
 - `LoginView` : bouton Google, passkey conservé en premier.
 - `LoginLinkView` : plus d'appel à `GET /auth/{token}`, il porte l'invitation.
-- `CredentialsView` / `useCredentials` : `PATCH /users` authentifié.
+- `CredentialsView` / `useCredentials` supprimés ; le callback OAuth redirige
+  directement vers le profil.
 - `UserTokenModal` : **le QR et le lien portent désormais le jeton**. Avant, le
   QR encodait l'URL de base sans le token — aucun lien d'invitation exploitable
   n'était donc produit, et le flow de première liaison n'avait pas d'amorce.
