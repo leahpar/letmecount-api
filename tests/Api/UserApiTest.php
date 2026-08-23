@@ -75,67 +75,39 @@ class UserApiTest extends AuthenticatedApiTestCase
         $this->assertArrayHasKey('id', $data);
     }
 
-    public function testUpdateCredentialsWithValidToken(): void
+    public function testUpdateOwnUsername(): void
     {
-        $token = 'test-token-123';
-        $this->user->setToken($token);
-        $this->em->flush();
-
-        $updateData = [
-            'token' => $token,
-            'username' => 'newusername',
-            'password' => 'newpassword123'
-        ];
+        $updateData = ['username' => 'newusername'];
 
         $this->call('PATCH', '/users', [], $updateData);
 
         $this->assertResponseIsSuccessful();
 
-        $content = $this->client->getResponse()->getContent();
-        $data = json_decode($content, true);
-
-        // Vérifier que les données ont été mises à jour en base
         $updatedUser = $this->em->getRepository(User::class)->find($this->user->id);
         $this->assertEquals('newusername', $updatedUser->getUsername());
     }
 
-    public function testUpdateCredentialsWithInvalidToken(): void
+    public function testUpdateUsernameRequiresAuthentication(): void
     {
-        $updateData = [
-            'token' => 'invalid-token',
-            'username' => 'newusername'
-        ];
+        $this->client->setServerParameter('HTTP_Authorization', '');
 
-        $this->call('PATCH', '/users', [], $updateData);
+        $this->call('PATCH', '/users', [], ['username' => 'newusername']);
 
         $this->assertResponseStatusCodeSame(401);
     }
 
-    public function testUpdateCredentialsWithoutToken(): void
+    public function testUpdateUsernameWithoutUsername(): void
     {
-        $updateData = [
-            'username' => 'newusername'
-        ];
-
-        $this->call('PATCH', '/users', [], $updateData);
+        $this->call('PATCH', '/users', [], []);
 
         $this->assertResponseStatusCodeSame(422);
     }
 
-    public function testUpdateCredentialsWithExistingUsername(): void
+    public function testUpdateUsernameWithExistingUsername(): void
     {
-        $existingUser = $this->createUser('existinguser');
+        $this->createUser('existinguser');
 
-        $token = 'test-token-123';
-        $this->user->setToken($token);
-        $this->em->flush();
-
-        $updateData = [
-            'token' => $token,
-            'username' => 'existinguser'
-        ];
-
-        $this->call('PATCH', '/users', [], $updateData);
+        $this->call('PATCH', '/users', [], ['username' => 'existinguser']);
 
         $this->assertResponseStatusCodeSame(409);
     }

@@ -42,7 +42,7 @@ use Symfony\Component\Serializer\Attribute\Groups;
         new Patch(
             uriTemplate: '/users',
             denormalizationContext: ['groups' => ['user:credentials']],
-            security: 'true',
+            security: "is_granted('IS_AUTHENTICATED_FULLY')",
             input: UpdateCredentialsDto::class,
             processor: UserCredentialsProcessor::class
         ),

@@ -7,10 +7,8 @@ use Symfony\Component\Serializer\Attribute\Groups;
 
 class UpdateCredentialsDto
 {
-    #[Assert\NotBlank(message: 'Le token est requis')]
-    #[Groups(['user:credentials'])]
-    public ?string $token = null;
-
+    #[Assert\NotBlank(message: 'Le nom d\'utilisateur est requis')]
+    #[Assert\Length(max: 180)]
     #[Groups(['user:credentials'])]
     public ?string $username = null;
 }

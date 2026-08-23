@@ -8,43 +8,47 @@ use App\Entity\UpdateCredentialsDto;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpFoundation\Exception\BadRequestException;
+use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
+/**
+ * Choix de son propre nom d'utilisateur.
+ *
+ * Depuis le passage à OAuth, cette opération est réservée à l'utilisateur
+ * authentifié : la liaison du compte a déjà eu lieu et a émis un JWT.
+ */
 class UserCredentialsProcessor implements ProcessorInterface
 {
     public function __construct(
         private UserRepository $userRepository,
-        private EntityManagerInterface $em
+        private EntityManagerInterface $em,
+        private Security $security,
     ) {
     }
 
     public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = []): void
     {
         if (!$data instanceof UpdateCredentialsDto) {
-            throw new BadRequestException('Données invalides');
+            throw new BadRequestHttpException('Données invalides');
         }
 
-        if (!$data->token) {
-            throw new BadRequestException('Token requis');
+        $user = $this->security->getUser();
+        if (!$user instanceof User) {
+            throw new UnauthorizedHttpException('', 'Authentification requise');
         }
 
-        $user = $this->userRepository->findOneBy(['token' => $data->token]);
-        if (!$user) {
-            throw new UnauthorizedHttpException('', 'Token invalide');
+        if (!$data->username) {
+            throw new BadRequestHttpException('Nom d\'utilisateur requis');
         }
 
-        if ($data->username !== null) {
-            $existingUser = $this->userRepository->findOneBy(['username' => $data->username]);
-            if ($existingUser && $existingUser->id !== $user->id) {
-                throw new ConflictHttpException('Ce nom d\'utilisateur existe déjà');
-            }
-
-            $user->setUsername($data->username);
+        $existingUser = $this->userRepository->findOneBy(['username' => $data->username]);
+        if ($existingUser && $existingUser->id !== $user->id) {
+            throw new ConflictHttpException('Ce nom d\'utilisateur existe déjà');
         }
 
-        $user->setToken(null); // Invalidate the token after use
+        $user->setUsername($data->username);
         $this->em->flush();
     }
 }
