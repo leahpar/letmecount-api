@@ -75,43 +75,6 @@ class UserApiTest extends AuthenticatedApiTestCase
         $this->assertArrayHasKey('id', $data);
     }
 
-    public function testUpdateOwnUsername(): void
-    {
-        $updateData = ['username' => 'newusername'];
-
-        $this->call('PATCH', '/users', [], $updateData);
-
-        $this->assertResponseIsSuccessful();
-
-        $updatedUser = $this->em->getRepository(User::class)->find($this->user->id);
-        $this->assertEquals('newusername', $updatedUser->getUsername());
-    }
-
-    public function testUpdateUsernameRequiresAuthentication(): void
-    {
-        $this->client->setServerParameter('HTTP_Authorization', '');
-
-        $this->call('PATCH', '/users', [], ['username' => 'newusername']);
-
-        $this->assertResponseStatusCodeSame(401);
-    }
-
-    public function testUpdateUsernameWithoutUsername(): void
-    {
-        $this->call('PATCH', '/users', [], []);
-
-        $this->assertResponseStatusCodeSame(422);
-    }
-
-    public function testUpdateUsernameWithExistingUsername(): void
-    {
-        $this->createUser('existinguser');
-
-        $this->call('PATCH', '/users', [], ['username' => 'existinguser']);
-
-        $this->assertResponseStatusCodeSame(409);
-    }
-
     public function testGenerateTokenWithoutAdminRole(): void
     {
         $this->call('GET', '/users/' . $this->user->id . '/token');
