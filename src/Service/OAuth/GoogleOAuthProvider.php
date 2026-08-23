@@ -116,7 +116,7 @@ class GoogleOAuthProvider implements OAuthProviderInterface
             throw new BadRequestHttpException('id_token Google : audience inattendue');
         }
 
-        if (!isset($claims['exp']) || !is_numeric($claims['exp']) || (int) $claims['exp'] < time()) {
+        if (!isset($claims['exp']) || !is_numeric($claims['exp']) || (int) $claims['exp'] <= time()) {
             throw new BadRequestHttpException('id_token Google expiré');
         }
     }
