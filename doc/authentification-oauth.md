@@ -349,7 +349,7 @@ toute l'authentification. `JwtAudienceListener` normalise avec `(array)`.
   n'était donc produit, et le flow de première liaison n'avait pas d'amorce.
 - `deploy.yml` : injection de `VITE_GOOGLE_CLIENT_ID` au build.
 
-### Deux corrections d'intégration
+### Trois corrections d'intégration
 
 - **Pas d'`Authorization` sur `/auth/oauth`.** L'authenticator Lexik rejette un
   jeton périmé en 401 avant d'atteindre le contrôleur, même sur une route
@@ -357,12 +357,19 @@ toute l'authentification. `JwtAudienceListener` normalise avec `(array)`.
   en tentant un refresh.
 - **Erreurs en JSON.** Sans `defaults: ['_format' => 'json']`, Symfony rend ses
   erreurs en HTML sur cette route et le front ne pouvait lire aucun message.
+- **401 parasites au retour de Google.** Au chargement initial d'une page, la
+  navigation du routeur n'est pas encore résolue et `route.name` vaut `undefined` :
+  les composants globaux se montaient donc malgré leur `v-if` et lançaient leurs
+  requêtes authentifiées. Sur `/auth/callback`, ça faisait deux 401, deux
+  `redirectToLogin()`, et la navigation tuait l'échange OAuth en cours. Les
+  exclusions `/login_link` et `/welcome` déjà présentes dans l'intercepteur
+  étaient le contournement historique du même symptôme.
 
 ### Reste à faire
 
-- Créer le client OAuth « Web application » dans la Google Cloud Console,
-  renseigner `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `OAUTH_REDIRECT_URI`,
-  et faire le premier aller-retour réel : **rien n'a été testé contre Google**.
+- ~~Créer le client OAuth et faire le premier aller-retour réel.~~ **Fait le
+  2026-08-23 : la connexion Google fonctionne de bout en bout en local**, liaison
+  du compte comprise. Reste à valider en production, et sur PWA installée iOS.
 - Publier l'écran de consentement pour sortir du mode *Testing*.
 - Apple, si le compte développeur est pris.
 - Serveur d'autorisation + couche MCP.
