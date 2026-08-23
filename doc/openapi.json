@@ -25,93 +25,25 @@
                             "application/ld+json": {
                                 "schema": {
                                     "type": "object",
-                                    "properties": {
-                                        "member": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/Depense.jsonld-depense.read"
-                                            }
+                                    "description": "Depense.jsonld-depense.read collection.",
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/HydraCollectionBaseSchema"
                                         },
-                                        "totalItems": {
-                                            "type": "integer",
-                                            "minimum": 0
-                                        },
-                                        "view": {
+                                        {
                                             "type": "object",
+                                            "required": [
+                                                "member"
+                                            ],
                                             "properties": {
-                                                "@id": {
-                                                    "type": "string",
-                                                    "format": "iri-reference"
-                                                },
-                                                "@type": {
-                                                    "type": "string"
-                                                },
-                                                "first": {
-                                                    "type": "string",
-                                                    "format": "iri-reference"
-                                                },
-                                                "last": {
-                                                    "type": "string",
-                                                    "format": "iri-reference"
-                                                },
-                                                "previous": {
-                                                    "type": "string",
-                                                    "format": "iri-reference"
-                                                },
-                                                "next": {
-                                                    "type": "string",
-                                                    "format": "iri-reference"
-                                                }
-                                            },
-                                            "example": {
-                                                "@id": "string",
-                                                "type": "string",
-                                                "first": "string",
-                                                "last": "string",
-                                                "previous": "string",
-                                                "next": "string"
-                                            }
-                                        },
-                                        "search": {
-                                            "type": "object",
-                                            "properties": {
-                                                "@type": {
-                                                    "type": "string"
-                                                },
-                                                "template": {
-                                                    "type": "string"
-                                                },
-                                                "variableRepresentation": {
-                                                    "type": "string"
-                                                },
-                                                "mapping": {
+                                                "member": {
                                                     "type": "array",
                                                     "items": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "@type": {
-                                                                "type": "string"
-                                                            },
-                                                            "variable": {
-                                                                "type": "string"
-                                                            },
-                                                            "property": {
-                                                                "type": [
-                                                                    "string",
-                                                                    "null"
-                                                                ]
-                                                            },
-                                                            "required": {
-                                                                "type": "boolean"
-                                                            }
-                                                        }
+                                                        "$ref": "#/components/schemas/Depense.jsonld-depense.read"
                                                     }
                                                 }
                                             }
                                         }
-                                    },
-                                    "required": [
-                                        "member"
                                     ]
                                 }
                             }
@@ -127,14 +59,12 @@
                         "description": "The collection page number",
                         "required": false,
                         "deprecated": false,
-                        "allowEmptyValue": true,
                         "schema": {
                             "type": "integer",
                             "default": 1
                         },
                         "style": "form",
-                        "explode": false,
-                        "allowReserved": false
+                        "explode": true
                     },
                     {
                         "name": "tag",
@@ -142,13 +72,11 @@
                         "description": "",
                         "required": false,
                         "deprecated": false,
-                        "allowEmptyValue": false,
                         "schema": {
                             "type": "string"
                         },
                         "style": "form",
-                        "explode": false,
-                        "allowReserved": false
+                        "explode": false
                     },
                     {
                         "name": "tag[]",
@@ -156,7 +84,6 @@
                         "description": "",
                         "required": false,
                         "deprecated": false,
-                        "allowEmptyValue": false,
                         "schema": {
                             "type": "array",
                             "items": {
@@ -164,11 +91,9 @@
                             }
                         },
                         "style": "form",
-                        "explode": true,
-                        "allowReserved": false
+                        "explode": true
                     }
-                ],
-                "deprecated": false
+                ]
             },
             "post": {
                 "operationId": "api_depenses_post",
@@ -213,17 +138,17 @@
                         "content": {
                             "application/ld+json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ConstraintViolation.jsonld-jsonld"
+                                    "$ref": "#/components/schemas/ConstraintViolation.jsonld"
                                 }
                             },
                             "application/problem+json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ConstraintViolation-json"
+                                    "$ref": "#/components/schemas/ConstraintViolation"
                                 }
                             },
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ConstraintViolation-json"
+                                    "$ref": "#/components/schemas/ConstraintViolation"
                                 }
                             }
                         },
@@ -238,13 +163,12 @@
                     "content": {
                         "application/ld+json": {
                             "schema": {
-                                "$ref": "#/components/schemas/Depense.jsonld-depense.write"
+                                "$ref": "#/components/schemas/Depense-depense.write"
                             }
                         }
                     },
                     "required": true
-                },
-                "deprecated": false
+                }
             }
         },
         "/depenses/{id}": {
@@ -295,16 +219,13 @@
                         "description": "Depense identifier",
                         "required": true,
                         "deprecated": false,
-                        "allowEmptyValue": false,
                         "schema": {
                             "type": "string"
                         },
                         "style": "simple",
-                        "explode": false,
-                        "allowReserved": false
+                        "explode": false
                     }
-                ],
-                "deprecated": false
+                ]
             },
             "delete": {
                 "operationId": "api_depenses_id_delete",
@@ -346,16 +267,13 @@
                         "description": "Depense identifier",
                         "required": true,
                         "deprecated": false,
-                        "allowEmptyValue": false,
                         "schema": {
                             "type": "string"
                         },
                         "style": "simple",
-                        "explode": false,
-                        "allowReserved": false
+                        "explode": false
                     }
-                ],
-                "deprecated": false
+                ]
             },
             "patch": {
                 "operationId": "api_depenses_id_patch",
@@ -400,17 +318,17 @@
                         "content": {
                             "application/ld+json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ConstraintViolation.jsonld-jsonld"
+                                    "$ref": "#/components/schemas/ConstraintViolation.jsonld"
                                 }
                             },
                             "application/problem+json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ConstraintViolation-json"
+                                    "$ref": "#/components/schemas/ConstraintViolation"
                                 }
                             },
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ConstraintViolation-json"
+                                    "$ref": "#/components/schemas/ConstraintViolation"
                                 }
                             }
                         },
@@ -447,13 +365,11 @@
                         "description": "Depense identifier",
                         "required": true,
                         "deprecated": false,
-                        "allowEmptyValue": false,
                         "schema": {
                             "type": "string"
                         },
                         "style": "simple",
-                        "explode": false,
-                        "allowReserved": false
+                        "explode": false
                     }
                 ],
                 "requestBody": {
@@ -461,13 +377,12 @@
                     "content": {
                         "application/merge-patch+json": {
                             "schema": {
-                                "$ref": "#/components/schemas/Depense-depense.write"
+                                "$ref": "#/components/schemas/Depense-depense.write.jsonMergePatch"
                             }
                         }
                     },
                     "required": true
-                },
-                "deprecated": false
+                }
             }
         },
         "/logs": {
@@ -483,93 +398,25 @@
                             "application/ld+json": {
                                 "schema": {
                                     "type": "object",
-                                    "properties": {
-                                        "member": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/Log.jsonld-log.read"
-                                            }
+                                    "description": "Log.jsonld-log.read collection.",
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/HydraCollectionBaseSchema"
                                         },
-                                        "totalItems": {
-                                            "type": "integer",
-                                            "minimum": 0
-                                        },
-                                        "view": {
+                                        {
                                             "type": "object",
+                                            "required": [
+                                                "member"
+                                            ],
                                             "properties": {
-                                                "@id": {
-                                                    "type": "string",
-                                                    "format": "iri-reference"
-                                                },
-                                                "@type": {
-                                                    "type": "string"
-                                                },
-                                                "first": {
-                                                    "type": "string",
-                                                    "format": "iri-reference"
-                                                },
-                                                "last": {
-                                                    "type": "string",
-                                                    "format": "iri-reference"
-                                                },
-                                                "previous": {
-                                                    "type": "string",
-                                                    "format": "iri-reference"
-                                                },
-                                                "next": {
-                                                    "type": "string",
-                                                    "format": "iri-reference"
-                                                }
-                                            },
-                                            "example": {
-                                                "@id": "string",
-                                                "type": "string",
-                                                "first": "string",
-                                                "last": "string",
-                                                "previous": "string",
-                                                "next": "string"
-                                            }
-                                        },
-                                        "search": {
-                                            "type": "object",
-                                            "properties": {
-                                                "@type": {
-                                                    "type": "string"
-                                                },
-                                                "template": {
-                                                    "type": "string"
-                                                },
-                                                "variableRepresentation": {
-                                                    "type": "string"
-                                                },
-                                                "mapping": {
+                                                "member": {
                                                     "type": "array",
                                                     "items": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "@type": {
-                                                                "type": "string"
-                                                            },
-                                                            "variable": {
-                                                                "type": "string"
-                                                            },
-                                                            "property": {
-                                                                "type": [
-                                                                    "string",
-                                                                    "null"
-                                                                ]
-                                                            },
-                                                            "required": {
-                                                                "type": "boolean"
-                                                            }
-                                                        }
+                                                        "$ref": "#/components/schemas/Log.jsonld-log.read"
                                                     }
                                                 }
                                             }
                                         }
-                                    },
-                                    "required": [
-                                        "member"
                                     ]
                                 }
                             }
@@ -585,17 +432,14 @@
                         "description": "The collection page number",
                         "required": false,
                         "deprecated": false,
-                        "allowEmptyValue": true,
                         "schema": {
                             "type": "integer",
                             "default": 1
                         },
                         "style": "form",
-                        "explode": false,
-                        "allowReserved": false
+                        "explode": true
                     }
-                ],
-                "deprecated": false
+                ]
             }
         },
         "/logs/{id}": {
@@ -646,16 +490,13 @@
                         "description": "Log identifier",
                         "required": true,
                         "deprecated": false,
-                        "allowEmptyValue": false,
                         "schema": {
                             "type": "string"
                         },
                         "style": "simple",
-                        "explode": false,
-                        "allowReserved": false
+                        "explode": false
                     }
-                ],
-                "deprecated": false
+                ]
             }
         },
         "/passkeys": {
@@ -671,93 +512,25 @@
                             "application/ld+json": {
                                 "schema": {
                                     "type": "object",
-                                    "properties": {
-                                        "member": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/Passkey.jsonld-passkey.read"
-                                            }
+                                    "description": "Passkey.jsonld-passkey.read collection.",
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/HydraCollectionBaseSchema"
                                         },
-                                        "totalItems": {
-                                            "type": "integer",
-                                            "minimum": 0
-                                        },
-                                        "view": {
+                                        {
                                             "type": "object",
+                                            "required": [
+                                                "member"
+                                            ],
                                             "properties": {
-                                                "@id": {
-                                                    "type": "string",
-                                                    "format": "iri-reference"
-                                                },
-                                                "@type": {
-                                                    "type": "string"
-                                                },
-                                                "first": {
-                                                    "type": "string",
-                                                    "format": "iri-reference"
-                                                },
-                                                "last": {
-                                                    "type": "string",
-                                                    "format": "iri-reference"
-                                                },
-                                                "previous": {
-                                                    "type": "string",
-                                                    "format": "iri-reference"
-                                                },
-                                                "next": {
-                                                    "type": "string",
-                                                    "format": "iri-reference"
-                                                }
-                                            },
-                                            "example": {
-                                                "@id": "string",
-                                                "type": "string",
-                                                "first": "string",
-                                                "last": "string",
-                                                "previous": "string",
-                                                "next": "string"
-                                            }
-                                        },
-                                        "search": {
-                                            "type": "object",
-                                            "properties": {
-                                                "@type": {
-                                                    "type": "string"
-                                                },
-                                                "template": {
-                                                    "type": "string"
-                                                },
-                                                "variableRepresentation": {
-                                                    "type": "string"
-                                                },
-                                                "mapping": {
+                                                "member": {
                                                     "type": "array",
                                                     "items": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "@type": {
-                                                                "type": "string"
-                                                            },
-                                                            "variable": {
-                                                                "type": "string"
-                                                            },
-                                                            "property": {
-                                                                "type": [
-                                                                    "string",
-                                                                    "null"
-                                                                ]
-                                                            },
-                                                            "required": {
-                                                                "type": "boolean"
-                                                            }
-                                                        }
+                                                        "$ref": "#/components/schemas/Passkey.jsonld-passkey.read"
                                                     }
                                                 }
                                             }
                                         }
-                                    },
-                                    "required": [
-                                        "member"
                                     ]
                                 }
                             }
@@ -773,17 +546,14 @@
                         "description": "The collection page number",
                         "required": false,
                         "deprecated": false,
-                        "allowEmptyValue": true,
                         "schema": {
                             "type": "integer",
                             "default": 1
                         },
                         "style": "form",
-                        "explode": false,
-                        "allowReserved": false
+                        "explode": true
                     }
-                ],
-                "deprecated": false
+                ]
             }
         },
         "/passkeys/{id}": {
@@ -855,16 +625,13 @@
                         "description": "Passkey identifier",
                         "required": true,
                         "deprecated": false,
-                        "allowEmptyValue": false,
                         "schema": {
                             "type": "string"
                         },
                         "style": "simple",
-                        "explode": false,
-                        "allowReserved": false
+                        "explode": false
                     }
-                ],
-                "deprecated": false
+                ]
             },
             "delete": {
                 "operationId": "api_passkeys_id_delete",
@@ -927,16 +694,13 @@
                         "description": "Passkey identifier",
                         "required": true,
                         "deprecated": false,
-                        "allowEmptyValue": false,
                         "schema": {
                             "type": "string"
                         },
                         "style": "simple",
-                        "explode": false,
-                        "allowReserved": false
+                        "explode": false
                     }
-                ],
-                "deprecated": false
+                ]
             },
             "patch": {
                 "operationId": "api_passkeys_id_patch",
@@ -981,17 +745,17 @@
                         "content": {
                             "application/ld+json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ConstraintViolation.jsonld-jsonld"
+                                    "$ref": "#/components/schemas/ConstraintViolation.jsonld"
                                 }
                             },
                             "application/problem+json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ConstraintViolation-json"
+                                    "$ref": "#/components/schemas/ConstraintViolation"
                                 }
                             },
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ConstraintViolation-json"
+                                    "$ref": "#/components/schemas/ConstraintViolation"
                                 }
                             }
                         },
@@ -1049,13 +813,11 @@
                         "description": "Passkey identifier",
                         "required": true,
                         "deprecated": false,
-                        "allowEmptyValue": false,
                         "schema": {
                             "type": "string"
                         },
                         "style": "simple",
-                        "explode": false,
-                        "allowReserved": false
+                        "explode": false
                     }
                 ],
                 "requestBody": {
@@ -1063,13 +825,12 @@
                     "content": {
                         "application/merge-patch+json": {
                             "schema": {
-                                "$ref": "#/components/schemas/Passkey-passkey.write"
+                                "$ref": "#/components/schemas/Passkey-passkey.write.jsonMergePatch"
                             }
                         }
                     },
                     "required": true
-                },
-                "deprecated": false
+                }
             }
         },
         "/tags": {
@@ -1085,93 +846,25 @@
                             "application/ld+json": {
                                 "schema": {
                                     "type": "object",
-                                    "properties": {
-                                        "member": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/Tag.jsonld-tag.read"
-                                            }
+                                    "description": "Tag.jsonld-tag.read collection.",
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/HydraCollectionBaseSchema"
                                         },
-                                        "totalItems": {
-                                            "type": "integer",
-                                            "minimum": 0
-                                        },
-                                        "view": {
+                                        {
                                             "type": "object",
+                                            "required": [
+                                                "member"
+                                            ],
                                             "properties": {
-                                                "@id": {
-                                                    "type": "string",
-                                                    "format": "iri-reference"
-                                                },
-                                                "@type": {
-                                                    "type": "string"
-                                                },
-                                                "first": {
-                                                    "type": "string",
-                                                    "format": "iri-reference"
-                                                },
-                                                "last": {
-                                                    "type": "string",
-                                                    "format": "iri-reference"
-                                                },
-                                                "previous": {
-                                                    "type": "string",
-                                                    "format": "iri-reference"
-                                                },
-                                                "next": {
-                                                    "type": "string",
-                                                    "format": "iri-reference"
-                                                }
-                                            },
-                                            "example": {
-                                                "@id": "string",
-                                                "type": "string",
-                                                "first": "string",
-                                                "last": "string",
-                                                "previous": "string",
-                                                "next": "string"
-                                            }
-                                        },
-                                        "search": {
-                                            "type": "object",
-                                            "properties": {
-                                                "@type": {
-                                                    "type": "string"
-                                                },
-                                                "template": {
-                                                    "type": "string"
-                                                },
-                                                "variableRepresentation": {
-                                                    "type": "string"
-                                                },
-                                                "mapping": {
+                                                "member": {
                                                     "type": "array",
                                                     "items": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "@type": {
-                                                                "type": "string"
-                                                            },
-                                                            "variable": {
-                                                                "type": "string"
-                                                            },
-                                                            "property": {
-                                                                "type": [
-                                                                    "string",
-                                                                    "null"
-                                                                ]
-                                                            },
-                                                            "required": {
-                                                                "type": "boolean"
-                                                            }
-                                                        }
+                                                        "$ref": "#/components/schemas/Tag.jsonld-tag.read"
                                                     }
                                                 }
                                             }
                                         }
-                                    },
-                                    "required": [
-                                        "member"
                                     ]
                                 }
                             }
@@ -1187,17 +880,14 @@
                         "description": "The collection page number",
                         "required": false,
                         "deprecated": false,
-                        "allowEmptyValue": true,
                         "schema": {
                             "type": "integer",
                             "default": 1
                         },
                         "style": "form",
-                        "explode": false,
-                        "allowReserved": false
+                        "explode": true
                     }
-                ],
-                "deprecated": false
+                ]
             },
             "post": {
                 "operationId": "api_tags_post",
@@ -1242,17 +932,17 @@
                         "content": {
                             "application/ld+json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ConstraintViolation.jsonld-jsonld"
+                                    "$ref": "#/components/schemas/ConstraintViolation.jsonld"
                                 }
                             },
                             "application/problem+json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ConstraintViolation-json"
+                                    "$ref": "#/components/schemas/ConstraintViolation"
                                 }
                             },
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ConstraintViolation-json"
+                                    "$ref": "#/components/schemas/ConstraintViolation"
                                 }
                             }
                         },
@@ -1267,13 +957,12 @@
                     "content": {
                         "application/ld+json": {
                             "schema": {
-                                "$ref": "#/components/schemas/Tag.jsonld-tag.write"
+                                "$ref": "#/components/schemas/Tag-tag.write"
                             }
                         }
                     },
                     "required": true
-                },
-                "deprecated": false
+                }
             }
         },
         "/tags/{id}": {
@@ -1324,16 +1013,13 @@
                         "description": "Tag identifier",
                         "required": true,
                         "deprecated": false,
-                        "allowEmptyValue": false,
                         "schema": {
                             "type": "string"
                         },
                         "style": "simple",
-                        "explode": false,
-                        "allowReserved": false
+                        "explode": false
                     }
-                ],
-                "deprecated": false
+                ]
             },
             "delete": {
                 "operationId": "api_tags_id_delete",
@@ -1375,16 +1061,13 @@
                         "description": "Tag identifier",
                         "required": true,
                         "deprecated": false,
-                        "allowEmptyValue": false,
                         "schema": {
                             "type": "string"
                         },
                         "style": "simple",
-                        "explode": false,
-                        "allowReserved": false
+                        "explode": false
                     }
-                ],
-                "deprecated": false
+                ]
             },
             "patch": {
                 "operationId": "api_tags_id_patch",
@@ -1429,17 +1112,17 @@
                         "content": {
                             "application/ld+json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ConstraintViolation.jsonld-jsonld"
+                                    "$ref": "#/components/schemas/ConstraintViolation.jsonld"
                                 }
                             },
                             "application/problem+json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ConstraintViolation-json"
+                                    "$ref": "#/components/schemas/ConstraintViolation"
                                 }
                             },
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ConstraintViolation-json"
+                                    "$ref": "#/components/schemas/ConstraintViolation"
                                 }
                             }
                         },
@@ -1476,13 +1159,11 @@
                         "description": "Tag identifier",
                         "required": true,
                         "deprecated": false,
-                        "allowEmptyValue": false,
                         "schema": {
                             "type": "string"
                         },
                         "style": "simple",
-                        "explode": false,
-                        "allowReserved": false
+                        "explode": false
                     }
                 ],
                 "requestBody": {
@@ -1490,13 +1171,12 @@
                     "content": {
                         "application/merge-patch+json": {
                             "schema": {
-                                "$ref": "#/components/schemas/Tag-tag.write"
+                                "$ref": "#/components/schemas/Tag-tag.write.jsonMergePatch"
                             }
                         }
                     },
                     "required": true
-                },
-                "deprecated": false
+                }
             }
         },
         "/users": {
@@ -1512,93 +1192,25 @@
                             "application/ld+json": {
                                 "schema": {
                                     "type": "object",
-                                    "properties": {
-                                        "member": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/User.jsonld-user.read"
-                                            }
+                                    "description": "User.jsonld-user.read collection.",
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/HydraCollectionBaseSchema"
                                         },
-                                        "totalItems": {
-                                            "type": "integer",
-                                            "minimum": 0
-                                        },
-                                        "view": {
+                                        {
                                             "type": "object",
+                                            "required": [
+                                                "member"
+                                            ],
                                             "properties": {
-                                                "@id": {
-                                                    "type": "string",
-                                                    "format": "iri-reference"
-                                                },
-                                                "@type": {
-                                                    "type": "string"
-                                                },
-                                                "first": {
-                                                    "type": "string",
-                                                    "format": "iri-reference"
-                                                },
-                                                "last": {
-                                                    "type": "string",
-                                                    "format": "iri-reference"
-                                                },
-                                                "previous": {
-                                                    "type": "string",
-                                                    "format": "iri-reference"
-                                                },
-                                                "next": {
-                                                    "type": "string",
-                                                    "format": "iri-reference"
-                                                }
-                                            },
-                                            "example": {
-                                                "@id": "string",
-                                                "type": "string",
-                                                "first": "string",
-                                                "last": "string",
-                                                "previous": "string",
-                                                "next": "string"
-                                            }
-                                        },
-                                        "search": {
-                                            "type": "object",
-                                            "properties": {
-                                                "@type": {
-                                                    "type": "string"
-                                                },
-                                                "template": {
-                                                    "type": "string"
-                                                },
-                                                "variableRepresentation": {
-                                                    "type": "string"
-                                                },
-                                                "mapping": {
+                                                "member": {
                                                     "type": "array",
                                                     "items": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "@type": {
-                                                                "type": "string"
-                                                            },
-                                                            "variable": {
-                                                                "type": "string"
-                                                            },
-                                                            "property": {
-                                                                "type": [
-                                                                    "string",
-                                                                    "null"
-                                                                ]
-                                                            },
-                                                            "required": {
-                                                                "type": "boolean"
-                                                            }
-                                                        }
+                                                        "$ref": "#/components/schemas/User.jsonld-user.read"
                                                     }
                                                 }
                                             }
                                         }
-                                    },
-                                    "required": [
-                                        "member"
                                     ]
                                 }
                             }
@@ -1614,14 +1226,12 @@
                         "description": "The collection page number",
                         "required": false,
                         "deprecated": false,
-                        "allowEmptyValue": true,
                         "schema": {
                             "type": "integer",
                             "default": 1
                         },
                         "style": "form",
-                        "explode": false,
-                        "allowReserved": false
+                        "explode": true
                     },
                     {
                         "name": "username",
@@ -1629,16 +1239,13 @@
                         "description": "",
                         "required": false,
                         "deprecated": false,
-                        "allowEmptyValue": false,
                         "schema": {
                             "type": "string"
                         },
                         "style": "form",
-                        "explode": false,
-                        "allowReserved": false
+                        "explode": false
                     }
-                ],
-                "deprecated": false
+                ]
             },
             "post": {
                 "operationId": "api_users_post",
@@ -1683,17 +1290,17 @@
                         "content": {
                             "application/ld+json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ConstraintViolation.jsonld-jsonld"
+                                    "$ref": "#/components/schemas/ConstraintViolation.jsonld"
                                 }
                             },
                             "application/problem+json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ConstraintViolation-json"
+                                    "$ref": "#/components/schemas/ConstraintViolation"
                                 }
                             },
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ConstraintViolation-json"
+                                    "$ref": "#/components/schemas/ConstraintViolation"
                                 }
                             }
                         },
@@ -1729,13 +1336,12 @@
                     "content": {
                         "application/ld+json": {
                             "schema": {
-                                "$ref": "#/components/schemas/User.jsonld-user.write"
+                                "$ref": "#/components/schemas/User-user.write"
                             }
                         }
                     },
                     "required": true
-                },
-                "deprecated": false
+                }
             },
             "patch": {
                 "operationId": "api_users_patch",
@@ -1780,17 +1386,17 @@
                         "content": {
                             "application/ld+json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ConstraintViolation.jsonld-jsonld"
+                                    "$ref": "#/components/schemas/ConstraintViolation.jsonld"
                                 }
                             },
                             "application/problem+json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ConstraintViolation-json"
+                                    "$ref": "#/components/schemas/ConstraintViolation"
                                 }
                             },
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ConstraintViolation-json"
+                                    "$ref": "#/components/schemas/ConstraintViolation"
                                 }
                             }
                         },
@@ -1847,13 +1453,12 @@
                     "content": {
                         "application/merge-patch+json": {
                             "schema": {
-                                "$ref": "#/components/schemas/User.UpdateCredentialsDto-user.credentials"
+                                "$ref": "#/components/schemas/User.UpdateCredentialsDto-user.credentials.jsonMergePatch"
                             }
                         }
                     },
                     "required": true
-                },
-                "deprecated": false
+                }
             }
         },
         "/users/me": {
@@ -1897,8 +1502,7 @@
                 },
                 "summary": "Retrieves a User resource.",
                 "description": "Retrieves a User resource.",
-                "parameters": [],
-                "deprecated": false
+                "parameters": []
             }
         },
         "/users/{id}": {
@@ -1949,16 +1553,13 @@
                         "description": "User identifier",
                         "required": true,
                         "deprecated": false,
-                        "allowEmptyValue": false,
                         "schema": {
                             "type": "string"
                         },
                         "style": "simple",
-                        "explode": false,
-                        "allowReserved": false
+                        "explode": false
                     }
-                ],
-                "deprecated": false
+                ]
             },
             "patch": {
                 "operationId": "api_users_id_patch",
@@ -2003,17 +1604,17 @@
                         "content": {
                             "application/ld+json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ConstraintViolation.jsonld-jsonld"
+                                    "$ref": "#/components/schemas/ConstraintViolation.jsonld"
                                 }
                             },
                             "application/problem+json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ConstraintViolation-json"
+                                    "$ref": "#/components/schemas/ConstraintViolation"
                                 }
                             },
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ConstraintViolation-json"
+                                    "$ref": "#/components/schemas/ConstraintViolation"
                                 }
                             }
                         },
@@ -2071,13 +1672,11 @@
                         "description": "User identifier",
                         "required": true,
                         "deprecated": false,
-                        "allowEmptyValue": false,
                         "schema": {
                             "type": "string"
                         },
                         "style": "simple",
-                        "explode": false,
-                        "allowReserved": false
+                        "explode": false
                     }
                 ],
                 "requestBody": {
@@ -2085,13 +1684,12 @@
                     "content": {
                         "application/merge-patch+json": {
                             "schema": {
-                                "$ref": "#/components/schemas/User"
+                                "$ref": "#/components/schemas/User.jsonMergePatch"
                             }
                         }
                     },
                     "required": true
-                },
-                "deprecated": false
+                }
             }
         },
         "/users/{id}/token": {
@@ -2163,29 +1761,24 @@
                         "description": "User identifier",
                         "required": true,
                         "deprecated": false,
-                        "allowEmptyValue": false,
                         "schema": {
                             "type": "string"
                         },
                         "style": "simple",
-                        "explode": false,
-                        "allowReserved": false
+                        "explode": false
                     }
-                ],
-                "deprecated": false
+                ]
             }
         }
     },
     "components": {
         "schemas": {
-            "ConstraintViolation-json": {
+            "ConstraintViolation": {
                 "type": "object",
                 "description": "Unprocessable entity",
-                "deprecated": false,
                 "properties": {
                     "status": {
                         "default": 422,
-                        "example": 422,
                         "type": "integer"
                     },
                     "violations": {
@@ -2200,8 +1793,25 @@
                                 "message": {
                                     "type": "string",
                                     "description": "The message associated with the violation"
+                                },
+                                "code": {
+                                    "type": "string",
+                                    "description": "The code of the violation"
+                                },
+                                "hint": {
+                                    "type": "string",
+                                    "description": "An extra hint to understand the violation"
+                                },
+                                "payload": {
+                                    "type": "object",
+                                    "additionalProperties": true,
+                                    "description": "The serialized payload of the violation"
                                 }
-                            }
+                            },
+                            "required": [
+                                "propertyPath",
+                                "message"
+                            ]
                         }
                     },
                     "detail": {
@@ -2228,102 +1838,86 @@
                     }
                 }
             },
-            "ConstraintViolation.jsonld-jsonld": {
-                "type": "object",
-                "description": "Unprocessable entity",
-                "deprecated": false,
-                "properties": {
-                    "@context": {
-                        "readOnly": true,
-                        "oneOf": [
-                            {
+            "ConstraintViolation.jsonld": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/HydraItemBaseSchema"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "status": {
+                                "default": 422,
+                                "type": "integer"
+                            },
+                            "violations": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "propertyPath": {
+                                            "type": "string",
+                                            "description": "The property path of the violation"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "The message associated with the violation"
+                                        },
+                                        "code": {
+                                            "type": "string",
+                                            "description": "The code of the violation"
+                                        },
+                                        "hint": {
+                                            "type": "string",
+                                            "description": "An extra hint to understand the violation"
+                                        },
+                                        "payload": {
+                                            "type": "object",
+                                            "additionalProperties": true,
+                                            "description": "The serialized payload of the violation"
+                                        }
+                                    },
+                                    "required": [
+                                        "propertyPath",
+                                        "message"
+                                    ]
+                                }
+                            },
+                            "detail": {
+                                "readOnly": true,
                                 "type": "string"
                             },
-                            {
-                                "type": "object",
-                                "properties": {
-                                    "@vocab": {
-                                        "type": "string"
-                                    },
-                                    "hydra": {
-                                        "type": "string",
-                                        "enum": [
-                                            "http://www.w3.org/ns/hydra/core#"
-                                        ]
-                                    }
-                                },
-                                "required": [
-                                    "@vocab",
-                                    "hydra"
-                                ],
-                                "additionalProperties": true
-                            }
-                        ]
-                    },
-                    "@id": {
-                        "readOnly": true,
-                        "type": "string"
-                    },
-                    "@type": {
-                        "readOnly": true,
-                        "type": "string"
-                    },
-                    "status": {
-                        "default": 422,
-                        "example": 422,
-                        "type": "integer"
-                    },
-                    "violations": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "propertyPath": {
-                                    "type": "string",
-                                    "description": "The property path of the violation"
-                                },
-                                "message": {
-                                    "type": "string",
-                                    "description": "The message associated with the violation"
-                                }
+                            "description": {
+                                "readOnly": true,
+                                "type": "string"
+                            },
+                            "type": {
+                                "readOnly": true,
+                                "type": "string"
+                            },
+                            "title": {
+                                "readOnly": true,
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "instance": {
+                                "readOnly": true,
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
                             }
                         }
-                    },
-                    "detail": {
-                        "readOnly": true,
-                        "type": "string"
-                    },
-                    "description": {
-                        "readOnly": true,
-                        "type": "string"
-                    },
-                    "type": {
-                        "readOnly": true,
-                        "type": "string"
-                    },
-                    "title": {
-                        "readOnly": true,
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "instance": {
-                        "readOnly": true,
-                        "type": [
-                            "string",
-                            "null"
-                        ]
                     }
-                }
+                ],
+                "description": "Unprocessable entity"
             },
             "Depense-depense.write": {
                 "type": "object",
-                "description": "",
-                "deprecated": false,
                 "properties": {
                     "details": {
-                        "minItems": 1,
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/Detail-depense.write"
@@ -2369,55 +1963,13 @@
                     "payePar"
                 ]
             },
-            "Depense.jsonld": {
+            "Depense-depense.write.jsonMergePatch": {
                 "type": "object",
-                "description": "",
-                "deprecated": false,
                 "properties": {
-                    "@context": {
-                        "readOnly": true,
-                        "oneOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "object",
-                                "properties": {
-                                    "@vocab": {
-                                        "type": "string"
-                                    },
-                                    "hydra": {
-                                        "type": "string",
-                                        "enum": [
-                                            "http://www.w3.org/ns/hydra/core#"
-                                        ]
-                                    }
-                                },
-                                "required": [
-                                    "@vocab",
-                                    "hydra"
-                                ],
-                                "additionalProperties": true
-                            }
-                        ]
-                    },
-                    "@id": {
-                        "readOnly": true,
-                        "type": "string"
-                    },
-                    "@type": {
-                        "readOnly": true,
-                        "type": "string"
-                    },
-                    "id": {
-                        "readOnly": true,
-                        "type": "integer"
-                    },
                     "details": {
-                        "minItems": 1,
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/Detail.jsonld"
+                            "$ref": "#/components/schemas/Detail-depense.write"
                         }
                     },
                     "date": {
@@ -2450,163 +2002,130 @@
                         "format": "iri-reference",
                         "example": "https://example.com/"
                     }
-                },
-                "required": [
-                    "date",
-                    "montant",
-                    "titre",
-                    "partage",
-                    "tag",
-                    "payePar"
+                }
+            },
+            "Depense.jsonld": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/HydraItemBaseSchema"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "readOnly": true,
+                                "type": "integer"
+                            },
+                            "details": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/Detail.jsonld"
+                                }
+                            },
+                            "date": {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            "montant": {
+                                "minimum": 0,
+                                "type": "number"
+                            },
+                            "titre": {
+                                "maxLength": 255,
+                                "type": "string"
+                            },
+                            "partage": {
+                                "enum": [
+                                    "parts",
+                                    "montants"
+                                ],
+                                "description": "Mode de partage de la d\u00e9pense.<br>\n- Si \"parts\" : les parts dans les d\u00e9tails servent \u00e0 calculer la r\u00e9partition proportionnelle<br>\n- Si \"montants\" : les montants des d\u00e9tails doivent \u00eatre exacts et valides",
+                                "type": "string"
+                            },
+                            "tag": {
+                                "type": "string",
+                                "format": "iri-reference",
+                                "example": "https://example.com/"
+                            },
+                            "payePar": {
+                                "type": "string",
+                                "format": "iri-reference",
+                                "example": "https://example.com/"
+                            }
+                        },
+                        "required": [
+                            "date",
+                            "montant",
+                            "titre",
+                            "partage",
+                            "tag",
+                            "payePar"
+                        ]
+                    }
                 ]
             },
             "Depense.jsonld-depense.read": {
-                "type": "object",
-                "description": "",
-                "deprecated": false,
-                "properties": {
-                    "@context": {
-                        "readOnly": true,
-                        "oneOf": [
-                            {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/HydraItemBaseSchema"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "readOnly": true,
+                                "type": "integer"
+                            },
+                            "details": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/Detail.jsonld-depense.read"
+                                }
+                            },
+                            "date": {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            "montant": {
+                                "minimum": 0,
+                                "type": "number"
+                            },
+                            "titre": {
+                                "maxLength": 255,
                                 "type": "string"
                             },
-                            {
-                                "type": "object",
-                                "properties": {
-                                    "@vocab": {
-                                        "type": "string"
-                                    },
-                                    "hydra": {
-                                        "type": "string",
-                                        "enum": [
-                                            "http://www.w3.org/ns/hydra/core#"
-                                        ]
-                                    }
-                                },
-                                "required": [
-                                    "@vocab",
-                                    "hydra"
+                            "partage": {
+                                "enum": [
+                                    "parts",
+                                    "montants"
                                 ],
-                                "additionalProperties": true
+                                "description": "Mode de partage de la d\u00e9pense.<br>\n- Si \"parts\" : les parts dans les d\u00e9tails servent \u00e0 calculer la r\u00e9partition proportionnelle<br>\n- Si \"montants\" : les montants des d\u00e9tails doivent \u00eatre exacts et valides",
+                                "type": "string"
+                            },
+                            "tag": {
+                                "type": "string",
+                                "format": "iri-reference",
+                                "example": "https://example.com/"
+                            },
+                            "payePar": {
+                                "type": "string",
+                                "format": "iri-reference",
+                                "example": "https://example.com/"
                             }
+                        },
+                        "required": [
+                            "date",
+                            "montant",
+                            "titre",
+                            "partage",
+                            "tag",
+                            "payePar"
                         ]
-                    },
-                    "@id": {
-                        "readOnly": true,
-                        "type": "string"
-                    },
-                    "@type": {
-                        "readOnly": true,
-                        "type": "string"
-                    },
-                    "id": {
-                        "readOnly": true,
-                        "type": "integer"
-                    },
-                    "details": {
-                        "minItems": 1,
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/Detail.jsonld-depense.read"
-                        }
-                    },
-                    "date": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "montant": {
-                        "minimum": 0,
-                        "type": "number"
-                    },
-                    "titre": {
-                        "maxLength": 255,
-                        "type": "string"
-                    },
-                    "partage": {
-                        "enum": [
-                            "parts",
-                            "montants"
-                        ],
-                        "description": "Mode de partage de la d\u00e9pense.<br>\n- Si \"parts\" : les parts dans les d\u00e9tails servent \u00e0 calculer la r\u00e9partition proportionnelle<br>\n- Si \"montants\" : les montants des d\u00e9tails doivent \u00eatre exacts et valides",
-                        "type": "string"
-                    },
-                    "tag": {
-                        "type": "string",
-                        "format": "iri-reference",
-                        "example": "https://example.com/"
-                    },
-                    "payePar": {
-                        "type": "string",
-                        "format": "iri-reference",
-                        "example": "https://example.com/"
                     }
-                },
-                "required": [
-                    "date",
-                    "montant",
-                    "titre",
-                    "partage",
-                    "tag",
-                    "payePar"
-                ]
-            },
-            "Depense.jsonld-depense.write": {
-                "type": "object",
-                "description": "",
-                "deprecated": false,
-                "properties": {
-                    "details": {
-                        "minItems": 1,
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/Detail.jsonld-depense.write"
-                        }
-                    },
-                    "date": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "montant": {
-                        "minimum": 0,
-                        "type": "number"
-                    },
-                    "titre": {
-                        "maxLength": 255,
-                        "type": "string"
-                    },
-                    "partage": {
-                        "enum": [
-                            "parts",
-                            "montants"
-                        ],
-                        "description": "Mode de partage de la d\u00e9pense.<br>\n- Si \"parts\" : les parts dans les d\u00e9tails servent \u00e0 calculer la r\u00e9partition proportionnelle<br>\n- Si \"montants\" : les montants des d\u00e9tails doivent \u00eatre exacts et valides",
-                        "type": "string"
-                    },
-                    "tag": {
-                        "type": "string",
-                        "format": "iri-reference",
-                        "example": "https://example.com/"
-                    },
-                    "payePar": {
-                        "type": "string",
-                        "format": "iri-reference",
-                        "example": "https://example.com/"
-                    }
-                },
-                "required": [
-                    "date",
-                    "montant",
-                    "titre",
-                    "partage",
-                    "tag",
-                    "payePar"
                 ]
             },
             "Detail-depense.write": {
                 "type": "object",
-                "description": "",
-                "deprecated": false,
                 "required": [
                     "user",
                     "parts",
@@ -2631,44 +2150,7 @@
             },
             "Detail.jsonld": {
                 "type": "object",
-                "description": "",
-                "deprecated": false,
                 "properties": {
-                    "@context": {
-                        "readOnly": true,
-                        "oneOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "object",
-                                "properties": {
-                                    "@vocab": {
-                                        "type": "string"
-                                    },
-                                    "hydra": {
-                                        "type": "string",
-                                        "enum": [
-                                            "http://www.w3.org/ns/hydra/core#"
-                                        ]
-                                    }
-                                },
-                                "required": [
-                                    "@vocab",
-                                    "hydra"
-                                ],
-                                "additionalProperties": true
-                            }
-                        ]
-                    },
-                    "@id": {
-                        "readOnly": true,
-                        "type": "string"
-                    },
-                    "@type": {
-                        "readOnly": true,
-                        "type": "string"
-                    },
                     "id": {
                         "readOnly": true,
                         "type": "integer"
@@ -2701,69 +2183,6 @@
             },
             "Detail.jsonld-depense.read": {
                 "type": "object",
-                "description": "",
-                "deprecated": false,
-                "required": [
-                    "user",
-                    "parts",
-                    "montant"
-                ],
-                "properties": {
-                    "@context": {
-                        "readOnly": true,
-                        "oneOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "object",
-                                "properties": {
-                                    "@vocab": {
-                                        "type": "string"
-                                    },
-                                    "hydra": {
-                                        "type": "string",
-                                        "enum": [
-                                            "http://www.w3.org/ns/hydra/core#"
-                                        ]
-                                    }
-                                },
-                                "required": [
-                                    "@vocab",
-                                    "hydra"
-                                ],
-                                "additionalProperties": true
-                            }
-                        ]
-                    },
-                    "@id": {
-                        "readOnly": true,
-                        "type": "string"
-                    },
-                    "@type": {
-                        "readOnly": true,
-                        "type": "string"
-                    },
-                    "user": {
-                        "type": "string",
-                        "format": "iri-reference",
-                        "example": "https://example.com/"
-                    },
-                    "parts": {
-                        "minimum": 0,
-                        "description": "Nombre de parts pour ce d\u00e9tail.<br>\nUtilis\u00e9 uniquement pour l'affichage dans le cas la r\u00e9partition par parts.",
-                        "type": "integer"
-                    },
-                    "montant": {
-                        "description": "Montant r\u00e9el en euros pour ce d\u00e9tail.<br>\nLe montant est arrondi \u00e0 deux d\u00e9cimales.<br>\nLe montant est obligatoire peu importe le mode de r\u00e9partition.",
-                        "type": "number"
-                    }
-                }
-            },
-            "Detail.jsonld-depense.write": {
-                "type": "object",
-                "description": "",
-                "deprecated": false,
                 "required": [
                     "user",
                     "parts",
@@ -2789,20 +2208,28 @@
             "Error": {
                 "type": "object",
                 "description": "A representation of common errors.",
-                "deprecated": false,
                 "properties": {
                     "title": {
                         "readOnly": true,
                         "description": "A short, human-readable summary of the problem.",
-                        "type": "string"
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "detail": {
                         "readOnly": true,
                         "description": "A human-readable explanation specific to this occurrence of the problem.",
-                        "type": "string"
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "status": {
-                        "type": "number",
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
                         "examples": [
                             404
                         ],
@@ -2824,12 +2251,174 @@
                 }
             },
             "Error.jsonld": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/HydraItemBaseSchema"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "title": {
+                                "readOnly": true,
+                                "description": "A short, human-readable summary of the problem.",
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "detail": {
+                                "readOnly": true,
+                                "description": "A human-readable explanation specific to this occurrence of the problem.",
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "status": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ],
+                                "examples": [
+                                    404
+                                ],
+                                "default": 400
+                            },
+                            "instance": {
+                                "readOnly": true,
+                                "description": "A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced.",
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "type": {
+                                "readOnly": true,
+                                "description": "A URI reference that identifies the problem type",
+                                "type": "string"
+                            },
+                            "description": {
+                                "readOnly": true,
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "description": "A representation of common errors."
+            },
+            "HydraCollectionBaseSchema": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/HydraCollectionBaseSchemaNoPagination"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "view": {
+                                "type": "object",
+                                "properties": {
+                                    "@id": {
+                                        "type": "string",
+                                        "format": "iri-reference"
+                                    },
+                                    "@type": {
+                                        "type": "string"
+                                    },
+                                    "first": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "format": "iri-reference"
+                                    },
+                                    "last": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "format": "iri-reference"
+                                    },
+                                    "previous": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "format": "iri-reference"
+                                    },
+                                    "next": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "format": "iri-reference"
+                                    }
+                                },
+                                "example": {
+                                    "@id": "string",
+                                    "@type": "string",
+                                    "first": "string",
+                                    "last": "string",
+                                    "previous": "string",
+                                    "next": "string"
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "HydraCollectionBaseSchemaNoPagination": {
                 "type": "object",
-                "description": "A representation of common errors.",
-                "deprecated": false,
+                "properties": {
+                    "totalItems": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "search": {
+                        "type": "object",
+                        "properties": {
+                            "@type": {
+                                "type": "string"
+                            },
+                            "template": {
+                                "type": "string"
+                            },
+                            "variableRepresentation": {
+                                "type": "string"
+                            },
+                            "mapping": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "@type": {
+                                            "type": "string"
+                                        },
+                                        "variable": {
+                                            "type": "string"
+                                        },
+                                        "property": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        },
+                                        "required": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "HydraItemBaseSchema": {
+                "type": "object",
                 "properties": {
                     "@context": {
-                        "readOnly": true,
                         "oneOf": [
                             {
                                 "type": "string"
@@ -2856,204 +2445,122 @@
                         ]
                     },
                     "@id": {
-                        "readOnly": true,
                         "type": "string"
                     },
                     "@type": {
-                        "readOnly": true,
                         "type": "string"
-                    },
-                    "title": {
-                        "readOnly": true,
-                        "description": "A short, human-readable summary of the problem.",
-                        "type": "string"
-                    },
-                    "detail": {
-                        "readOnly": true,
-                        "description": "A human-readable explanation specific to this occurrence of the problem.",
-                        "type": "string"
-                    },
-                    "status": {
-                        "type": "number",
-                        "examples": [
-                            404
-                        ],
-                        "default": 400
-                    },
-                    "instance": {
-                        "readOnly": true,
-                        "description": "A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced.",
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "type": {
-                        "readOnly": true,
-                        "description": "A URI reference that identifies the problem type",
-                        "type": "string"
-                    },
-                    "description": {
-                        "readOnly": true,
-                        "type": [
-                            "string",
-                            "null"
-                        ]
                     }
-                }
+                },
+                "required": [
+                    "@id",
+                    "@type"
+                ]
             },
             "Log.jsonld-log.read": {
-                "type": "object",
-                "description": "",
-                "deprecated": false,
-                "properties": {
-                    "@id": {
-                        "readOnly": true,
-                        "type": "string"
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/HydraItemBaseSchema"
                     },
-                    "@type": {
-                        "readOnly": true,
-                        "type": "string"
-                    },
-                    "@context": {
-                        "readOnly": true,
-                        "oneOf": [
-                            {
+                    {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "readOnly": true,
+                                "type": "integer"
+                            },
+                            "date": {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            "action": {
                                 "type": "string"
                             },
-                            {
-                                "type": "object",
-                                "properties": {
-                                    "@vocab": {
-                                        "type": "string"
-                                    },
-                                    "hydra": {
-                                        "type": "string",
-                                        "enum": [
-                                            "http://www.w3.org/ns/hydra/core#"
-                                        ]
-                                    }
-                                },
-                                "required": [
-                                    "@vocab",
-                                    "hydra"
-                                ],
-                                "additionalProperties": true
+                            "user": {
+                                "type": "string",
+                                "format": "iri-reference",
+                                "example": "https://example.com/"
+                            },
+                            "depense": {
+                                "type": "string",
+                                "format": "iri-reference",
+                                "example": "https://example.com/"
+                            },
+                            "libelle": {
+                                "type": "string"
+                            },
+                            "montant": {
+                                "type": "number"
                             }
-                        ]
-                    },
-                    "id": {
-                        "readOnly": true,
-                        "type": "integer"
-                    },
-                    "date": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "action": {
-                        "type": "string"
-                    },
-                    "user": {
-                        "type": "string",
-                        "format": "iri-reference",
-                        "example": "https://example.com/"
-                    },
-                    "depense": {
-                        "type": "string",
-                        "format": "iri-reference",
-                        "example": "https://example.com/"
-                    },
-                    "libelle": {
-                        "type": "string"
-                    },
-                    "montant": {
-                        "type": "number"
+                        }
                     }
-                }
+                ]
             },
-            "Passkey-passkey.write": {
+            "Passkey-passkey.write.jsonMergePatch": {
                 "type": "object",
                 "description": "Un passkey enregistr\u00e9 pour un utilisateur.\n\nLes champs de la c\u00e9r\u00e9monie WebAuthn (cl\u00e9 publique, compteur, aaguid...) sont\nmapp\u00e9s par le bundle, qui d\u00e9clare CredentialRecord en mapped-superclass\n(voir Resources/config/doctrine-mapping/CredentialRecord.orm.xml).\nNe rien y red\u00e9clarer ici : Doctrine refuserait les colonnes en double.",
-                "deprecated": false,
                 "properties": {
                     "name": {
                         "description": "Libell\u00e9 affich\u00e9 dans \u00ab Mes appareils \u00bb.",
                         "default": "Appareil",
-                        "example": "Appareil",
                         "type": "string"
                     }
                 }
             },
             "Passkey.jsonld-passkey.read": {
-                "type": "object",
-                "description": "Un passkey enregistr\u00e9 pour un utilisateur.\n\nLes champs de la c\u00e9r\u00e9monie WebAuthn (cl\u00e9 publique, compteur, aaguid...) sont\nmapp\u00e9s par le bundle, qui d\u00e9clare CredentialRecord en mapped-superclass\n(voir Resources/config/doctrine-mapping/CredentialRecord.orm.xml).\nNe rien y red\u00e9clarer ici : Doctrine refuserait les colonnes en double.",
-                "deprecated": false,
-                "properties": {
-                    "@context": {
-                        "readOnly": true,
-                        "oneOf": [
-                            {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/HydraItemBaseSchema"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "readOnly": true,
+                                "type": "integer"
+                            },
+                            "name": {
+                                "description": "Libell\u00e9 affich\u00e9 dans \u00ab Mes appareils \u00bb.",
+                                "default": "Appareil",
                                 "type": "string"
                             },
-                            {
-                                "type": "object",
-                                "properties": {
-                                    "@vocab": {
-                                        "type": "string"
-                                    },
-                                    "hydra": {
-                                        "type": "string",
-                                        "enum": [
-                                            "http://www.w3.org/ns/hydra/core#"
-                                        ]
-                                    }
-                                },
-                                "required": [
-                                    "@vocab",
-                                    "hydra"
+                            "createdAt": {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            "lastUsedAt": {
+                                "type": [
+                                    "string",
+                                    "null"
                                 ],
-                                "additionalProperties": true
+                                "format": "date-time"
                             }
-                        ]
-                    },
-                    "@id": {
-                        "readOnly": true,
-                        "type": "string"
-                    },
-                    "@type": {
-                        "readOnly": true,
-                        "type": "string"
-                    },
-                    "id": {
-                        "readOnly": true,
-                        "type": "integer"
-                    },
-                    "name": {
-                        "description": "Libell\u00e9 affich\u00e9 dans \u00ab Mes appareils \u00bb.",
-                        "default": "Appareil",
-                        "example": "Appareil",
-                        "type": "string"
-                    },
-                    "createdAt": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "lastUsedAt": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
+                        }
                     }
-                }
+                ],
+                "description": "Un passkey enregistr\u00e9 pour un utilisateur.\n\nLes champs de la c\u00e9r\u00e9monie WebAuthn (cl\u00e9 publique, compteur, aaguid...) sont\nmapp\u00e9s par le bundle, qui d\u00e9clare CredentialRecord en mapped-superclass\n(voir Resources/config/doctrine-mapping/CredentialRecord.orm.xml).\nNe rien y red\u00e9clarer ici : Doctrine refuserait les colonnes en double."
             },
             "Tag-tag.write": {
                 "type": "object",
-                "description": "",
-                "deprecated": false,
                 "required": [
                     "libelle"
                 ],
+                "properties": {
+                    "libelle": {
+                        "maxLength": 255,
+                        "type": "string"
+                    },
+                    "users": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "format": "iri-reference",
+                            "example": "https://example.com/"
+                        }
+                    }
+                }
+            },
+            "Tag-tag.write.jsonMergePatch": {
+                "type": "object",
                 "properties": {
                     "libelle": {
                         "maxLength": 255,
@@ -3070,161 +2577,97 @@
                 }
             },
             "Tag.jsonld": {
-                "type": "object",
-                "description": "",
-                "deprecated": false,
-                "properties": {
-                    "@context": {
-                        "readOnly": true,
-                        "oneOf": [
-                            {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/HydraItemBaseSchema"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "readOnly": true,
+                                "type": "integer"
+                            },
+                            "libelle": {
+                                "maxLength": 255,
                                 "type": "string"
                             },
-                            {
-                                "type": "object",
-                                "properties": {
-                                    "@vocab": {
-                                        "type": "string"
-                                    },
-                                    "hydra": {
-                                        "type": "string",
-                                        "enum": [
-                                            "http://www.w3.org/ns/hydra/core#"
-                                        ]
-                                    }
-                                },
-                                "required": [
-                                    "@vocab",
-                                    "hydra"
-                                ],
-                                "additionalProperties": true
+                            "depenses": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string",
+                                    "format": "iri-reference",
+                                    "example": "https://example.com/"
+                                }
+                            },
+                            "users": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string",
+                                    "format": "iri-reference",
+                                    "example": "https://example.com/"
+                                }
                             }
+                        },
+                        "required": [
+                            "libelle"
                         ]
-                    },
-                    "@id": {
-                        "readOnly": true,
-                        "type": "string"
-                    },
-                    "@type": {
-                        "readOnly": true,
-                        "type": "string"
-                    },
-                    "id": {
-                        "readOnly": true,
-                        "type": "integer"
-                    },
-                    "libelle": {
-                        "maxLength": 255,
-                        "type": "string"
-                    },
-                    "depenses": {
-                        "type": "array",
-                        "items": {
-                            "type": "string",
-                            "format": "iri-reference",
-                            "example": "https://example.com/"
-                        }
-                    },
-                    "users": {
-                        "type": "array",
-                        "items": {
-                            "type": "string",
-                            "format": "iri-reference",
-                            "example": "https://example.com/"
-                        }
                     }
-                },
-                "required": [
-                    "libelle"
                 ]
             },
             "Tag.jsonld-tag.read": {
-                "type": "object",
-                "description": "",
-                "deprecated": false,
-                "properties": {
-                    "@context": {
-                        "readOnly": true,
-                        "oneOf": [
-                            {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/HydraItemBaseSchema"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "readOnly": true,
+                                "type": "integer"
+                            },
+                            "libelle": {
+                                "maxLength": 255,
                                 "type": "string"
                             },
-                            {
-                                "type": "object",
-                                "properties": {
-                                    "@vocab": {
-                                        "type": "string"
-                                    },
-                                    "hydra": {
-                                        "type": "string",
-                                        "enum": [
-                                            "http://www.w3.org/ns/hydra/core#"
-                                        ]
-                                    }
-                                },
-                                "required": [
-                                    "@vocab",
-                                    "hydra"
-                                ],
-                                "additionalProperties": true
+                            "users": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string",
+                                    "format": "iri-reference",
+                                    "example": "https://example.com/"
+                                }
                             }
+                        },
+                        "required": [
+                            "libelle"
                         ]
-                    },
-                    "@id": {
-                        "readOnly": true,
-                        "type": "string"
-                    },
-                    "@type": {
-                        "readOnly": true,
-                        "type": "string"
-                    },
-                    "id": {
-                        "readOnly": true,
-                        "type": "integer"
-                    },
-                    "libelle": {
-                        "maxLength": 255,
-                        "type": "string"
-                    },
-                    "users": {
-                        "type": "array",
-                        "items": {
-                            "type": "string",
-                            "format": "iri-reference",
-                            "example": "https://example.com/"
-                        }
                     }
-                },
-                "required": [
-                    "libelle"
                 ]
             },
-            "Tag.jsonld-tag.write": {
+            "User-user.write": {
                 "type": "object",
-                "description": "",
-                "deprecated": false,
-                "required": [
-                    "libelle"
-                ],
                 "properties": {
-                    "libelle": {
-                        "maxLength": 255,
+                    "username": {
                         "type": "string"
-                    },
-                    "users": {
-                        "type": "array",
-                        "items": {
-                            "type": "string",
-                            "format": "iri-reference",
-                            "example": "https://example.com/"
-                        }
                     }
                 }
             },
-            "User": {
+            "User.UpdateCredentialsDto-user.credentials.jsonMergePatch": {
                 "type": "object",
-                "description": "",
-                "deprecated": false,
+                "properties": {
+                    "username": {
+                        "maxLength": 180,
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                }
+            },
+            "User.jsonMergePatch": {
+                "type": "object",
                 "properties": {
                     "id": {
                         "readOnly": true,
@@ -3257,6 +2700,7 @@
                         }
                     },
                     "token": {
+                        "description": "Jeton de liaison \u00e0 usage unique, g\u00e9n\u00e9r\u00e9 par l'admin.",
                         "type": [
                             "string",
                             "null"
@@ -3270,243 +2714,132 @@
                     "soldeIndividuel": {
                         "readOnly": true,
                         "type": "number"
-                    }
-                }
-            },
-            "User.UpdateCredentialsDto-user.credentials": {
-                "type": "object",
-                "description": "",
-                "deprecated": false,
-                "required": [
-                    "token"
-                ],
-                "properties": {
-                    "token": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "username": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
                     }
                 }
             },
             "User.jsonld-user.read": {
-                "type": "object",
-                "description": "",
-                "deprecated": false,
-                "properties": {
-                    "@context": {
-                        "readOnly": true,
-                        "oneOf": [
-                            {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/HydraItemBaseSchema"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "readOnly": true,
+                                "type": "integer"
+                            },
+                            "tags": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string",
+                                    "format": "iri-reference",
+                                    "example": "https://example.com/"
+                                }
+                            },
+                            "conjoint": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "iri-reference",
+                                "example": "https://example.com/"
+                            },
+                            "username": {
                                 "type": "string"
                             },
-                            {
-                                "type": "object",
-                                "properties": {
-                                    "@vocab": {
-                                        "type": "string"
-                                    },
-                                    "hydra": {
-                                        "type": "string",
-                                        "enum": [
-                                            "http://www.w3.org/ns/hydra/core#"
-                                        ]
-                                    }
-                                },
-                                "required": [
-                                    "@vocab",
-                                    "hydra"
-                                ],
-                                "additionalProperties": true
+                            "roles": {
+                                "description": "The user roles",
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "solde": {
+                                "readOnly": true,
+                                "description": "Retourne le solde de l'utilisateur.",
+                                "type": "number"
+                            },
+                            "soldeIndividuel": {
+                                "readOnly": true,
+                                "type": "number"
                             }
-                        ]
-                    },
-                    "@id": {
-                        "readOnly": true,
-                        "type": "string"
-                    },
-                    "@type": {
-                        "readOnly": true,
-                        "type": "string"
-                    },
-                    "id": {
-                        "readOnly": true,
-                        "type": "integer"
-                    },
-                    "tags": {
-                        "type": "array",
-                        "items": {
-                            "type": "string",
-                            "format": "iri-reference",
-                            "example": "https://example.com/"
                         }
-                    },
-                    "conjoint": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "iri-reference",
-                        "example": "https://example.com/"
-                    },
-                    "username": {
-                        "type": "string"
-                    },
-                    "roles": {
-                        "description": "The user roles",
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    },
-                    "solde": {
-                        "readOnly": true,
-                        "description": "Retourne le solde de l'utilisateur.",
-                        "type": "number"
-                    },
-                    "soldeIndividuel": {
-                        "readOnly": true,
-                        "type": "number"
                     }
-                }
+                ]
             },
             "User.jsonld-user.read_user.token": {
-                "type": "object",
-                "description": "",
-                "deprecated": false,
-                "properties": {
-                    "@context": {
-                        "readOnly": true,
-                        "oneOf": [
-                            {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/HydraItemBaseSchema"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "readOnly": true,
+                                "type": "integer"
+                            },
+                            "tags": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string",
+                                    "format": "iri-reference",
+                                    "example": "https://example.com/"
+                                }
+                            },
+                            "conjoint": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "iri-reference",
+                                "example": "https://example.com/"
+                            },
+                            "username": {
                                 "type": "string"
                             },
-                            {
-                                "type": "object",
-                                "properties": {
-                                    "@vocab": {
-                                        "type": "string"
-                                    },
-                                    "hydra": {
-                                        "type": "string",
-                                        "enum": [
-                                            "http://www.w3.org/ns/hydra/core#"
-                                        ]
-                                    }
-                                },
-                                "required": [
-                                    "@vocab",
-                                    "hydra"
-                                ],
-                                "additionalProperties": true
+                            "roles": {
+                                "description": "The user roles",
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "token": {
+                                "description": "Jeton de liaison \u00e0 usage unique, g\u00e9n\u00e9r\u00e9 par l'admin.",
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "solde": {
+                                "readOnly": true,
+                                "description": "Retourne le solde de l'utilisateur.",
+                                "type": "number"
+                            },
+                            "soldeIndividuel": {
+                                "readOnly": true,
+                                "type": "number"
                             }
-                        ]
-                    },
-                    "@id": {
-                        "readOnly": true,
-                        "type": "string"
-                    },
-                    "@type": {
-                        "readOnly": true,
-                        "type": "string"
-                    },
-                    "id": {
-                        "readOnly": true,
-                        "type": "integer"
-                    },
-                    "tags": {
-                        "type": "array",
-                        "items": {
-                            "type": "string",
-                            "format": "iri-reference",
-                            "example": "https://example.com/"
                         }
-                    },
-                    "conjoint": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "iri-reference",
-                        "example": "https://example.com/"
-                    },
-                    "username": {
-                        "type": "string"
-                    },
-                    "roles": {
-                        "description": "The user roles",
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    },
-                    "token": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "solde": {
-                        "readOnly": true,
-                        "description": "Retourne le solde de l'utilisateur.",
-                        "type": "number"
-                    },
-                    "soldeIndividuel": {
-                        "readOnly": true,
-                        "type": "number"
                     }
-                }
+                ]
             },
             "User.jsonld-user.write": {
-                "type": "object",
-                "description": "",
-                "deprecated": false,
-                "properties": {
-                    "@context": {
-                        "readOnly": true,
-                        "oneOf": [
-                            {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/HydraItemBaseSchema"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "username": {
                                 "type": "string"
-                            },
-                            {
-                                "type": "object",
-                                "properties": {
-                                    "@vocab": {
-                                        "type": "string"
-                                    },
-                                    "hydra": {
-                                        "type": "string",
-                                        "enum": [
-                                            "http://www.w3.org/ns/hydra/core#"
-                                        ]
-                                    }
-                                },
-                                "required": [
-                                    "@vocab",
-                                    "hydra"
-                                ],
-                                "additionalProperties": true
                             }
-                        ]
-                    },
-                    "@id": {
-                        "readOnly": true,
-                        "type": "string"
-                    },
-                    "@type": {
-                        "readOnly": true,
-                        "type": "string"
-                    },
-                    "username": {
-                        "type": "string"
+                        }
                     }
-                }
+                ]
             }
         },
         "responses": {},
@@ -3530,16 +2863,20 @@
     ],
     "tags": [
         {
-            "name": "Depense"
+            "name": "Depense",
+            "description": "Resource 'Depense' operations."
         },
         {
-            "name": "Log"
+            "name": "Log",
+            "description": "Resource 'Log' operations."
         },
         {
-            "name": "Tag"
+            "name": "Tag",
+            "description": "Resource 'Tag' operations."
         },
         {
-            "name": "User"
+            "name": "User",
+            "description": "Resource 'User' operations."
         },
         {
             "name": "Passkey",
