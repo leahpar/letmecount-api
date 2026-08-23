@@ -81,14 +81,26 @@ class OAuthLoginService
             throw new ConflictHttpException('Ce compte est déjà lié à une autre identité');
         }
 
-        match ($providerName) {
-            'google' => $user->setGoogleSub($subject),
+        $column = match ($providerName) {
+            'google' => 'google_sub',
             default => throw new BadRequestHttpException(sprintf('Fournisseur "%s" inconnu', $providerName)),
         };
 
-        // Le jeton d'invitation est à usage unique
-        $user->setToken(null);
-        $this->em->flush();
+        // La liaison passe par un UPDATE conditionnel plutôt que par un flush de l'ORM :
+        // c'est le WHERE qui porte la garantie d'usage unique du jeton. Deux requêtes
+        // concurrentes présentant le même jeton ne peuvent pas gagner toutes les deux,
+        // là où le lire-puis-écrire laissait la seconde écraser la première.
+        $affected = $this->em->getConnection()->executeStatement(
+            sprintf('UPDATE user SET %s = :subject, token = NULL WHERE token = :token AND %s IS NULL', $column, $column),
+            ['subject' => $subject, 'token' => $linkToken],
+        );
+
+        if (0 === $affected) {
+            // Course perdue : une autre requête a consommé le jeton entre-temps.
+            throw new AccessDeniedHttpException('Invitation invalide ou déjà utilisée');
+        }
+
+        $this->em->refresh($user);
 
         return $user;
     }
