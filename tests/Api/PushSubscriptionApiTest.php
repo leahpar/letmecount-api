@@ -81,6 +81,19 @@ class PushSubscriptionApiTest extends AuthenticatedApiTestCase
         $this->assertResponseStatusCodeSame(422);
     }
 
+    /**
+     * Une clé illisible ne se voit qu'au chiffrement, et fait alors échouer
+     * l'envoi de tout le lot : elle ne doit pas entrer en base.
+     */
+    public function testMalformedKeysAreRejected(): void
+    {
+        $this->subscribe(['p256dh' => 'pas-une-cle']);
+        $this->assertResponseStatusCodeSame(422);
+
+        $this->subscribe(['auth' => 'trop-court']);
+        $this->assertResponseStatusCodeSame(422);
+    }
+
     public function testListOnlyReturnsOwnSubscriptions(): void
     {
         $this->subscribe();

@@ -76,18 +76,26 @@ class PushSubscription
 
     /**
      * Clé publique de l'abonnement (P-256, base64url), pour chiffrer la charge utile.
+     *
+     * Le format est vérifié parce qu'une clé illisible ne se voit qu'au moment
+     * du chiffrement, et fait alors échouer l'envoi de tout le lot, pas
+     * seulement celui de l'appareil fautif. 65 octets, soit 87 caractères en
+     * base64url (88 avec le remplissage, que les navigateurs omettent).
      */
     #[ORM\Column(length: 255)]
     #[Groups(['push_subscription:write'])]
     #[Assert\NotBlank]
+    #[Assert\Regex(pattern: '/^[A-Za-z0-9_-]{86,88}={0,2}$/', message: 'Clé publique d\'abonnement invalide.')]
     public string $p256dh;
 
     /**
-     * Secret d'authentification de l'abonnement (base64url).
+     * Secret d'authentification de l'abonnement : 16 octets, soit 22 caractères
+     * en base64url. Même raison qu'au-dessus pour le contrôle de format.
      */
     #[ORM\Column(length: 255)]
     #[Groups(['push_subscription:write'])]
     #[Assert\NotBlank]
+    #[Assert\Regex(pattern: '/^[A-Za-z0-9_-]{21,24}={0,2}$/', message: 'Secret d\'abonnement invalide.')]
     public string $auth;
 
     /**

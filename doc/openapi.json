@@ -2644,10 +2644,12 @@
                         "type": "string"
                     },
                     "p256dh": {
+                        "pattern": "^([A-Za-z0-9_-]{86,88}={0,2})$",
                         "description": "Cl\u00e9 publique de l'abonnement (P-256, base64url), pour chiffrer la charge utile.",
                         "type": "string"
                     },
                     "auth": {
+                        "pattern": "^([A-Za-z0-9_-]{21,24}={0,2})$",
                         "description": "Secret d'authentification de l'abonnement (base64url).",
                         "type": "string"
                     }
