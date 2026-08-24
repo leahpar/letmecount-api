@@ -231,17 +231,16 @@ pas une refonte.
 
 ## 4. Points ouverts
 
-- **Le compte développeur Apple.** ~99 €/an, obligatoire même pour du web, plus un
-  Services ID, un fichier de vérification de domaine et une clé `.p8`. Coût
-  administratif, pas technique. Recommandation : livrer Google d'abord, puis Apple.
+- ~~**Le compte développeur Apple.**~~ **Pris le 2026-08-24**, avec son Services
+  ID, son App ID primaire, sa clé `.p8` et la vérification de domaine.
 - **`ROLE_ADMIN` via MCP.** Conséquence de « pas de distinction web/MCP » : un
   token utilisé par un agent porte tous les droits du compte, y compris les
   opérations admin (`POST /users`, `GET /users/{id}/token` — donc la capacité de
   fabriquer des codes de liaison). Deux options : l'accepter, ou réintroduire le
   seul bit qui distingue les tokens. => L'accepter dans un premier temps.
-- **Apple `response_mode=query` sans scope** (D3) : à reconfirmer à la
-  configuration du Services ID. Si Apple impose `form_post` malgré tout, le
-  callback Apple devra atterrir sur l'API et rebondir vers le front.
+- ~~**Apple `response_mode=query` sans scope** (D3)~~ : **confirmé le
+  2026-08-24**. Sans `scope`, Apple répond bien en `query`, le callback reste sur
+  le domaine du front et le rebond par l'API n'a pas lieu d'être. D3 tenait.
 - **Écran de consentement Google** : à publier pour sortir du mode *Testing*
   (plafonné à 100 utilisateurs listés un par un). Avec les seuls scopes non
   sensibles, pas de passage en revue de vérification.
@@ -316,10 +315,9 @@ place du compte développeur.
 
 ### Choix pris en cours d'implémentation
 
-- **Apple non implémenté.** Écrire du code que personne ne peut exécuter ni
-  tester irait contre le KISS tant que le compte développeur n'est pas décidé.
-  La couture (`OAuthProviderInterface` + les `match` de `OAuthLoginService`) est
-  en place.
+- ~~**Apple non implémenté.**~~ Livré le 2026-08-24, voir plus bas. La couture
+  prévue (`OAuthProviderInterface` + les `match` de `OAuthLoginService`) a tenu :
+  aucun de ces deux points n'a eu à être repensé.
 - **Le `redirect_uri` est fixé côté serveur** (`OAUTH_REDIRECT_URI`), jamais lu
   dans la requête : un appelant ne peut pas détourner l'échange.
 - **Rate limiter conservé mais restreint.** Le jeton d'invitation reste à
@@ -392,6 +390,48 @@ toute l'authentification. `JwtAudienceListener` normalise avec `(array)`.
   exclusions `/login_link` et `/welcome` déjà présentes dans l'intercepteur
   étaient le contournement historique du même symptôme.
 
+### Fait — Apple (branches `feat/oauth-apple`, API et front)
+
+- `AppleOAuthProvider` : `client_secret` JWT ES256 régénéré à chaque échange
+  (5 min de validité) à partir de la clé `.p8`, échange serveur-à-serveur,
+  lecture du `sub`.
+- `User.appleSub` (unique, nullable) + migration `Version20260824090000`.
+- `.env` : `APPLE_SERVICES_ID`, `APPLE_TEAM_ID`, `APPLE_KEY_ID` et
+  `APPLE_PRIVATE_KEY_BASE64` — la `.p8` est un PEM multi-lignes, elle ne tient en
+  variable d'environnement qu'encodée en base64.
+- Front : `useOAuth.startLogin(provider, linkToken?)`, composant `OAuthButtons`
+  partagé par `LoginView` et `LoginLinkView`.
+
+### Trois décisions prises pendant l'implémentation Apple
+
+- **Le `nonce` remplace PKCE, et il est *vérifié*.** Apple ne documente pas PKCE.
+  Le nonce n'est donc pas seulement envoyé dans l'URL d'autorisation : il est
+  comparé au claim de l'`id_token` côté API. C'est ce qui lui fait jouer exactement
+  le rôle de PKCE — un tiers qui intercepterait le code d'autorisation dans l'URL
+  de retour ne peut pas le rejouer contre `/auth/oauth`, le nonce étant resté dans
+  le `sessionStorage` de l'onglet légitime. Sans cette vérification, le chemin
+  Apple serait strictement moins sûr que le chemin Google.
+- **`lcobucci/jwt` déclaré explicitement** dans `composer.json`. Il était déjà là
+  en transitif via Lexik, et `composer` n'a modifié aucune version du lock. D4
+  (« aucune dépendance nouvelle ») tient donc, et sa nuance aussi : ce
+  `client_secret` est bien *notre* JWT, signé par *notre* clé. Le motif est la
+  conversion de signature ASN.1 → `R||S` qu'exige ES256, un décodage DER qui casse
+  une implémentation naïve environ une fois sur 256 — quand `r` ou `s` a un octet
+  de poids fort nul. Exactement le genre de bug intermittent qu'on ne veut pas
+  écrire à la main.
+- **`OidcIdTokenTrait`** : la validation `iss` / `aud` / `exp` et la lecture du
+  `sub` sont mises en commun entre les deux providers. C'étaient les lignes qui
+  portent la sécurité du flow ; dupliquées, un correctif appliqué à un seul
+  provider serait passé inaperçu. Le trait normalise `aud` avec `(array)`,
+  cf. le piège ci-dessus.
+
+### Un bug d'isolation des tests corrigé au passage
+
+Trois tests de liaison Google échouaient déjà en suite complète alors qu'ils
+passaient isolément : le limiteur `auth_link` est par IP, tous les tests
+partagent `127.0.0.1`, et les derniers récoltaient un 429 au lieu du code
+attendu. `OAuthTest::setUp()` remet le compteur à zéro.
+
 ### Développer en https en local (contrainte Apple)
 
 Apple refuse `localhost` dans les Return URLs d'un Services ID, quel que soit le
@@ -450,9 +490,14 @@ vérification.
   du compte comprise. Reste à valider en production, et sur PWA installée iOS.
 - Publier l'écran de consentement pour sortir du mode *Testing* (plafonné à
   100 utilisateurs, à lister un par un).
-- Créer la variable de dépôt `VITE_GOOGLE_CLIENT_ID` côté front (Settings >
-  Secrets and variables > Actions > Variables) : le workflow l'injecte dans
-  `.env.production` au build. Le client_id est public, ce n'est pas un secret.
+- Créer les variables de dépôt `VITE_GOOGLE_CLIENT_ID` et
+  `VITE_APPLE_SERVICES_ID` côté front (Settings > Secrets and variables >
+  Actions > Variables) : le workflow les injecte dans `.env.production` au build.
+  Les deux sont publics, ce ne sont pas des secrets.
+- Déposer le `apple-developer-domain-association.txt` dans
+  `front/public/.well-known/` du dépôt. Vérifié : le dossier survit au build Vite
+  et au rsync ; le fallback SPA du serveur web ne doit pas intercepter
+  `/.well-known/`, cf. le piège de redirection ci-dessus.
 - **Envoyer leur lien d'invitation aux utilisateurs existants pendant qu'ils
   sont encore connectés.** Le déploiement ne déconnecte personne (les jetons
   sans `aud` restent acceptés, cf. `testTokenWithoutAudienceIsStillAccepted`),
