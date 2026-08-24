@@ -16,7 +16,6 @@ use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use JMS\Serializer\Annotation as JMS;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Attribute\Ignore;
 use Symfony\Component\Serializer\Attribute\Groups;
@@ -90,6 +89,11 @@ class User implements UserInterface
     public function __construct()
     {
         $this->tags = new ArrayCollection();
+        // Doctrine les remplace à l'hydratation, mais un User neuf doit pouvoir
+        // calculer son solde : sans ça, getSolde() est un fatal sur une entité
+        // qui n'a pas encore fait l'aller-retour en base.
+        $this->details = new ArrayCollection();
+        $this->depenses = new ArrayCollection();
     }
 
     public function addTag(Tag $tag): self
@@ -111,7 +115,6 @@ class User implements UserInterface
      * Si l'utilisateur a un conjoint, le solde inclut celui du conjoint.
      * C'est-à-dire la somme des montants de ses détails et de ceux de son conjoint.
      */
-    #[JMS\VirtualProperty('solde')]
     #[Groups(['user:read'])]
     public function getSolde(bool $withConjoint = true): float
     {
@@ -133,7 +136,6 @@ class User implements UserInterface
         return round($solde, 2);
     }
 
-    #[JMS\VirtualProperty('soldeIndividuel')]
     #[Groups(['user:read'])]
     public function getSoldeIndividuel(): float
     {
