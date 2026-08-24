@@ -1,16 +1,43 @@
 # Dette technique repérée en marge du chantier OAuth
 
 Relevé le 2026-08-23, en établissant la baseline avant de remplacer
-l'authentification (cf. `doc/authentification-oauth.md`). **Rien de tout ceci
-n'est causé par ce chantier, et rien n'a été corrigé** : ces points demandent des
-arbitrages qui n'entraient pas dans le périmètre.
+l'authentification (cf. `doc/authentification-oauth.md`). Rien de tout ceci
+n'était causé par ce chantier.
+
+**Statut : traité le 2026-08-24.** Les points 1 à 4 sont corrigés, la suite est
+au vert (102 tests, 239 assertions) et `make stan` ne signale plus d'erreur dans
+`src/`. Le relevé d'origine est conservé tel quel ci-dessous, avec en tête de
+chaque point ce qui a réellement été fait — y compris là où le diagnostic
+initial était faux.
 
 État de départ sur `master` : `make tests` → 50 tests, 12 erreurs + 5 échecs ;
-`make stan` → 10 erreurs.
+`make stan` → 10 erreurs. Au moment de la reprise, sur `dev` : 102 tests,
+12 erreurs + 5 échecs, 9 erreurs PHPStan.
 
 ---
 
 ## 1. ⚠️ `solde` a disparu des réponses de l'API
+
+> **Corrigé — et le diagnostic ci-dessous était faux.** L'annotation JMS n'y
+> était pour rien, et API Platform exposait bien `solde` et `soldeIndividuel` :
+> les métadonnées `user:read` les contiennent, et une requête HTTP réelle les
+> renvoie sans problème. La vraie cause est que `User::$depenses` et
+> `User::$details` n'étaient pas initialisées dans le constructeur,
+> contrairement à `$tags`. `getSolde()` était donc un *fatal* — « must not be
+> accessed before initialization » — sur tout `User` neuf. Le Serializer avale
+> cette erreur (`skip_uninitialized_values` est à `true` par défaut) et se
+> contente d'omettre la propriété, ce qui donnait la réponse tronquée relevée
+> ici.
+>
+> Périmètre réel : **pas de régression en production**. Toute requête HTTP part
+> d'une entité hydratée par Doctrine, qui initialise les collections ; le front
+> n'a jamais été cassé. Ce qui était touché, c'est le `User` neuf dans la même
+> unité de travail — la réponse d'un `POST /users`, et les tests.
+>
+> Correctif : initialiser les deux collections au constructeur. Les deux
+> `#[JMS\VirtualProperty]` ont été retirées au passage : seuls usages de JMS
+> dans `src/`, inertes, et c'est ce qui avait envoyé le diagnostic sur cette
+> fausse piste.
 
 **Le plus important : régression visible par les utilisateurs.**
 
@@ -59,6 +86,11 @@ dans une méthode privée), ou une `#[ApiProperty]` explicite. Vérifier ensuite
 
 ## 2. `DepenseLogListener` casse sans utilisateur authentifié
 
+> **Corrigé.** Le listener sort silencieusement quand `Security::getUser()` ne
+> rend pas un `User`, exactement comme `DepensePushListener` : `Log::$user` reste
+> obligatoire, et une dépense créée hors requête authentifiée n'est pas
+> journalisée. `GenerateRandomExpensesCommand` en profite — elle tombait dessus.
+
 ```
 TypeError: App\Entity\Log::__construct(): Argument #3 ($user) must be of type
 App\Entity\User, null given, called in DepenseLogListener.php on line 47
@@ -80,6 +112,20 @@ Correctif naturel : ne pas journaliser en l'absence d'utilisateur, ou rendre
 
 ## 3. Fixtures de test périmées : `Depense::$tag` est devenu obligatoire
 
+> **Corrigé.** `createDepense()` pose un tag par défaut, les payloads `POST` et
+> `PATCH` en fournissent un, et les helpers `createTag()` /
+> `createTestDepenseWithTag()` qui étaient dupliqués dans trois classes de test
+> sont remontés dans `AuthenticatedApiTestCase`.
+>
+> Ce n'était pas qu'un problème de fixtures : **`GenerateRandomExpensesCommand`
+> ne posait un tag qu'une fois sur deux**, et violait donc la contrainte
+> `NOT NULL` dès la première dépense sans tag. Elle en pose désormais un
+> systématiquement, et sort en erreur s'il n'y a aucun tag en base.
+>
+> Deux causes s'étaient glissées dans le même lot : les tests de suppression
+> relisaient l'entité via `$entity->id` *après* le `DELETE`, or Doctrine remet
+> l'identifiant à `null` sur l'objet supprimé.
+
 `Depense::$tag` est `#[ORM\JoinColumn(nullable: false)]` + `#[Assert\NotBlank]`,
 mais `AuthenticatedApiTestCase::createDepense()` et les payloads des tests ne
 fournissent aucun tag. D'où des 422 à la création et une
@@ -95,6 +141,24 @@ own depenses, User solde calculation with multiple depenses.*
 ---
 
 ## 4. Tests `conjoint` : comportement à trancher
+
+> **Tranché le 2026-08-24 : les tests étaient périmés, ils ont été réécrits.**
+> La relation reste unidirectionnelle et c'est désormais assumé explicitement,
+> asymétrie de solde comprise (le solde de A intègre celui de B, la réciproque
+> est fausse). Deux éléments ont pesé : le front tolère déjà l'unidirectionnel —
+> `HistoriqueView.vue` groupe « A & B » dès qu'un seul des deux pointe vers
+> l'autre — et `front/src/types/api.ts` déclare `conjoint?: string`, une IRI.
+> `testGetUserIncludesConjoint` attendait de son côté un objet imbriqué, ce que
+> `#[ApiProperty(readableLink: false)]` ne produit pas : il était périmé
+> indépendamment de la question de réciprocité.
+>
+> Au passage, `testSoldeWithConjoint` attendait des montants faux : appelé sans
+> dépense, `createDetail()` en crée une, payée par l'utilisateur courant. Ce test
+> n'aurait pas pu passer même avec la synchronisation bidirectionnelle.
+>
+> Si la réciprocité redevient un sujet, c'est une évolution produit à part
+> entière — synchronisation des deux côtés et détachement de l'ancien conjoint —
+> pas une correction de test.
 
 Ces tests appellent `User::setConjoint()`, qui n'existe plus — l'entité est
 passée aux propriétés publiques (`public ?User $conjoint`).
@@ -115,6 +179,11 @@ Change conjoint.*
 
 ## 5. Points mineurs
 
+> Non traités : ils sortaient du périmètre de la remise au vert. Restent donc
+> ouverts `TODO.md`, le cahier des charges, le `deploy.yml` du front et
+> `mcp-server/`. `doc/openapi.json` a bien été régénéré depuis.
+
+
 - **`doc/openapi.json` avait dérivé** : le fichier n'avait pas été régénéré
   depuis la migration Symfony 7.4, d'où ~1400 lignes de diff sans rapport dès
   qu'on lance `make doc`. Régénéré dans la branche `feat/oauth-google`, dans un
@@ -134,3 +203,28 @@ Change conjoint.*
   `auth_login` s'authentifie par username/mot de passe, qui n'existe plus depuis
   la migration passkey. Il est donc déjà cassé, et stocke de toute façon le JWT
   dans une variable globale de module — mono-utilisateur.
+
+---
+
+## Ce qui reste après la remise au vert
+
+**Deux erreurs PHPStan subsistent**, et elles ne sont pas dans `src/` :
+
+```
+Ignored error pattern missingType.iterableValue was not matched in reported errors.
+Ignored error pattern missingType.return was not matched in reported errors.
+```
+
+Ce sont deux entrées `ignoreErrors` de `phpstan.neon` devenues sans objet : plus
+aucune erreur de ces deux identifiants n'est émise, et PHPStan le signale
+(`reportUnmatchedIgnoredErrors` est actif par défaut). Le correctif tient en la
+suppression de ces deux lignes :
+
+```neon
+- identifier: missingType.iterableValue
+- identifier: missingType.return
+```
+
+**Elles n'ont pas été retirées** : `CLAUDE.md` interdit d'éditer `phpstan.neon`.
+C'est donc au propriétaire du dépôt de trancher — les supprimer pour un `make
+stan` vert, ou les garder si elles doivent couvrir du code à venir.
