@@ -52,20 +52,22 @@ class PushSender
     /**
      * @param iterable<User> $users
      * @param array{title: string, body: string, url?: string} $payload
+     *
+     * @return int nombre d'appareils réellement notifiés
      */
-    public function send(iterable $users, array $payload): void
+    public function send(iterable $users, array $payload): int
     {
         // Sans clés VAPID configurées, on ne notifie pas — mais on ne fait pas
         // non plus échouer l'écriture qui a déclenché l'envoi.
         if ('' === $this->publicKey || '' === $this->privateKey) {
             $this->logger->warning('[Push] Clés VAPID absentes, notification non envoyée.');
 
-            return;
+            return 0;
         }
 
         $subscriptions = $this->subscriptionsOf($users);
         if ([] === $subscriptions) {
-            return;
+            return 0;
         }
 
         $webPush = new WebPush(
@@ -76,6 +78,10 @@ class PushSender
             ]],
             ['TTL' => self::TTL],
             new Psr18Client($this->httpClient->withOptions(['timeout' => self::TIMEOUT])),
+            // Sans logger, la lib signale l'absence de GMP/BCMath par un
+            // trigger_error() que le gestionnaire d'erreurs de Symfony convertit
+            // en exception : la construction échoue avant le premier envoi.
+            logger: $this->logger,
         );
 
         foreach ($subscriptions as $subscription) {
@@ -92,8 +98,11 @@ class PushSender
             );
         }
 
+        $delivered = 0;
+
         foreach ($webPush->flush() as $report) {
             if ($report->isSuccess()) {
+                ++$delivered;
                 continue;
             }
 
@@ -109,6 +118,8 @@ class PushSender
         }
 
         $this->entityManager->flush();
+
+        return $delivered;
     }
 
     /**
