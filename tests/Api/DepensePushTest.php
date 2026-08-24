@@ -19,10 +19,12 @@ class DepensePushTest extends AuthenticatedApiTestCase
 
         $sender = $this->createMock(PushSender::class);
         $sender->method('send')->willReturnCallback(
-            function (iterable $users, array $payload): void {
+            function (iterable $users, array $payload): int {
                 foreach ($users as $user) {
                     $this->envois[] = [$user->getUsername(), $payload];
                 }
+
+                return count($this->envois);
             }
         );
 
