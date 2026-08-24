@@ -30,9 +30,9 @@ class GenerateRandomExpensesCommand extends Command
     protected function configure(): void
     {
         $this
-            ->addArgument('count', InputArgument::OPTIONAL, 'Nombre de dépenses à générer', 10)
-            ->addOption('min-amount', null, InputOption::VALUE_OPTIONAL, 'Montant minimum pour une dépense', 5.0)
-            ->addOption('max-amount', null, InputOption::VALUE_OPTIONAL, 'Montant maximum pour une dépense', 100.0)
+            ->addArgument('count', InputArgument::OPTIONAL, 'Nombre de dépenses à générer', '10')
+            ->addOption('min-amount', null, InputOption::VALUE_OPTIONAL, 'Montant minimum pour une dépense', '5.0')
+            ->addOption('max-amount', null, InputOption::VALUE_OPTIONAL, 'Montant maximum pour une dépense', '100.0')
             ->addOption('days-back', null, InputOption::VALUE_OPTIONAL, 'Nombre de jours dans le passé pour les dates', 30)
         ;
     }
@@ -53,8 +53,12 @@ class GenerateRandomExpensesCommand extends Command
             return Command::FAILURE;
         }
 
-        // Récupérer tous les tags (optionnel)
+        // Depense::$tag est obligatoire : sans tag en base, rien à générer.
         $tags = $this->entityManager->getRepository(Tag::class)->findAll();
+        if (empty($tags)) {
+            $io->error('Aucun tag trouvé en base. Veuillez d\'abord créer des tags.');
+            return Command::FAILURE;
+        }
 
         $io->info(sprintf('Génération de %d dépenses aléatoires...', $count));
         $io->info(sprintf('Utilisateurs disponibles: %d', count($users)));
@@ -87,7 +91,7 @@ class GenerateRandomExpensesCommand extends Command
             // Créer une nouvelle dépense
             $depense = new Depense();
             $depense->titre = $expenseTitles[array_rand($expenseTitles)];
-            $depense->montant = round(mt_rand($minAmount * 100, $maxAmount * 100) / 100, 2);
+            $depense->montant = round(mt_rand((int) round($minAmount * 100), (int) round($maxAmount * 100)) / 100, 2);
             $depense->partage = mt_rand(0, 1) ? 'parts' : 'montants';
             
             // Date aléatoire dans les X derniers jours
@@ -97,10 +101,8 @@ class GenerateRandomExpensesCommand extends Command
             // Assigner un payeur aléatoire
             $depense->payePar = $users[array_rand($users)];
             
-            // Assigner un tag aléatoire (50% de chance)
-            if (!empty($tags) && mt_rand(0, 1)) {
-                $depense->tag = $tags[array_rand($tags)];
-            }
+            // Assigner un tag aléatoire
+            $depense->tag = $tags[array_rand($tags)];
 
             // Créer des détails pour 1 à tous les utilisateurs
             $participantCount = mt_rand(1, count($users));
