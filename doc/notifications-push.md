@@ -1,7 +1,18 @@
 # Notifications push — note de conception
 
-Statut : **conception validée ; lot 0 (renommage) fait**, branche `dev` du dépôt
-front, non commité. Date : 2026-08-24.
+Statut : **lots 0 à 3 implémentés**, non déployés. Date : 2026-08-24.
+
+| Lot | Objet | État | Branche |
+|-----|-------|------|---------|
+| 0 | Renommage « Notifications » → « Activité » | fait | front `feat/renommage-activite` |
+| 1 | Socle API (abonnements, envoi) | fait | api `feat/notifications-push` |
+| 2 | Abonnement côté front | fait | front `feat/notifications-push` |
+| 3 | Déclenchement sur les dépenses | fait | api `feat/notifications-push` |
+| 4 | Finitions | à faire | — |
+| 5 | Solde bas | à cadrer | — |
+
+Les lots 0 et 2 sont sur deux branches front distinctes : leurs fichiers ne se
+recouvrent pas, et le renommage est livrable seul.
 
 Objectif : qu'une dépense qui le concerne arrive sur le téléphone d'un
 utilisateur, application fermée. Les chantiers OAuth Google/Apple en cours de
@@ -93,11 +104,24 @@ faute d'application native — et le `AuthKey_*.p8` du chantier Apple est une cl
 fermée, ce qui est précisément l'objectif.
 
 Dépendance : `minishlink/web-push` (pas de bundle Symfony officiel, la lib brute
-suffit). Attention en v11 : elle est passée à PSR-18 + `php-http/discovery` là où
-la v10 embarquait Guzzle. `symfony/http-client` est déjà là et fournit un client
-PSR-18, mais il faudra sans doute ajouter une implémentation de factories PSR-17
-(`nyholm/psr7`) — à constater au `composer require`, et à trancher là :
-v11 + discovery, ou v10 qui tire Guzzle.
+suffit). **v11 retenue**, et ça s'est joué en trois temps :
+
+1. Un `composer require` nu installe la **v8** : `web-token/jwt-library`, exigée
+   par les v10 et v11, plafonne `brick/math` à `^0.17` alors que la pile WebAuthn
+   l'a verrouillé en 0.18. La v8 traîne Guzzle et six paquets abandonnés
+   (`web-token/jwt-*` v2, `fgrosse/phpasn1`).
+2. `-W` autorise la rétrogradation de `brick/math` en 0.17.2. Les trois paquets
+   qui en dépendent (`spomky-labs/cbor-php`, `spomky-labs/pki-framework`,
+   `web-auth/cose-lib`) acceptent tous `^0.17` — et la suite de tests, WebAuthn
+   compris, est restée identique à la référence de `dev` (84 tests, 12 erreurs,
+   5 échecs, tous préexistants).
+3. La v11 découvre son client HTTP par `php-http/discovery`. `symfony/http-client`
+   fournit bien le PSR-18, mais **pas** de factories PSR-17 : sans elles la
+   découverte échoue à l'exécution. `nyholm/psr7` les apporte ; Guzzle sort du
+   projet et les envois passent par `symfony/http-client`.
+
+`gmp` et `bcmath` restent absents : `Utils::checkRequirement()` s'en contente
+d'une notice, seules `curl`, `mbstring` et `openssl` sont exigées.
 
 ### D2 — Destinataires : les utilisateurs concernés par la dépense, moins l'auteur
 
@@ -235,7 +259,7 @@ de suite, indépendamment du push.
 
 Le mot « Notifications » devient libre pour l'écran de réglages du push.
 
-### Lot 1 — Socle API (aucun effet visible)
+### Lot 1 — Socle API (aucun effet visible) — **fait**
 
 - `composer require minishlink/web-push` ; trancher la question PSR-18 de D1.
 - Générer la paire VAPID (une commande de la lib), déposer la privée dans
@@ -255,7 +279,7 @@ Le mot « Notifications » devient libre pour l'écran de réglages du push.
 Vérifiable par : `test.http` ou curl, et une notification envoyée à la main
 depuis une commande jetable une fois le lot 2 posé.
 
-### Lot 2 — Abonnement côté front
+### Lot 2 — Abonnement côté front — **fait**
 
 - `sw.js` : listener `push` (`showNotification` avec `icon: /img/logo.png`, un
   `tag` pour que les notifications se remplacent au lieu de s'empiler, et
@@ -275,16 +299,17 @@ depuis une commande jetable une fois le lot 2 posé.
 
 Vérifiable par : abonnement depuis le téléphone, puis envoi manuel depuis l'API.
 
-### Lot 3 — Déclenchement sur les dépenses
+### Lot 3 — Déclenchement sur les dépenses — **fait**
 
 - Listener Doctrine dédié sur `postPersist` de `Depense` → destinataires selon
   D2 → mise en file.
 - Listener `kernel.terminate` qui vide la file.
 - Rédaction du message : personnel, avec la part du destinataire lue dans son
-  `Detail`. Charge utile réduite à l'essentiel (titre, corps, id de la dépense
-  pour le lien profond). Le contenu est chiffré de bout en bout, le service de
-  push ne le lit pas, mais la limite de taille est d'environ 4 Ko — rester loin
-  en dessous.
+  `Detail` — « testuser a payé 50,00 € · 20,00 € pour toi ». Le tag `Transfert`
+  garde sa propre formulation (« t'a remboursé »), non pour le ciblage, qui
+  tombe juste tout seul, mais parce que « 20 € pour toi » serait faux pour un
+  remboursement. Charge utile réduite à l'essentiel (titre, corps, id de la
+  dépense pour le lien profond).
 - Test d'endpoint : A crée une dépense partagée avec B, le service d'envoi est
   appelé pour B et **pas** pour A ; un participant du tag absent des détails
   n'est pas notifié.
