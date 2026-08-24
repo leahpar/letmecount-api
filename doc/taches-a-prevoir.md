@@ -43,7 +43,20 @@ liste.
 
 ---
 
-## 2. Remettre la suite de tests au vert
+## 2. ✅ Remettre la suite de tests au vert
+
+**Fait le 2026-08-24.** `make tests` → **102 tests, 239 assertions, au vert**.
+`make stan` ne signale plus d'erreur dans `src/`. Le détail de ce qui a été
+corrigé — et le diagnostic du point `solde`, qui était faux — est dans
+`doc/dette-technique.md`, désormais fusionnée sur `dev`.
+
+Deux choses en sont sorties qui n'étaient pas des tests rouges :
+`GenerateRandomExpensesCommand` violait la contrainte `NOT NULL` de
+`Depense::$tag` une fois sur deux, et il n'y avait **pas** de régression `solde`
+en production. Reste ouvert : deux entrées `ignoreErrors` obsolètes dans
+`phpstan.neon`, que `CLAUDE.md` interdit de toucher.
+
+L'état de départ, conservé pour mémoire :
 
 **État :** `make tests` → 102 tests, **12 erreurs et 5 échecs**. `make stan` → 9
 erreurs. Ces chiffres sont stables depuis le 23 août et n'ont pas bougé pendant
@@ -71,7 +84,7 @@ créée hors requête HTTP ? — le même que celui déjà tranché pour
 `DepensePushListener`, qui sort silencieusement dans ce cas.
 
 À faire aussi : fusionner la branche `chore/dette-technique`, dont la note de
-diagnostic n'est pour l'instant nulle part sur `dev`.
+diagnostic n'est pour l'instant nulle part sur `dev`. *(Fait.)*
 
 ---
 
@@ -116,7 +129,7 @@ n'a pas été vérifiée** — c'est le premier point à lever, tout le reste en
 
 **Faire la tâche 2 d'abord.** Sans suite de tests fiable, une migration de
 framework se fait à l'aveugle — c'est exactement le chantier où l'on veut
-pouvoir croire le vert.
+pouvoir croire le vert. *(C'est fait : le vert est de nouveau lisible.)*
 
 Rappel de calendrier : 7.4 est une **LTS**, supportée jusqu'à fin 2028. Rien ne
 presse, ce qui est plutôt un argument pour attendre que `doctrine/doctrine-bundle`

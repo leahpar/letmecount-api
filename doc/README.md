@@ -32,8 +32,8 @@ Un document par chantier, écrit avant l'implémentation puis tenu à jour penda
 
 | Document | Quoi |
 |---|---|
-| [taches-a-prevoir.md](taches-a-prevoir.md) | Les chantiers à ouvrir : accès git en ssh, remise au vert des tests, migration Symfony 8, service worker de la PWA. |
-| `dette-technique.md` | Diagnostic détaillé des tests rouges et des erreurs PHPStan. **Vit encore sur la branche `chore/dette-technique`**, non fusionnée : à faire atterrir sur `dev`. |
+| [taches-a-prevoir.md](taches-a-prevoir.md) | Les chantiers à ouvrir : accès git en ssh, migration Symfony 8, service worker de la PWA. La remise au vert des tests est faite. |
+| [dette-technique.md](dette-technique.md) | Diagnostic des tests rouges et des erreurs PHPStan. **Traité** le 2026-08-24 ; conservé parce qu'il documente ce qui a été tranché, et un diagnostic initial qui s'est révélé faux. |
 
 ## Écrire un nouveau document
 
