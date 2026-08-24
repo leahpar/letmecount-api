@@ -833,6 +833,209 @@
                 }
             }
         },
+        "/push-subscriptions": {
+            "get": {
+                "operationId": "api_push-subscriptions_get_collection",
+                "tags": [
+                    "PushSubscription"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PushSubscription collection",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "type": "object",
+                                    "description": "PushSubscription.jsonld-push_subscription.read collection.",
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/HydraCollectionBaseSchema"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "required": [
+                                                "member"
+                                            ],
+                                            "properties": {
+                                                "member": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/PushSubscription.jsonld-push_subscription.read"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Retrieves the collection of PushSubscription resources.",
+                "description": "Retrieves the collection of PushSubscription resources.",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "The collection page number",
+                        "required": false,
+                        "deprecated": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        },
+                        "style": "form",
+                        "explode": true
+                    }
+                ]
+            },
+            "post": {
+                "operationId": "api_push-subscriptions_post",
+                "tags": [
+                    "PushSubscription"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "PushSubscription resource created",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PushSubscription.jsonld-push_subscription.read"
+                                }
+                            }
+                        },
+                        "links": {}
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error.jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "links": {}
+                    },
+                    "422": {
+                        "description": "An error occurred",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConstraintViolation.jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConstraintViolation"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConstraintViolation"
+                                }
+                            }
+                        },
+                        "links": {}
+                    }
+                },
+                "summary": "Creates a PushSubscription resource.",
+                "description": "Creates a PushSubscription resource.",
+                "parameters": [],
+                "requestBody": {
+                    "description": "The new PushSubscription resource",
+                    "content": {
+                        "application/ld+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PushSubscription-push_subscription.write"
+                            }
+                        }
+                    },
+                    "required": true
+                }
+            }
+        },
+        "/push-subscriptions/{id}": {
+            "delete": {
+                "operationId": "api_push-subscriptions_id_delete",
+                "tags": [
+                    "PushSubscription"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "PushSubscription resource deleted"
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error.jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "links": {}
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error.jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "links": {}
+                    }
+                },
+                "summary": "Removes the PushSubscription resource.",
+                "description": "Removes the PushSubscription resource.",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "PushSubscription identifier",
+                        "required": true,
+                        "deprecated": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "style": "simple",
+                        "explode": false
+                    }
+                ]
+            }
+        },
         "/tags": {
             "get": {
                 "operationId": "api_tags_get_collection",
@@ -2422,6 +2625,74 @@
                 ],
                 "description": "Un passkey enregistr\u00e9 pour un utilisateur.\n\nLes champs de la c\u00e9r\u00e9monie WebAuthn (cl\u00e9 publique, compteur, aaguid...) sont\nmapp\u00e9s par le bundle, qui d\u00e9clare CredentialRecord en mapped-superclass\n(voir Resources/config/doctrine-mapping/CredentialRecord.orm.xml).\nNe rien y red\u00e9clarer ici : Doctrine refuserait les colonnes en double."
             },
+            "PushSubscription-push_subscription.write": {
+                "type": "object",
+                "description": "Un navigateur abonn\u00e9 aux notifications push, pour un utilisateur.\n\nLes trois champs techniques viennent tels quels du PushSubscription du\nnavigateur, mais \u00e0 plat : celui-ci s\u00e9rialise en {endpoint, keys: {p256dh, auth}},\net aplatir c\u00f4t\u00e9 front \u00e9vite un DTO et un denormalizer pour trois cha\u00eenes.\n\nL'endpoint est unique : le front le repousse \u00e0 chaque d\u00e9marrage (le navigateur\npeut le renouveler sans pr\u00e9venir), et le processor fait un upsert dessus.",
+                "required": [
+                    "endpoint",
+                    "p256dh",
+                    "auth"
+                ],
+                "properties": {
+                    "endpoint": {
+                        "format": "uri",
+                        "maxLength": 500,
+                        "description": "URL fournie par le service de push du navigateur (FCM, Mozilla, Apple).",
+                        "externalDocs": {
+                            "url": "https://schema.org/url"
+                        },
+                        "type": "string"
+                    },
+                    "p256dh": {
+                        "pattern": "^([A-Za-z0-9_-]{86,88}={0,2})$",
+                        "description": "Cl\u00e9 publique de l'abonnement (P-256, base64url), pour chiffrer la charge utile.",
+                        "type": "string"
+                    },
+                    "auth": {
+                        "pattern": "^([A-Za-z0-9_-]{21,24}={0,2})$",
+                        "description": "Secret d'authentification de l'abonnement (base64url).",
+                        "type": "string"
+                    }
+                }
+            },
+            "PushSubscription.jsonld-push_subscription.read": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/HydraItemBaseSchema"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "readOnly": true,
+                                "type": "integer"
+                            },
+                            "endpoint": {
+                                "format": "uri",
+                                "maxLength": 500,
+                                "description": "URL fournie par le service de push du navigateur (FCM, Mozilla, Apple).",
+                                "externalDocs": {
+                                    "url": "https://schema.org/url"
+                                },
+                                "type": "string"
+                            },
+                            "deviceName": {
+                                "description": "Libell\u00e9 affich\u00e9 dans \u00ab Mes appareils \u00bb, d\u00e9duit du User-Agent.",
+                                "default": "Appareil",
+                                "type": "string"
+                            },
+                            "createdAt": {
+                                "type": "string",
+                                "format": "date-time"
+                            }
+                        },
+                        "required": [
+                            "endpoint"
+                        ]
+                    }
+                ],
+                "description": "Un navigateur abonn\u00e9 aux notifications push, pour un utilisateur.\n\nLes trois champs techniques viennent tels quels du PushSubscription du\nnavigateur, mais \u00e0 plat : celui-ci s\u00e9rialise en {endpoint, keys: {p256dh, auth}},\net aplatir c\u00f4t\u00e9 front \u00e9vite un DTO et un denormalizer pour trois cha\u00eenes.\n\nL'endpoint est unique : le front le repousse \u00e0 chaque d\u00e9marrage (le navigateur\npeut le renouveler sans pr\u00e9venir), et le processor fait un upsert dessus."
+            },
             "Tag-tag.write": {
                 "type": "object",
                 "required": [
@@ -2740,6 +3011,10 @@
         {
             "name": "Log",
             "description": "Resource 'Log' operations."
+        },
+        {
+            "name": "PushSubscription",
+            "description": "Un navigateur abonn\u00e9 aux notifications push, pour un utilisateur.\n\nLes trois champs techniques viennent tels quels du PushSubscription du\nnavigateur, mais \u00e0 plat : celui-ci s\u00e9rialise en {endpoint, keys: {p256dh, auth}},\net aplatir c\u00f4t\u00e9 front \u00e9vite un DTO et un denormalizer pour trois cha\u00eenes.\n\nL'endpoint est unique : le front le repousse \u00e0 chaque d\u00e9marrage (le navigateur\npeut le renouveler sans pr\u00e9venir), et le processor fait un upsert dessus."
         },
         {
             "name": "Tag",
