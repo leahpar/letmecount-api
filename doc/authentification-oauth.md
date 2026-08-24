@@ -470,10 +470,12 @@ Au quotidien :
 
 - `npm run dev` — dev normal sur `http://localhost:5173`, c'est le défaut.
 - `npm run dev:https` — https sur `https://letmecount.lasoireefille.fr`, à
-  utiliser pour tester Apple. Il faut aussi décommenter `VITE_APP_BASE_URL` /
-  `VITE_OAUTH_REDIRECT_URI` dans `front/.env.local` et `OAUTH_REDIRECT_URI` dans
-  `api/.env.local` : les trois valeurs doivent correspondre exactement au
-  Services ID. `CORS_ALLOW_ORIGIN` côté API couvre déjà les deux origines.
+  utiliser pour tester Apple. Rien à basculer côté front : la commande lance
+  Vite en mode `https`, qui charge `front/.env.https` par-dessus `.env.local` et
+  y prend `VITE_APP_BASE_URL` / `VITE_OAUTH_REDIRECT_URI`. Reste à aligner
+  `OAUTH_REDIRECT_URI` dans `api/.env.local` : la valeur doit correspondre
+  exactement au Services ID. `CORS_ALLOW_ORIGIN` côté API couvre déjà les deux
+  origines.
 
 Effet de bord : tant que la ligne `/etc/hosts` est active, le front de prod est
 inaccessible depuis cette machine. La commenter pour y revenir.
