@@ -375,7 +375,60 @@ lot 3 en usage.
 
 ---
 
-## 5. Hors périmètre
+## 5. Tester depuis un autre appareil du réseau local
+
+### Pourquoi `--host` ne suffit pas
+
+Les service workers et `PushManager` n'existent que dans un **contexte sécurisé**.
+Exposer le serveur de dev en clair sur le réseau (`http://10.0.0.193:5173`) ne
+donne donc rien : `navigator.serviceWorker` est absent, il n'y a rien à tester.
+Seuls `localhost` et `127.0.0.1` échappent à la règle — et depuis un autre
+appareil, ce ne sont plus les bons.
+
+Il faut donc du https, c'est-à-dire le montage mkcert déjà en place pour Apple
+(cf. `authentification-oauth.md`, « Développer en https en local »), étendu sur
+deux points :
+
+- `npm run dev:https` écoute désormais sur **toutes les interfaces**
+  (`host: true` dans `vite.config.ts`) et non plus sur la seule loopback ;
+- il proxifie l'API sous `/api`. Depuis une autre machine,
+  `VITE_API_URL=http://localhost:8888` désigne *sa* loopback à elle ; et une page
+  https ne peut de toute façon pas appeler une API en http, le navigateur bloque
+  le contenu mixte. Le proxy met les deux sur la même origine, ce qui règle aussi
+  la question du CORS.
+
+### Côté machine de développement
+
+`npm run dev:https`, puis `VITE_API_URL=/api` dans `front/.env.local` pour
+emprunter le proxy. Attention : `/api` n'existe **que** dans ce mode, il faut
+remettre l'URL directe pour revenir à `npm run dev`.
+
+### Côté appareil de test
+
+L'appareil doit atteindre le front par le **nom de domaine** : le certificat
+couvre `letmecount.lasoireefille.fr`, pas l'IP.
+
+1. `10.0.0.193 letmecount.lasoireefille.fr` dans son `/etc/hosts` (l'IP étant
+   celle de la machine de dev sur le réseau local).
+2. Y installer l'autorité mkcert, sans quoi le certificat est rejeté. Le fichier
+   est `~/.local/share/mkcert/rootCA.pem` sur la machine de dev ; sur macOS :
+   `sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain rootCA.pem`.
+3. Ouvrir `https://letmecount.lasoireefille.fr`.
+
+Le DNS public doit continuer de pointer vers la prod : ces redirections restent
+locales à chaque machine.
+
+### Ce que chaque plateforme demande
+
+- **Safari macOS** (16.1+) accepte le push sur un site ordinaire : la permission
+  se demande depuis un geste utilisateur, rien à installer.
+- **iOS** ne donne accès à `pushManager` que dans une PWA **ajoutée à l'écran
+  d'accueil**. Dans Safari, l'interrupteur n'a rien à proposer — c'est le cas que
+  `useWebPush.needsInstall` détecte pour afficher le message adéquat.
+
+---
+
+## 6. Hors périmètre
 
 - Préférences de notification par utilisateur (D7).
 - Notifier les modifications et suppressions de dépenses. L'activité les couvre,
