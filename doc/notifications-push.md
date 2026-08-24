@@ -275,6 +275,10 @@ Le mot « Notifications » devient libre pour l'écran de réglages du push.
   utilisateurs sur GET et DELETE). Le service d'envoi se teste dans
   `tests/Service/` avec un client HTTP simulé, comme `GoogleOAuthProviderTest`.
 - `make stan` et `make doc` (l'OpenAPI est recopié vers le front).
+- `app:push:test <pseudo>` : envoie une notification sans passer par la création
+  d'une dépense. C'est l'outil qui vérifie la chaîne complète — clés VAPID,
+  abonnement, service de push, affichage par le service worker — et c'est lui
+  qui a sorti les deux pièges du §4.
 
 Vérifiable par : `test.http` ou curl, et une notification envoyée à la main
 depuis une commande jetable une fois le lot 2 posé.
@@ -353,6 +357,21 @@ lot 3 en usage.
 - **`GenerateRandomExpensesCommand` crée des dépenses hors requête HTTP** : pas
   de `security.getUser()`, pas de `kernel.terminate`. S'assurer que le listener
   du lot 3 ne casse pas la commande — et qu'elle n'envoie pas 200 notifications.
+
+### Deux pièges rencontrés, trouvés par `app:push:test`
+
+- **`new WebPush()` échoue si on ne lui passe pas de logger.** Sans GMP ni
+  BCMath, la lib émet sa recommandation par `trigger_error(E_USER_NOTICE)`
+  quand son logger est nul — et le gestionnaire d'erreurs de Symfony convertit
+  ce notice en exception. L'objet n'est jamais construit, aucun envoi ne part.
+  Les tests unitaires ne l'ont pas vu (PHPUnit 11 ne convertit plus les notices)
+  et les tests d'endpoint non plus (`PushSender` y est simulé) : seul un envoi
+  réel le révèle. Le logger est désormais passé en argument nommé.
+- **Une clé d'abonnement illisible fait échouer tout le lot.** Le déchiffrement
+  a lieu dans `flush()`, pas à la mise en file : une seule ligne malformée en
+  base emporte les notifications de tous les autres destinataires du même envoi.
+  D'où le contrôle de format sur `p256dh` (87 caractères) et `auth` (22) à
+  l'entrée de l'API — c'est là que ça se règle, pas à l'envoi.
 
 ---
 
