@@ -53,11 +53,14 @@ class TagApiTest extends AuthenticatedApiTestCase
     public function testDeleteTag(): void
     {
         $tag = $this->createTestTag();
+        // Doctrine remet l'identifiant à null sur l'objet supprimé : le retenir
+        // avant l'appel, sinon le find() qui suit part sans identifiant.
+        $id = $tag->id;
 
-        $this->call('DELETE', '/tags/' . $tag->id);
+        $this->call('DELETE', '/tags/' . $id);
         $this->assertResponseStatusCodeSame(204);
 
-        $deletedTag = $this->em->getRepository(Tag::class)->find($tag->id);
+        $deletedTag = $this->em->getRepository(Tag::class)->find($id);
         $this->assertNull($deletedTag);
     }
 

@@ -32,23 +32,6 @@ class DepensePushTest extends AuthenticatedApiTestCase
     }
 
     /**
-     * @param list<User> $users
-     */
-    private function createTag(string $libelle, array $users): Tag
-    {
-        $tag = new Tag();
-        $tag->libelle = $libelle;
-        foreach ($users as $user) {
-            $tag->addUser($user);
-        }
-
-        $this->em->persist($tag);
-        $this->em->flush();
-
-        return $tag;
-    }
-
-    /**
      * @param list<array{User, float}> $parts
      */
     private function postDepense(Tag $tag, User $payePar, float $montant, array $parts, string $titre = 'Courses'): void

@@ -41,8 +41,14 @@ class DepenseLogListener
 
     private function logAction(string $action, Depense $depense): void
     {
-        /** @var User $user */
         $user = $this->security->getUser();
+
+        // Hors requête authentifiée (commande de génération de dépenses), il n'y
+        // a pas d'auteur à journaliser. Même arbitrage que DepensePushListener :
+        // Log::$user reste obligatoire, et on ne journalise pas.
+        if (!$user instanceof User) {
+            return;
+        }
 
         $log = new Log($action, $depense, $user);
 
