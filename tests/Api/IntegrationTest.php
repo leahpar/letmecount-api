@@ -8,6 +8,7 @@ class IntegrationTest extends AuthenticatedApiTestCase
     {
         // Créer un deuxième utilisateur
         $user2 = $this->createUser('user2');
+        $tag = $this->createTag();
 
         // Créer une première dépense où user1 paye 100 et chacun doit 50
         $depense1Data = [
@@ -15,6 +16,7 @@ class IntegrationTest extends AuthenticatedApiTestCase
             'montant' => 100.00,
             'titre' => 'Restaurant 1',
             'partage' => 'montants',
+            'tag' => '/tags/' . $tag->id,
             'payePar' => '/users/' . $this->user->id,
             'details' => [
                 [
@@ -39,6 +41,7 @@ class IntegrationTest extends AuthenticatedApiTestCase
             'montant' => 60.00,
             'titre' => 'Restaurant 2',
             'partage' => 'montants',
+            'tag' => '/tags/' . $tag->id,
             'payePar' => '/users/' . $user2->id,
             'details' => [
                 [
@@ -75,12 +78,14 @@ class IntegrationTest extends AuthenticatedApiTestCase
     public function testDepenseWithDetailsInResponse(): void
     {
         $user2 = $this->createUser('detailuser');
+        $tag = $this->createTag();
 
         $depenseData = [
             'date' => '2024-01-15T00:00:00+00:00',
             'montant' => 80.00,
             'titre' => 'Courses',
             'partage' => 'montants',
+            'tag' => '/tags/' . $tag->id,
             'payePar' => '/users/' . $this->user->id,
             'details' => [
                 [
