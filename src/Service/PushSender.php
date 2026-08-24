@@ -35,6 +35,12 @@ class PushSender
      */
     private const TIMEOUT = 5;
 
+    /**
+     * Sans clés configurées, chaque écriture passerait par ici : on ne le
+     * signale qu'une fois par requête plutôt qu'à chaque dépense créée.
+     */
+    private bool $vapidWarningLogged = false;
+
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly PushSubscriptionRepository $repository,
@@ -60,13 +66,27 @@ class PushSender
         // Sans clés VAPID configurées, on ne notifie pas — mais on ne fait pas
         // non plus échouer l'écriture qui a déclenché l'envoi.
         if ('' === $this->publicKey || '' === $this->privateKey) {
-            $this->logger->warning('[Push] Clés VAPID absentes, notification non envoyée.');
+            if (!$this->vapidWarningLogged) {
+                $this->logger->warning('[Push] Clés VAPID absentes, notifications désactivées.');
+                $this->vapidWarningLogged = true;
+            }
 
             return 0;
         }
 
         $subscriptions = $this->subscriptionsOf($users);
         if ([] === $subscriptions) {
+            return 0;
+        }
+
+        try {
+            $body = json_encode($payload, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $e) {
+            // Une charge utile inencodable (UTF-8 invalide dans un titre de
+            // dépense, par exemple) ne doit pas remonter jusqu'à l'appelant :
+            // l'envoi est accessoire, l'écriture qui l'a déclenché ne l'est pas.
+            $this->logger->error('[Push] Charge utile inencodable : {message}', ['message' => $e->getMessage()]);
+
             return 0;
         }
 
@@ -94,7 +114,7 @@ class PushSender
                     $subscription->auth,
                     ContentEncoding::aes128gcm
                 ),
-                json_encode($payload, JSON_THROW_ON_ERROR)
+                $body
             );
         }
 

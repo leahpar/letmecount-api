@@ -85,7 +85,7 @@ class PushSubscription
     #[ORM\Column(length: 255)]
     #[Groups(['push_subscription:write'])]
     #[Assert\NotBlank]
-    #[Assert\Regex(pattern: '/^[A-Za-z0-9_-]{86,88}={0,2}$/', message: 'Clé publique d\'abonnement invalide.')]
+    #[Assert\Regex(pattern: '/^[A-Za-z0-9_-]{87}={0,1}$/', message: 'Clé publique d\'abonnement invalide.')]
     public string $p256dh;
 
     /**
@@ -95,7 +95,7 @@ class PushSubscription
     #[ORM\Column(length: 255)]
     #[Groups(['push_subscription:write'])]
     #[Assert\NotBlank]
-    #[Assert\Regex(pattern: '/^[A-Za-z0-9_-]{21,24}={0,2}$/', message: 'Secret d\'abonnement invalide.')]
+    #[Assert\Regex(pattern: '/^[A-Za-z0-9_-]{22}={0,2}$/', message: 'Secret d\'abonnement invalide.')]
     public string $auth;
 
     /**
