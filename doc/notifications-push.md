@@ -399,9 +399,9 @@ deux points :
 
 ### Côté machine de développement
 
-`npm run dev:https`, puis `VITE_API_URL=/api` dans `front/.env.local` pour
-emprunter le proxy. Attention : `/api` n'existe **que** dans ce mode, il faut
-remettre l'URL directe pour revenir à `npm run dev`.
+`npm run dev:https`, et c'est tout : `.env.https` bascule déjà `VITE_API_URL`
+sur `/api`, et n'est chargé que dans ce mode. `npm run dev` retrouve l'URL
+directe de `.env.local` sans rien à défaire.
 
 ### Côté appareil de test
 
