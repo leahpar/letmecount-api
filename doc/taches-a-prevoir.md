@@ -5,8 +5,11 @@ sujets, aucun urgent, tous connus. Chacun tient seul et peut être pris
 indépendamment des autres.
 
 Ne sont listés ici que les chantiers *à ouvrir*. La dette déjà inventoriée en
-détail vit dans `doc/dette-technique.md` (branche `chore/dette-technique`, non
-fusionnée) ; la présente note y renvoie plutôt que de la répéter.
+détail vit dans `doc/dette-technique.md` ; la présente note y renvoie plutôt que
+de la répéter.
+
+**Mise à jour du 2026-08-24 :** la tâche 2 est faite, et `dette-technique.md` est
+fusionnée sur `dev`. Le relevé d'origine des trois autres sujets est inchangé.
 
 ---
 
@@ -56,7 +59,8 @@ Deux choses en sont sorties qui n'étaient pas des tests rouges :
 en production. Reste ouvert : deux entrées `ignoreErrors` obsolètes dans
 `phpstan.neon`, que `CLAUDE.md` interdit de toucher.
 
-L'état de départ, conservé pour mémoire :
+L'état de départ, conservé pour mémoire — sa cause n°1 et l'ordre qu'elle
+suggérait se sont révélés faux, voir `dette-technique.md` :
 
 **État :** `make tests` → 102 tests, **12 erreurs et 5 échecs**. `make stan` → 9
 erreurs. Ces chiffres sont stables depuis le 23 août et n'ont pas bougé pendant
