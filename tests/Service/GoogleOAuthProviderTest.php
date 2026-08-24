@@ -54,7 +54,7 @@ class GoogleOAuthProviderTest extends TestCase
     {
         $provider = $this->provider($this->validClaims());
 
-        $this->assertSame('1234567890', $provider->fetchSubject('code', 'verifier'));
+        $this->assertSame('1234567890', $provider->fetchSubject('code', 'verifier', null));
     }
 
     public function testAcceptsBothGoogleIssuerForms(): void
@@ -62,7 +62,7 @@ class GoogleOAuthProviderTest extends TestCase
         $claims = $this->validClaims();
         $claims['iss'] = 'accounts.google.com';
 
-        $this->assertSame('1234567890', $this->provider($claims)->fetchSubject('code', 'verifier'));
+        $this->assertSame('1234567890', $this->provider($claims)->fetchSubject('code', 'verifier', null));
     }
 
     public function testRejectsUnexpectedIssuer(): void
@@ -71,7 +71,7 @@ class GoogleOAuthProviderTest extends TestCase
         $claims['iss'] = 'https://evil.example.com';
 
         $this->expectException(BadRequestHttpException::class);
-        $this->provider($claims)->fetchSubject('code', 'verifier');
+        $this->provider($claims)->fetchSubject('code', 'verifier', null);
     }
 
     public function testRejectsUnexpectedAudience(): void
@@ -80,7 +80,7 @@ class GoogleOAuthProviderTest extends TestCase
         $claims['aud'] = 'un-autre-client';
 
         $this->expectException(BadRequestHttpException::class);
-        $this->provider($claims)->fetchSubject('code', 'verifier');
+        $this->provider($claims)->fetchSubject('code', 'verifier', null);
     }
 
     public function testRejectsExpiredToken(): void
@@ -89,7 +89,7 @@ class GoogleOAuthProviderTest extends TestCase
         $claims['exp'] = time() - 10;
 
         $this->expectException(BadRequestHttpException::class);
-        $this->provider($claims)->fetchSubject('code', 'verifier');
+        $this->provider($claims)->fetchSubject('code', 'verifier', null);
     }
 
     public function testRejectsMissingSubject(): void
@@ -98,7 +98,7 @@ class GoogleOAuthProviderTest extends TestCase
         unset($claims['sub']);
 
         $this->expectException(BadRequestHttpException::class);
-        $this->provider($claims)->fetchSubject('code', 'verifier');
+        $this->provider($claims)->fetchSubject('code', 'verifier', null);
     }
 
     public function testRejectsResponseWithoutIdToken(): void
@@ -111,7 +111,7 @@ class GoogleOAuthProviderTest extends TestCase
         );
 
         $this->expectException(BadRequestHttpException::class);
-        $provider->fetchSubject('code', 'verifier');
+        $provider->fetchSubject('code', 'verifier', null);
     }
 
     public function testRejectsMalformedIdToken(): void
@@ -124,7 +124,24 @@ class GoogleOAuthProviderTest extends TestCase
         );
 
         $this->expectException(BadRequestHttpException::class);
-        $provider->fetchSubject('code', 'verifier');
+        $provider->fetchSubject('code', 'verifier', null);
+    }
+
+    public function testRejectsMissingCodeVerifier(): void
+    {
+        $this->expectException(BadRequestHttpException::class);
+        $this->provider($this->validClaims())->fetchSubject('code', null, null);
+    }
+
+    /**
+     * RFC 7519 §4.1.3 : `aud` peut être une chaîne ou un tableau.
+     */
+    public function testAcceptsAudienceGivenAsArray(): void
+    {
+        $claims = $this->validClaims();
+        $claims['aud'] = [self::CLIENT_ID];
+
+        $this->assertSame('1234567890', $this->provider($claims)->fetchSubject('code', 'verifier', null));
     }
 
     public function testSendsCodeAndVerifierToGoogle(): void
@@ -137,7 +154,7 @@ class GoogleOAuthProviderTest extends TestCase
         });
 
         $provider = new GoogleOAuthProvider($client, self::CLIENT_ID, 'test-secret', 'http://localhost:5173/auth/callback');
-        $provider->fetchSubject('le-code', 'le-verifier');
+        $provider->fetchSubject('le-code', 'le-verifier', null);
 
         $this->assertSame('POST', $captured['method']);
         $this->assertSame('https://oauth2.googleapis.com/token', $captured['url']);

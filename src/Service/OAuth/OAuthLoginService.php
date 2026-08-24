@@ -13,9 +13,9 @@ use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 /**
  * Résout le compte applicatif derrière une identité OAuth.
  *
- * L'application est fermée : Google dit « qui tu es », pas « tu as le droit
- * d'entrer ». C'est le jeton de liaison généré par l'admin qui autorise la
- * première connexion (cf. doc/authentification-oauth.md, décision D1).
+ * L'application est fermée : Google et Apple disent « qui tu es », pas « tu as
+ * le droit d'entrer ». C'est le jeton de liaison généré par l'admin qui autorise
+ * la première connexion (cf. doc/authentification-oauth.md, décision D1).
  */
 class OAuthLoginService
 {
@@ -30,10 +30,10 @@ class OAuthLoginService
     ) {
     }
 
-    public function login(string $providerName, string $code, string $codeVerifier, ?string $linkToken): User
+    public function login(string $providerName, string $code, ?string $codeVerifier, ?string $nonce, ?string $linkToken): User
     {
         $provider = $this->resolveProvider($providerName);
-        $subject = $provider->fetchSubject($code, $codeVerifier);
+        $subject = $provider->fetchSubject($code, $codeVerifier, $nonce);
 
         $user = $this->findByIdentity($providerName, $subject);
         if ($user) {
@@ -59,14 +59,22 @@ class OAuthLoginService
         throw new BadRequestHttpException(sprintf('Fournisseur "%s" inconnu', $name));
     }
 
-    /**
-     * Le jour où Apple s'ajoute, c'est ici et dans link() que ça se passe.
-     */
     private function findByIdentity(string $providerName, string $subject): ?User
     {
+        return $this->userRepository->findOneBy([$this->identityColumn($providerName)['property'] => $subject]);
+    }
+
+    /**
+     * Le seul endroit qui connaisse la correspondance provider → colonne d'identité.
+     *
+     * @return array{property: string, column: string}
+     */
+    private function identityColumn(string $providerName): array
+    {
         return match ($providerName) {
-            'google' => $this->userRepository->findOneBy(['googleSub' => $subject]),
-            default => null,
+            'google' => ['property' => 'googleSub', 'column' => 'google_sub'],
+            'apple' => ['property' => 'appleSub', 'column' => 'apple_sub'],
+            default => throw new BadRequestHttpException(sprintf('Fournisseur "%s" inconnu', $providerName)),
         };
     }
 
@@ -77,21 +85,24 @@ class OAuthLoginService
             throw new AccessDeniedHttpException('Invitation invalide ou déjà utilisée');
         }
 
-        if (null !== $user->getGoogleSub()) {
+        // Un compte déjà lié à un provider ne peut pas l'être à un autre : sinon un
+        // jeton d'invitation fuité permettrait de s'ajouter sur un compte actif.
+        if ($user->isLinked()) {
             throw new ConflictHttpException('Ce compte est déjà lié à une autre identité');
         }
 
-        $column = match ($providerName) {
-            'google' => 'google_sub',
-            default => throw new BadRequestHttpException(sprintf('Fournisseur "%s" inconnu', $providerName)),
-        };
+        $column = $this->identityColumn($providerName)['column'];
 
         // La liaison passe par un UPDATE conditionnel plutôt que par un flush de l'ORM :
         // c'est le WHERE qui porte la garantie d'usage unique du jeton. Deux requêtes
         // concurrentes présentant le même jeton ne peuvent pas gagner toutes les deux,
-        // là où le lire-puis-écrire laissait la seconde écraser la première.
+        // là où le lire-puis-écrire laissait la seconde écraser la première. Les deux
+        // colonnes sont contrôlées, pour que la course couvre aussi le cas ci-dessus.
         $affected = $this->em->getConnection()->executeStatement(
-            sprintf('UPDATE user SET %s = :subject, token = NULL WHERE token = :token AND %s IS NULL', $column, $column),
+            sprintf(
+                'UPDATE user SET %s = :subject, token = NULL WHERE token = :token AND google_sub IS NULL AND apple_sub IS NULL',
+                $column,
+            ),
             ['subject' => $subject, 'token' => $linkToken],
         );
 

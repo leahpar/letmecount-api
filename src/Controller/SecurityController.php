@@ -15,8 +15,9 @@ use Symfony\Component\Routing\Attribute\Route;
 class SecurityController extends AbstractController
 {
     /**
-     * Connexion OAuth : le front a déjà obtenu un code d'autorisation chez le
-     * provider, on l'échange ici côté serveur et on émet nos propres jetons.
+     * Connexion OAuth (Google, Apple) : le front a déjà obtenu un code
+     * d'autorisation chez le provider, on l'échange ici côté serveur et on émet
+     * nos propres jetons.
      *
      * Le `link_token` n'est présent qu'à la première connexion, quand
      * l'utilisateur arrive par le lien d'invitation généré par l'admin.
@@ -37,14 +38,18 @@ class SecurityController extends AbstractController
 
         $provider = $payload['provider'] ?? null;
         $code = $payload['code'] ?? null;
-        $codeVerifier = $payload['code_verifier'] ?? null;
-        $linkToken = $payload['link_token'] ?? null;
 
-        if (!is_string($provider) || !is_string($code) || !is_string($codeVerifier)) {
-            throw new BadRequestHttpException('Paramètres "provider", "code" et "code_verifier" requis');
+        if (!is_string($provider) || !is_string($code)) {
+            throw new BadRequestHttpException('Paramètres "provider" et "code" requis');
         }
 
-        $linkToken = is_string($linkToken) && '' !== $linkToken ? $linkToken : null;
+        // `code_verifier` (PKCE, Google) et `nonce` (Apple) sont exclusifs l'un de
+        // l'autre : c'est le provider qui exige le sien, le contrôleur ne tranche pas.
+        $optional = static fn (string $key): ?string => is_string($payload[$key] ?? null) && '' !== $payload[$key] ? $payload[$key] : null;
+
+        $codeVerifier = $optional('code_verifier');
+        $nonce = $optional('nonce');
+        $linkToken = $optional('link_token');
 
         // Le jeton d'invitation ne fait que 6 chiffres : on borne le bruteforce par IP.
         // Une connexion normale (compte déjà lié) n'est pas concernée.
@@ -58,7 +63,7 @@ class SecurityController extends AbstractController
             }
         }
 
-        $user = $oauthLogin->login($provider, $code, $codeVerifier, $linkToken);
+        $user = $oauthLogin->login($provider, $code, $codeVerifier, $nonce, $linkToken);
 
         return $authenticationSuccessHandler->handleAuthenticationSuccess($user);
     }
