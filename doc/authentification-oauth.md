@@ -392,6 +392,57 @@ toute l'authentification. `JwtAudienceListener` normalise avec `(array)`.
   exclusions `/login_link` et `/welcome` déjà présentes dans l'intercepteur
   étaient le contournement historique du même symptôme.
 
+### Développer en https en local (contrainte Apple)
+
+Apple refuse `localhost` dans les Return URLs d'un Services ID, quel que soit le
+schéma : https sur localhost ne débloque rien. Un Services ID exige un domaine
+public enregistré (pas d'IP, pas de `.local`/`.test`), vérifié par un fichier
+que les serveurs d'Apple vont chercher, et des Return URLs en `https://` sur ce
+domaine, sans query string. Les ports non standard sont refusés eux aussi, d'où
+le 443.
+
+Un tunnel ngrok ne marche pas : Apple rejette les sous-domaines
+`*.ngrok-free.app` à la vérification. Testé le 2026-08-24.
+
+La solution retenue : servir le front de dev sur **le domaine de prod**
+`letmecount.lasoireefille.fr`, redirigé vers la machine locale par `/etc/hosts`.
+Ça fonctionne parce que la redirection Apple est faite par le navigateur de
+l'utilisateur — y compris en `response_mode=form_post`, où c'est le navigateur
+qui POSTe sur le callback. Apple n'a jamais besoin de résoudre le domaine après
+la vérification initiale.
+
+**Le DNS public doit continuer de pointer vers la prod** (51.77.140.14) : Apple
+revérifie les domaines périodiquement et repasse le Services ID en *unverified*
+si le fichier de vérification n'est plus joignable. L'override reste local.
+
+Mise en place, une fois pour toutes :
+
+1. `mkcert -install` (CA locale, dans le store système et NSS/Chrome).
+2. `mkcert -cert-file .certs/dev.pem -key-file .certs/dev-key.pem
+   letmecount.lasoireefille.fr localhost 127.0.0.1` depuis `front/`.
+   `.certs/` est ignoré par git.
+3. `127.0.0.1 letmecount.lasoireefille.fr` dans `/etc/hosts`.
+4. `sudo setcap 'cap_net_bind_service=+ep' $(readlink -f $(which node))` pour
+   binder le 443 sans root. À refaire à chaque changement de version node via
+   nvm. Alternative sans toucher au binaire : un Caddy local en 443 → 5173.
+
+Au quotidien :
+
+- `npm run dev` — dev normal sur `http://localhost:5173`, c'est le défaut.
+- `npm run dev:https` — https sur `https://letmecount.lasoireefille.fr`, à
+  utiliser pour tester Apple. Il faut aussi décommenter `VITE_APP_BASE_URL` /
+  `VITE_OAUTH_REDIRECT_URI` dans `front/.env.local` et `OAUTH_REDIRECT_URI` dans
+  `api/.env.local` : les trois valeurs doivent correspondre exactement au
+  Services ID. `CORS_ALLOW_ORIGIN` côté API couvre déjà les deux origines.
+
+Effet de bord : tant que la ligne `/etc/hosts` est active, le front de prod est
+inaccessible depuis cette machine. La commenter pour y revenir.
+
+Pièges rencontrés : Vite 7 rejette les Host headers inconnus, d'où
+`allowedHosts` ; et le fichier de vérification Apple doit sortir en `text/plain`
+sans redirection, une redirection vers l'apex suffit à faire échouer la
+vérification.
+
 ### Reste à faire
 
 - ~~Créer le client OAuth et faire le premier aller-retour réel.~~ **Fait le
@@ -409,7 +460,9 @@ toute l'authentification. `JwtAudienceListener` normalise avec `(array)`.
   déconnecte, vide ses données de site ou change d'appareil, il ne peut plus
   se reconnecter sans un lien d'invitation — sauf s'il a un passkey enregistré.
   Un utilisateur déjà authentifié qui ouvre son lien est lié sans friction.
-- Apple, si le compte développeur est pris.
+- ~~Apple, si le compte développeur est pris.~~ **Fait le 2026-08-24 :
+  « Continuer avec Apple » fonctionne de bout en bout en local**, via le
+  montage https décrit ci-dessus. Reste à valider en production.
 - Serveur d'autorisation + couche MCP.
 - Dette technique repérée en marge de ce chantier : voir `doc/dette-technique.md`
   (branche `chore/dette-technique`), dont la disparition de `solde` des réponses
