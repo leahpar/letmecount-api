@@ -6,6 +6,11 @@ api_platform:
         cache_headers:
             vary: ['Content-Type', 'Authorization', 'Origin']
 
+    # Le nœud est activé par défaut, mais son câblage est conditionné à la
+    # présence de McpBundle : autant que le fichier dise ce qui est vrai.
+    mcp:
+        enabled: true
+
     swagger:
         api_keys:
             JWT:

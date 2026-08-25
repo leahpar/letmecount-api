@@ -1,0 +1,17 @@
+mcp:
+    app: 'let-me-count'
+    description: 'Comptes partagés entre amis'
+    client_transports:
+        http: true
+    http:
+        # Le défaut du bundle est /_mcp. Ce chemin devient l'identifiant de
+        # ressource publié dans les métadonnées OAuth et l'audience des jetons :
+        # autant qu'il soit présentable.
+        path: /mcp
+        # Sans ça, la protection anti-DNS-rebinding du SDK n'autorise que
+        # localhost et refuse toute requête en production.
+        allowed_hosts: ['letmecountapi.lasoireefille.fr', 'localhost', '127.0.0.1']
+        session:
+            # Le défaut est `file`, dans le cache dir. Le pool cache.mcp.sessions
+            # est créé par le bundle.
+            store: cache

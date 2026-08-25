@@ -3,8 +3,12 @@ nelmio_cors:
         origin_regex: true
         allow_origin: ['%env(CORS_ALLOW_ORIGIN)%']
         allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE']
-        allow_headers: ['Content-Type', 'Authorization']
-        expose_headers: ['Link']
+        # Mcp-Session-Id et MCP-Protocol-Version : sans effet pour un client
+        # serveur-à-serveur, nécessaires à l'inspecteur MCP, qui tourne dans un
+        # navigateur. WWW-Authenticate sera lu par les clients MCP pour découvrir
+        # le serveur d'autorisation.
+        allow_headers: ['Content-Type', 'Authorization', 'Mcp-Session-Id', 'MCP-Protocol-Version']
+        expose_headers: ['Link', 'Mcp-Session-Id', 'WWW-Authenticate']
         max_age: 3600
     paths:
         '^/': null
