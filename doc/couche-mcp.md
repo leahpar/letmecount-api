@@ -1,9 +1,10 @@
 # Couche MCP sur l'API — plan de déploiement
 
-Statut : **lots 1 et 2 faits le 2026-08-25** — endpoint, surface d'outils, une
-passe de corrections après validation par un agent réel (§7, M10), puis la
-découverte OAuth côté ressource (§4.2). Lot 3 à ouvrir. Date de conception :
-2026-08-24.
+Statut : **les trois lots sont faits, le 2026-08-25** — endpoint et surface
+d'outils (§4.1, avec une passe de corrections après validation par un agent
+réel : §7, M10), découverte OAuth côté ressource (§4.2), serveur d'autorisation
+complet (§4.3). Ce qui reste est du branchement réel, pas du code. Date de
+conception : 2026-08-24.
 Suite de `doc/authentification-oauth.md` §3, dont ce document révise l'argumentaire
 (§3 ci-dessous) sans en changer la conclusion.
 
@@ -441,6 +442,107 @@ Décompte : ≈ 370 lignes de PHP, 120 de Vue, 250 de tests.
 
 **Chiffrage : 1 à 1,5 jour.**
 
+### 4.3 Lot 3 — ce qui a réellement été livré
+
+**Fait le 2026-08-25.** `make tests` → **150 tests au vert** (134 + 16), `make
+stan` sans erreur, `doc/openapi.json` inchangé — les routes OAuth sont des
+contrôleurs Symfony ordinaires, invisibles d'API Platform. Volume : ~730 lignes
+de PHP hors commentaires (estimation : 370), 157 de Vue, 450 de tests. L'écart
+sur le PHP est celui de la densité de commentaires du projet et des huit
+classes que la consigne du §6 impose de séparer ; le décompte des *endpoints*,
+lui, était juste.
+
+Les neuf points de la marche à suivre ont été livrés dans l'ordre, sans blocage.
+Ce qui suit est ce qui s'est décidé en chemin.
+
+#### Aucune variable d'environnement nouvelle
+
+La règle du lot 2 — une valeur, un endroit — a tenu sur tout le lot. L'`issuer`
+et les trois endpoints du document RFC 8414 se déduisent de l'origine publiée par
+`ProtectedResourceMetadata`, donc de `JWT_AUDIENCE`. Et **l'origine du front se
+lit sur `OAUTH_REDIRECT_URI`**, l'URI de retour qu'il utilise déjà : une variable
+`FRONT_URL` aurait dit la même chose, avec une occasion de plus de se contredire.
+
+#### La rotation du refresh token n'a pas été réécrite
+
+C'est la découverte qui a le plus changé le lot, et dans le bon sens.
+
+`AttachRefreshTokenOnSuccessListener` (gesdinet) est accroché à l'événement de
+succès de Lexik, et il lit le `refresh_token` **de la requête courante**. Donc
+dès lors que `/token` reçoit `grant_type=refresh_token&refresh_token=…` et
+appelle le point d'émission unique, toute la mécanique existante s'applique
+d'elle-même : usage unique, famille conservée, détection de rejeu, plafond de
+session. `OAuthTokenController` ne fait que valider le jeton présenté et charger
+son utilisateur — une dizaine de lignes au lieu d'une réimplémentation qui aurait
+forcément divergé de `/auth/refresh`.
+
+Le pendant : la validation, elle, est bien refaite ici, parce que le firewall ne
+la fait que sur `/auth/refresh`. Deux endroits valident, un seul émet.
+
+#### Les paramètres traversent le navigateur, sans table
+
+Le consentement vit sur le front (M3), donc la demande validée doit lui parvenir
+puis revenir. Deux façons : lui passer les paramètres, ou les garder côté serveur
+et ne lui passer qu'un identifiant de requête — le modèle PAR (RFC 9126).
+
+On passe les paramètres, et **ils sont revalidés au retour** exactement comme à
+l'aller : mêmes trois appels, même validateur. Ce qui a traversé le navigateur ne
+vaut donc pas plus que ce que n'importe quel client aurait pu poster. Un PAR
+aurait apporté une table de plus, sa purge, et rien sur la sécurité que la
+revalidation ne donne déjà. Seul `client_name` s'ajoute au passage, pour que
+l'écran ait quoi afficher sans requête supplémentaire — et c'est bien le
+hostname du `redirect_uri`, lui vérifié, que l'écran met en avant (M3).
+
+#### `invalid_client` rend 400 et non 401
+
+L'usage veut 401. Mais le 401 de la RFC 6749 §5.2 vise un client qui
+*s'authentifie*, et doit alors porter un `WWW-Authenticate` — les nôtres sont
+publics et ne s'authentifient jamais. Un 401 nu serait faux, et surtout un client
+MCP le lit comme « reconnecte-toi » : de quoi relancer la découverte en boucle
+sur une simple faute de frappe dans un `client_id`.
+
+#### Le code est consommé même quand l'échange échoue
+
+Un code dont l'échange échoue est détruit quand même. Sans ça, un attaquant tenant
+un code intercepté pourrait réessayer avec d'autres `code_verifier` : le PKCE ne
+serait plus qu'un mot de passe à deviner, avec autant d'essais que voulu. Toutes
+les erreurs d'échange rendent d'ailleurs le même `invalid_grant`, avec la même
+description : le code d'erreur ne doit pas devenir un oracle.
+
+#### `resource` absent est accepté, `resource` erroné refusé
+
+La RFC 8707 est écrite pour des serveurs qui protègent plusieurs ressources.
+Nous n'en avons qu'une (M6) : un client qui tait le paramètre ne crée donc aucune
+ambiguïté, et le refuser bloquerait des clients corrects pour rien. En revanche un
+`resource` qui désigne autre chose est refusé (`invalid_target`) — le client
+demande alors un jeton pour quelqu'un d'autre, et lui remettre le nôtre serait le
+tromper.
+
+#### Côté front : le garde de route devait apprendre à revenir
+
+L'écran de consentement est une page protégée dont **l'URL porte le sens** : ses
+paramètres viennent de l'API. Or le garde redirigeait vers `/login` en les
+perdant, ce qui cassait le flow sans message. Il mémorise donc l'URL avant de
+rediriger, et les deux chemins de connexion — passkey et retour de provider — la
+consomment. En sessionStorage : la connexion Google et Apple quitte l'onglet et y
+revient, ce qui remet l'application à zéro.
+
+C'est volontairement limité à cette route. Ailleurs, perdre l'URL cible après
+connexion ne coûte qu'un clic, et généraliser aurait changé un comportement que
+personne n'a demandé de changer.
+
+#### Vérifié sur le serveur de développement
+
+Toute la chaîne a été rejouée à la main sur `localhost:8888`, hors environnement
+de test : 401 portant le pointeur, les deux documents `.well-known`,
+`/register`, `/authorize` redirigeant vers `localhost:5173/oauth/consent` avec
+ses paramètres, et les refus de `/authorize` et `/token`. La migration est
+passée sur la base de développement.
+
+Ce qui **n'a pas** été rejoué : le branchement d'un vrai client MCP de bout en
+bout, qui demande le front lancé et un client qui ouvre un navigateur. C'est le
+prochain pas, et d'après le lot 1 c'est là que se trouvent les surprises.
+
 ---
 
 ## 5. Décisions
@@ -639,6 +741,20 @@ et sur un second projet, l'extraction est mécanique.
 C'est la stratégie qui a déjà marché ici : `OAuthProviderInterface` avait été posé
 pour Google seul, et Apple s'est branché dessus sans qu'aucun des deux points de
 couture n'ait eu à être repensé.
+
+**Tenu au lot 3**, et les quatre coutures ont un nom :
+
+| Couture                     | Où elle est                                        |
+|-----------------------------|----------------------------------------------------|
+| Émission des jetons         | `TokenIssuer`, appelé de deux endroits, un seul point d'émission |
+| Identification de l'humain  | `$this->getUser()` dans `OAuthAuthorizeController::consent` |
+| Consentement                | `ConsentRedirector`, qui ne connaît que l'origine du front |
+| Politique d'admission       | `ClientRegistrar` (ouvert) et la règle `security.yaml` de `/authorize/consent` |
+
+Tout le reste — métadonnées, validation, PKCE, codes, format d'erreur — vit dans
+`App\Service\OAuth\AuthorizationServer\` et ne connaît de Let-me-count que le
+fait qu'un code appartienne à un `User`. Si #2135 atterrit, c'est cette liste-là
+qu'il faudra rebrancher, et rien d'autre.
 
 ### Pourquoi pas `league/oauth2-server-bundle`
 
@@ -951,10 +1067,11 @@ Deux corollaires moins évidents :
 |-----|--------|---------------------------------------------------|-----------|
 | 1   | 9      | Endpoint + outils, sous le firewall existant      | **fait**  |
 | 2   | 1–4    | RFC 9728, `WWW-Authenticate`, audience URI        | **fait**  |
-| 3   | 4–8    | `/register`, `/authorize`, `/token`, consentement | 1 – 1,5 j |
+| 3   | 4–8    | `/register`, `/authorize`, `/token`, consentement | **fait**  |
 
-**Total : 2 à 3 jours**, dont les lots 1 et 2 sont faits — le second dans son
-enveloppe (§4.2).
+**Total : 2 à 3 jours**, et les trois lots sont faits. Le chiffrage a tenu sur le
+découpage ; ce qu'il ne couvrait pas, il le disait — le branchement d'un vrai
+client reste devant nous (§4.3).
 
 La réserve ci-dessous s'est vérifiée sur le lot 1, et par le mécanisme annoncé :
 le volume de code était trivial — quelques attributs et deux petits providers —
@@ -1000,5 +1117,12 @@ serveur d'autorisation inexistant n'avance à rien).
 - **Libellé des sessions.** Les refresh tokens sont déjà une ligne par session.
   Avec plusieurs clients MCP enregistrés, un écran de révocation distinguant
   « téléphone » de « Claude » de « ChatGPT » devient nettement plus utile qu'il ne
-  l'était. Une colonne de libellé, comme `name` sur les passkeys. À reconsidérer
-  après le lot 3, pas avant.
+  l'était. Une colonne de libellé, comme `name` sur les passkeys. **Le lot 3 est
+  passé : c'est maintenant qu'il faut le reconsidérer**, et le rapprochement est
+  facile — le code d'autorisation connaît son `OAuthClient`, donc le nom du client
+  est disponible au moment exact où le refresh token est créé.
+- **Ménage des clients enregistrés.** Rien ne supprime un `oauth_client`, et
+  `/register` est ouvert : le rate limiter borne le débit, pas le total. Sans
+  conséquence à l'échelle de l'app — une ligne fait quelques centaines d'octets et
+  ne donne aucun droit — mais un client sans code ni jeton depuis des mois n'a
+  aucune raison de rester. À voir en même temps que le libellé des sessions.
