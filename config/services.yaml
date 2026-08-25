@@ -26,6 +26,14 @@ services:
             $denormalizer: '@api_platform.serializer'
             $itemProvider: '@api_platform.doctrine.orm.state.item_provider'
 
+    App\State\McpDeleteProcessor:
+        arguments:
+            $removeProcessor: '@api_platform.doctrine.orm.state.remove_processor'
+
+    App\State\McpItemProvider:
+        arguments:
+            $itemProvider: '@api_platform.doctrine.orm.state.item_provider'
+
     App\State\McpCollectionProvider:
         arguments:
             $collectionProvider: '@api_platform.doctrine.orm.state.collection_provider'

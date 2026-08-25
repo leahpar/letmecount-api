@@ -2006,7 +2006,7 @@
                     "details": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/Detail-depense.write"
+                            "$ref": "#/components/schemas/Detail-depense.write_noid"
                         }
                     },
                     "date": {
@@ -2055,7 +2055,7 @@
                     "details": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/Detail-depense.write"
+                            "$ref": "#/components/schemas/Detail-depense.write_noid"
                         }
                     },
                     "date": {
@@ -2105,7 +2105,7 @@
                             "details": {
                                 "type": "array",
                                 "items": {
-                                    "$ref": "#/components/schemas/Detail.jsonld"
+                                    "$ref": "#/components/schemas/Detail.jsonld_noid"
                                 }
                             },
                             "date": {
@@ -2165,7 +2165,7 @@
                             "details": {
                                 "type": "array",
                                 "items": {
-                                    "$ref": "#/components/schemas/Detail.jsonld-depense.read"
+                                    "$ref": "#/components/schemas/Detail.jsonld-depense.read_noid"
                                 }
                             },
                             "date": {
@@ -2210,7 +2210,7 @@
                     }
                 ]
             },
-            "Detail-depense.write": {
+            "Detail-depense.write_noid": {
                 "type": "object",
                 "required": [
                     "user",
@@ -2234,7 +2234,31 @@
                     }
                 }
             },
-            "Detail.jsonld": {
+            "Detail.jsonld-depense.read_noid": {
+                "type": "object",
+                "required": [
+                    "user",
+                    "parts",
+                    "montant"
+                ],
+                "properties": {
+                    "user": {
+                        "type": "string",
+                        "format": "iri-reference",
+                        "example": "https://example.com/"
+                    },
+                    "parts": {
+                        "minimum": 0,
+                        "description": "Nombre de parts pour ce d\u00e9tail.<br>\nUtilis\u00e9 uniquement pour l'affichage dans le cas la r\u00e9partition par parts.",
+                        "type": "integer"
+                    },
+                    "montant": {
+                        "description": "Montant r\u00e9el en euros pour ce d\u00e9tail.<br>\nLe montant est arrondi \u00e0 deux d\u00e9cimales.<br>\nLe montant est obligatoire peu importe le mode de r\u00e9partition.",
+                        "type": "number"
+                    }
+                }
+            },
+            "Detail.jsonld_noid": {
                 "type": "object",
                 "properties": {
                     "id": {
@@ -2266,30 +2290,6 @@
                     "parts",
                     "montant"
                 ]
-            },
-            "Detail.jsonld-depense.read": {
-                "type": "object",
-                "required": [
-                    "user",
-                    "parts",
-                    "montant"
-                ],
-                "properties": {
-                    "user": {
-                        "type": "string",
-                        "format": "iri-reference",
-                        "example": "https://example.com/"
-                    },
-                    "parts": {
-                        "minimum": 0,
-                        "description": "Nombre de parts pour ce d\u00e9tail.<br>\nUtilis\u00e9 uniquement pour l'affichage dans le cas la r\u00e9partition par parts.",
-                        "type": "integer"
-                    },
-                    "montant": {
-                        "description": "Montant r\u00e9el en euros pour ce d\u00e9tail.<br>\nLe montant est arrondi \u00e0 deux d\u00e9cimales.<br>\nLe montant est obligatoire peu importe le mode de r\u00e9partition.",
-                        "type": "number"
-                    }
-                }
             },
             "Error": {
                 "type": "object",

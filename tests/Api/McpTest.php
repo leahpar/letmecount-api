@@ -142,6 +142,38 @@ class McpTest extends AuthenticatedApiTestCase
         }
     }
 
+    /**
+     * Un agent n'a que le schéma pour savoir quoi envoyer : s'il décrit autre
+     * chose que ce que l'outil lit vraiment, l'outil répond quand même et
+     * l'agent apprend faux. Les outils d'élément ont d'abord annoncé le corps
+     * entier d'une dépense, six champs `required` qu'ils n'ouvraient jamais, et
+     * pas l'identifiant qui est leur seul argument utile.
+     */
+    public function testToolInputSchemasDescribeWhatIsActuallyRead(): void
+    {
+        $this->initialize();
+        $schemas = [];
+        foreach ($this->rpc('tools/list')['result']['tools'] as $tool) {
+            $schemas[$tool['name']] = $tool['inputSchema'];
+        }
+
+        foreach (['depense_get', 'depense_delete'] as $name) {
+            $this->assertSame(['id'], array_keys($schemas[$name]['properties'] ?? []), $name);
+            $this->assertSame(['id'], $schemas[$name]['required'] ?? [], $name);
+        }
+
+        $this->assertSame(['id'], $schemas['depense_update']['required'] ?? []);
+        $this->assertContains('titre', array_keys($schemas['depense_update']['properties'] ?? []));
+
+        // user_me ne prend aucun argument. Son schéma reprenait la ressource
+        // entière, jusqu'au jeton de liaison à usage unique.
+        $this->assertSame([], array_keys($schemas['user_me']['properties'] ?? []));
+
+        foreach ($schemas as $name => $schema) {
+            $this->assertArrayNotHasKey('token', $schema['properties'] ?? [], $name);
+        }
+    }
+
     public function testDepensesListReadsFromTheDatabase(): void
     {
         $depense = $this->createDepense($this->user, 42.0, 'Vue par MCP');
@@ -294,6 +326,25 @@ class McpTest extends AuthenticatedApiTestCase
         $this->assertNull($this->em->getRepository(\App\Entity\Depense::class)->find($id));
     }
 
+    /**
+     * La suppression est la seule opération irréversible de la surface : elle
+     * doit confirmer. Elle répondait `null`, qu'un agent ne peut pas distinguer
+     * d'une erreur avalée.
+     */
+    public function testDepenseDeleteConfirmsWhatItDid(): void
+    {
+        $depense = $this->createDepense($this->user, 8.0, 'À confirmer');
+        $this->createDetail($this->user, 8.0, $depense);
+        $id = $depense->id;
+
+        $this->initialize();
+        $result = $this->rpc('tools/call', ['name' => 'depense_delete', 'arguments' => ['id' => $id]])['result'];
+
+        $content = $this->content($result);
+        $this->assertTrue($content['deleted'] ?? false);
+        $this->assertSame($id, $content['id'] ?? null);
+    }
+
     public function testTagsListAndCreate(): void
     {
         $this->initialize();
@@ -347,6 +398,28 @@ class McpTest extends AuthenticatedApiTestCase
 
         $result = $this->rpc('tools/call', ['name' => 'logs_list', 'arguments' => new \stdClass()])['result'];
         $this->assertContains('Tracée', array_column($this->items($result), 'libelle'));
+    }
+
+    /**
+     * Le message d'erreur est tout ce dont dispose un agent pour se corriger.
+     * « Not Found » ne distinguait ni l'identifiant inexistant, ni la ressource
+     * supprimée, ni le nom d'argument erroné — trois causes, une seule sortie.
+     */
+    public function testNotFoundErrorsSayWhatIsMissing(): void
+    {
+        $this->initialize();
+
+        foreach (['depense_get', 'depense_delete'] as $outil) {
+            $payload = $this->rpc('tools/call', [
+                'name' => $outil,
+                'arguments' => ['id' => 99999999],
+            ], false);
+
+            $message = $payload['error']['message'] ?? ($payload['result']['content'][0]['text'] ?? '');
+            $this->assertStringContainsString('Depense', $message, $outil);
+            $this->assertStringContainsString('99999999', $message, $outil);
+            $this->assertStringContainsString('introuvable', $message, $outil);
+        }
     }
 
     /**

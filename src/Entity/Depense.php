@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
@@ -20,8 +21,12 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 use App\Validator\DepenseConstraint;
+use App\Dto\Mcp\DepenseIdInput;
 use App\Dto\Mcp\DepenseListInput;
+use App\Dto\Mcp\DepenseUpdateInput;
 use App\State\McpCollectionProvider;
+use App\State\McpDeleteProcessor;
+use App\State\McpItemProvider;
 use App\State\McpWriteInputProvider;
 
 #[ORM\Entity(repositoryClass: DepenseRepository::class)]
@@ -64,18 +69,19 @@ use App\State\McpWriteInputProvider;
 )]
 #[McpTool(
     name: 'depense_get',
+    input: DepenseIdInput::class,
     // Les outils portant sur un élément ne reçoivent pas d'uriVariables par
     // défaut : sans cette ligne le Handler n'en transmet aucune, et le provider
     // Doctrine rend le premier enregistrement venu au lieu de celui demandé.
     uriVariables: ['id' => new Link(fromClass: self::class, identifiers: ['id'])],
     description: 'Récupère une dépense par son identifiant.',
     normalizationContext: ['groups' => ['depense:read']],
-    provider: 'api_platform.doctrine.orm.state.item_provider',
+    provider: McpItemProvider::class,
     security: "is_granted('IS_AUTHENTICATED_FULLY')"
 )]
 #[McpTool(
     name: 'depense_create',
-    description: 'Crée une dépense. Le partage vaut "parts" (répartition proportionnelle aux parts des détails) ou "montants" (montants exacts, dont la somme doit valoir le montant total).',
+    description: 'Crée une dépense partagée. Le client fournit toujours le montant de chaque détail, et leur somme doit valoir le montant total, à un centime près — le serveur ne répartit rien lui-même, y compris quand `partage` vaut "parts". Les IRI s\'écrivent "/users/4" et "/tags/3", à récupérer par `users_list` et `tags_list`.',
     method: 'POST',
     normalizationContext: ['groups' => ['depense:read']],
     denormalizationContext: ['groups' => ['depense:write']],
@@ -86,6 +92,7 @@ use App\State\McpWriteInputProvider;
 )]
 #[McpTool(
     name: 'depense_update',
+    input: DepenseUpdateInput::class,
     // Les outils portant sur un élément ne reçoivent pas d'uriVariables par
     // défaut : sans cette ligne le Handler n'en transmet aucune, et le provider
     // Doctrine rend le premier enregistrement venu au lieu de celui demandé.
@@ -101,6 +108,7 @@ use App\State\McpWriteInputProvider;
 )]
 #[McpTool(
     name: 'depense_delete',
+    input: DepenseIdInput::class,
     // Les outils portant sur un élément ne reçoivent pas d'uriVariables par
     // défaut : sans cette ligne le Handler n'en transmet aucune, et le provider
     // Doctrine rend le premier enregistrement venu au lieu de celui demandé.
@@ -108,8 +116,7 @@ use App\State\McpWriteInputProvider;
     description: 'Supprime une dépense.',
     method: 'DELETE',
     provider: McpWriteInputProvider::class,
-    processor: 'api_platform.doctrine.orm.state.remove_processor',
-    structuredContent: false,
+    processor: McpDeleteProcessor::class,
     security: "is_granted('IS_AUTHENTICATED_FULLY')"
 )]
 class Depense
@@ -131,6 +138,12 @@ class Depense
         orphanRemoval: true
     )]
     #[Groups(['depense:read', 'depense:write'])]
+    // Un Detail n'est pas une ressource : sans ça, JSON-LD lui fabrique un
+    // `@id` anonyme `/.well-known/genid/…`, différent à chaque sérialisation.
+    // Il n'est adressable par personne, le front ne le lit pas, et il encombre
+    // la fenêtre de contexte d'un agent MCP tout en donnant l'illusion que la
+    // donnée a changé entre deux appels.
+    #[ApiProperty(genId: false)]
     #[Assert\Valid]  // Valide aussi les détails imbriqués
     #[Assert\Count(min: 1)] // Au moins un détail requis
     public Collection $details;

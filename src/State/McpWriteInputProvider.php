@@ -5,6 +5,8 @@ namespace App\State;
 use ApiPlatform\Metadata\HttpOperation;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
+use App\Exception\McpNotFoundException;
+use Symfony\Component\Serializer\Exception\ExceptionInterface as SerializerException;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 
@@ -38,7 +40,17 @@ class McpWriteInputProvider implements ProviderInterface
         $data = $context['mcp_data'] ?? [];
         unset($data['id']);
 
-        $existing = $uriVariables ? $this->itemProvider->provide($operation, $uriVariables, $context) : null;
+        $existing = null;
+        if ($uriVariables) {
+            $existing = $this->itemProvider->provide($operation, $uriVariables, $context);
+
+            // Modifier ou supprimer suppose que la cible existe : le dire, plutôt
+            // que de laisser le pipeline rendre un « Not Found » sec — ou pire,
+            // pour une modification, créer une seconde dépense en silence.
+            if (null === $existing) {
+                throw new McpNotFoundException($operation->getShortName() ?? 'Ressource', $uriVariables);
+            }
+        }
 
         if ($operation instanceof HttpOperation && 'DELETE' === $operation->getMethod()) {
             return $existing;
@@ -55,6 +67,20 @@ class McpWriteInputProvider implements ProviderInterface
             $denormalizationContext['deep_object_to_populate'] = true;
         }
 
-        return $this->denormalizer->denormalize($data, $resourceClass, 'jsonld', $denormalizationContext);
+        try {
+            return $this->denormalizer->denormalize($data, $resourceClass, 'jsonld', $denormalizationContext);
+        } catch (SerializerException $e) {
+            // « Invalid IRI "2". » ne dit pas ce qu'il fallait écrire, et un
+            // agent qui a vu `depenses_list` accepter "2" pour le filtre `tag`
+            // a toutes les raisons de réessayer la même chose.
+            if (str_contains($e->getMessage(), 'Invalid IRI')) {
+                throw new \RuntimeException(\sprintf(
+                    '%s Les relations s\'écrivent sous forme d\'IRI, par exemple "/tags/3" ou "/users/4" — pas un identifiant nu.',
+                    rtrim($e->getMessage(), ' ')
+                ), 0, $e);
+            }
+
+            throw $e;
+        }
     }
 }

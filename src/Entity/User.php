@@ -12,6 +12,7 @@ use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Metadata\McpTool;
 use ApiPlatform\Metadata\McpToolCollection;
 use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use App\Dto\Mcp\NoInput;
 use App\Dto\Mcp\UserListInput;
 use App\State\McpCollectionProvider;
 use App\Provider\CurrentUserProvider;
@@ -64,7 +65,7 @@ use Symfony\Component\Serializer\Attribute\Groups;
 // ne rien déclarer suffit à ne rien exposer.
 #[McpToolCollection(
     name: 'users_list',
-    description: 'Liste les utilisateurs, pour retrouver l\'IRI d\'une personne à qui rattacher une dépense.',
+    description: 'Liste les utilisateurs, pour retrouver l\'IRI d\'une personne à qui rattacher une dépense. Chacun porte son solde, de même convention que dans `user_me`.',
     normalizationContext: ['groups' => ['user:read']],
     input: UserListInput::class,
     filters: ['annotated_app_entity_user_api_platform_doctrine_orm_filter_search_filter'],
@@ -73,7 +74,8 @@ use Symfony\Component\Serializer\Attribute\Groups;
 )]
 #[McpTool(
     name: 'user_me',
-    description: 'Renvoie l\'utilisateur courant, celui au nom de qui l\'agent agit.',
+    input: NoInput::class,
+    description: 'Renvoie l\'utilisateur courant, celui au nom de qui l\'agent agit. Son `solde` vaut ce qu\'il a payé moins ce qu\'il doit, vis-à-vis du groupe entier et non d\'une personne : négatif, il doit au groupe ; positif, le groupe lui doit. `soldeIndividuel` est le même calcul sans le conjoint, quand il y en a un. Il n\'existe volontairement pas de remboursement ni de suggestion de remboursement : l\'équilibrage se fait en laissant payer la prochaine dépense à ceux dont le solde est le plus bas.',
     uriVariables: [],
     normalizationContext: ['groups' => ['user:read']],
     provider: CurrentUserProvider::class,
