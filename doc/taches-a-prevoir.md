@@ -8,12 +8,32 @@ Ne sont listés ici que les chantiers *à ouvrir*. La dette déjà inventoriée 
 détail vit dans `doc/dette-technique.md` ; la présente note y renvoie plutôt que
 de la répéter.
 
-**Mise à jour du 2026-08-24 :** la tâche 2 est faite, et `dette-technique.md` est
-fusionnée sur `dev`. Le relevé d'origine des trois autres sujets est inchangé.
+**Mise à jour :** les tâches **1** (accès git en ssh, le 2026-08-25) et **2**
+(remise au vert des tests, le 2026-08-24) sont faites, et `dette-technique.md`
+est fusionnée sur `dev`. Restent la migration Symfony 8 et le service worker,
+dont le relevé d'origine est inchangé.
 
 ---
 
-## 1. Aligner l'accès git sur ssh
+## 1. ✅ Aligner l'accès git sur ssh
+
+**Fait le 2026-08-25.** Les `origin` des deux dépôts sont en ssh, et la chaîne
+complète est vérifiée : `ssh -T git@github.com` authentifie bien, `git fetch` et
+`git push --dry-run` passent sur `letmecount-api` comme sur `letmecount-front`.
+Aucun `credential.helper` ni `url.insteadOf` résiduel des contournements ne
+traîne dans la configuration git.
+
+**Le second symptôme tombe avec le premier.** Le jeton `gh` n'a toujours pas la
+portée `workflow`, et c'est sans conséquence : la restriction qui refusait de
+pousser une branche touchant `.github/workflows/*` est propre à
+l'authentification **par jeton OAuth**, donc à https. En ssh, l'authentification
+par clé publique ne porte pas de scopes, et la restriction ne s'applique pas.
+Cette portée ne sert plus qu'aux commandes `gh` qui *modifient* des workflows ;
+la lecture (`gh workflow list`, `gh run list`) fonctionne déjà sans elle —
+vérifié. Décision : on la laisse telle quelle, `gh auth refresh -s workflow`
+reste disponible si le besoin apparaît.
+
+Le relevé d'origine :
 
 **Pourquoi maintenant :** ça a bloqué deux fois pendant le chantier push.
 
@@ -42,7 +62,8 @@ git remote set-url origin git@github.com:leahpar/letmecount-front.git
 À défaut, `gh auth setup-git` puis `gh auth refresh -s workflow`.
 
 Coût : cinq minutes. C'est la tâche au meilleur rapport bénéfice/effort de cette
-liste.
+liste. *(Confirmé : le basculement a pris deux commandes, l'essentiel du temps
+étant passé à vérifier.)*
 
 ---
 

@@ -228,3 +228,9 @@ suppression de ces deux lignes :
 **Elles n'ont pas été retirées** : `CLAUDE.md` interdit d'éditer `phpstan.neon`.
 C'est donc au propriétaire du dépôt de trancher — les supprimer pour un `make
 stan` vert, ou les garder si elles doivent couvrir du code à venir.
+
+> **Levé le 2026-08-25** : les deux lignes ont été commentées, `make stan` rend
+> désormais *No errors*. À noter pour qui reprendrait le dépôt ailleurs :
+> `phpstan.neon` est dans `.gitignore`, c'est une configuration **locale et non
+> versionnée** — le correctif ne suit pas le dépôt et sera à refaire sur un autre
+> poste.
