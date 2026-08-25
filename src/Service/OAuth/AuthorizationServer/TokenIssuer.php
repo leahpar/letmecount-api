@@ -3,7 +3,7 @@
 namespace App\Service\OAuth\AuthorizationServer;
 
 use App\Entity\User;
-use App\EventListener\RefreshTokenLabelListener;
+use App\EventListener\RefreshTokenSessionListener;
 use Lexik\Bundle\JWTAuthenticationBundle\Security\Http\Authentication\AuthenticationSuccessHandler;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -34,7 +34,7 @@ final class TokenIssuer
 
     /**
      * `$sessionLabel` nomme la session ouverte — le nom du client OAuth. Il
-     * voyage par la requête parce que c'est là que `RefreshTokenLabelListener`
+     * voyage par la requête parce que c'est là que `RefreshTokenSessionListener`
      * peut le lire : l'émission passe par un événement, qui ne transporte que
      * l'utilisateur et les données de réponse.
      */
@@ -42,7 +42,7 @@ final class TokenIssuer
     {
         if (null !== $sessionLabel) {
             $this->requestStack->getCurrentRequest()?->attributes->set(
-                RefreshTokenLabelListener::CLIENT_NAME,
+                RefreshTokenSessionListener::CLIENT_NAME,
                 $sessionLabel,
             );
         }
@@ -67,6 +67,13 @@ final class TokenIssuer
         // du refresh token un champ facultatif.
         if (isset($data['refresh_token']) && is_string($data['refresh_token'])) {
             $body['refresh_token'] = $data['refresh_token'];
+        }
+
+        // Hors norme OAuth, et ignoré par les clients qui ne le connaissent
+        // pas : c'est ce qui permet à un client de se reconnaître dans la liste
+        // des connexions.
+        if (isset($data['session_key']) && is_string($data['session_key'])) {
+            $body['session_key'] = $data['session_key'];
         }
 
         // RFC 6749 §5.1 : une réponse porteuse de jetons ne se met pas en cache.

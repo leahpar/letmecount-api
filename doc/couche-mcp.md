@@ -1121,17 +1121,14 @@ serveur d'autorisation inexistant n'avance à rien).
   candidat.
 - ~~**Libellé des sessions.**~~ ~~**Ménage des clients enregistrés.**~~ **Faits
   tous les deux le 2026-08-25**, voir §10.
-- **Reconnaître la session courante.** L'écran des connexions ne dit pas laquelle
-  est le navigateur qu'on a sous les yeux : on peut donc se déconnecter soi-même
-  sans le vouloir. Rien de grave — il suffit de se reconnecter — mais c'est la
-  première chose qui manquera à l'usage.
+- ~~**Reconnaître la session courante.**~~ **Fait le 2026-08-25**, voir §10.
 
 ---
 
 ## 10. Après-coup — les sessions ont un nom
 
-**Fait le 2026-08-25**, dans la foulée du lot 3, sur les deux points que le §9
-laissait ouverts. `make tests` → **157 tests au vert** (150 + 7).
+**Fait le 2026-08-25**, dans la foulée du lot 3, sur les trois points que le §9
+laissait ouverts. `make tests` → **160 tests au vert** (150 + 10).
 
 ### Ce que l'utilisateur voit
 
@@ -1177,6 +1174,43 @@ l'utilisateur et les données de réponse, il n'y a pas d'autre canal.
 
 Conséquence appréciable : les sessions déjà ouvertes, qui n'ont pas de libellé,
 en reçoivent un à leur prochain renouvellement. Rien à migrer.
+
+### Les « doublons » n'en étaient pas
+
+Signalé à l'usage : se déconnecter puis se reconnecter laissait **deux** lignes
+dans la liste. Ce n'était pas un doublon à détecter, mais une session jamais
+fermée — `handleLogout` côté front se contentait de vider le `localStorage`.
+`/auth/logout` existait, était configuré, et n'avait jamais été appelé par
+personne ni couvert par un test. La ligne survivait donc jusqu'à l'expiration du
+refresh token, soit un an.
+
+Le front prévient maintenant le serveur avant d'oublier ses jetons, en **axios
+brut et non l'instance du projet** : ses intercepteurs renouvellent le jeton sur
+un 401, et la déconnexion porterait alors sur un jeton déjà remplacé — la
+session resterait ouverte, ce qui est exactement le bug qu'on corrige. Si l'appel
+échoue, la déconnexion locale a lieu quand même.
+
+Il n'y a pas de détection de doublon, et il ne peut pas y en avoir : deux lignes
+portant le même libellé sont peut-être deux vrais appareils. Ce qui est réparable
+est la cause — une session qu'on ferme se ferme.
+
+### Reconnaître sa propre session
+
+Chaque émission de jetons rend un `session_key`, que le client garde et compare
+aux lignes de la liste : celle qui correspond est marquée « cet appareil », et
+n'a pas de bouton Révoquer — s'en déconnecter passe par le menu, qui prévient le
+serveur.
+
+C'est la **famille** de gesdinet, exposée sous un autre nom parce que « famille »
+ne veut rien dire hors du bundle. Elle a été préférée à l'identifiant de ligne
+pour une raison de fond : elle survit aux rotations. Un identifiant de ligne
+changerait à chaque renouvellement, et serait périmé dès qu'un autre onglet
+renouvelle — le repère aurait disparu au moment précis où on en a besoin. Elle
+n'ouvre rien : on ne renouvelle pas un jeton avec.
+
+Le JWT ne pouvait pas porter ce repère : il est créé **avant** le refresh token
+dans la chaîne d'événements, il ne peut donc pas désigner une session qui n'existe
+pas encore.
 
 ### Le ménage se fait à l'inscription, pas au cron
 

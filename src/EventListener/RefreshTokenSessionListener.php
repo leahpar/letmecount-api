@@ -14,8 +14,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
- * Donne un nom lisible à chaque session, pour que l'écran « Mes appareils »
- * distingue le téléphone de Claude et de ChatGPT.
+ * Fait d'un refresh token une session lisible : son libellé, et l'identifiant
+ * par lequel le client se reconnaîtra dans la liste.
  *
  * Deux passages autour de celui de gesdinet, qui est ce qui crée et détruit les
  * jetons :
@@ -28,7 +28,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * Sans l'héritage, une session MCP nommée « Claude » se retrouverait rebaptisée
  * d'après le User-Agent du client au premier renouvellement.
  */
-class RefreshTokenLabelListener
+class RefreshTokenSessionListener
 {
     /**
      * Attribut de requête par lequel le serveur d'autorisation OAuth nomme la
@@ -99,6 +99,12 @@ class RefreshTokenLabelListener
         $token->createdAt = new \DateTimeImmutable();
 
         $this->refreshTokens->save($token);
+
+        // La famille, et non l'identifiant de la ligne : elle survit aux
+        // rotations, donc le client la garde une fois pour toutes au lieu de la
+        // remettre à jour à chaque renouvellement. Elle n'ouvre rien — on ne
+        // renouvelle pas un jeton avec elle — c'est un simple repère.
+        $event->setData($event->getData() + ['session_key' => $token->getFamily()]);
     }
 
     private function labelFor(Request $request): string

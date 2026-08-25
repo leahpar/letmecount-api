@@ -67,12 +67,29 @@ class RefreshToken extends BaseRefreshToken
     #[Groups(['session:read'])]
     public ?\DateTimeImmutable $createdAt = null;
 
-    // Redéclaré pour porter un groupe de sérialisation : le getter du parent
-    // n'en a pas, et un attribut ne s'ajoute pas depuis la classe fille. Sans
-    // lui, la liste ne porterait pas l'identifiant dont la suppression a besoin.
+    // Redéclarés pour porter un groupe de sérialisation : les getters du parent
+    // n'en ont pas, et un attribut ne s'ajoute pas depuis la classe fille. Sans
+    // eux, la liste ne porterait ni l'identifiant dont la suppression a besoin,
+    // ni la famille par laquelle un client reconnaît sa propre session.
     #[Groups(['session:read'])]
     public function getId(): int|string|null
     {
         return parent::getId();
+    }
+
+    /**
+     * Le repère par lequel un client reconnaît sa propre session dans la liste.
+     *
+     * C'est la « famille » de gesdinet, qui regroupe les jetons issus d'une même
+     * connexion : elle survit aux rotations, là où l'identifiant de ligne change
+     * à chaque renouvellement. Renommée en sortie parce que « famille » ne veut
+     * rien dire hors du bundle.
+     *
+     * Elle n'ouvre rien : on ne renouvelle pas un jeton avec.
+     */
+    #[Groups(['session:read'])]
+    public function getSessionKey(): ?string
+    {
+        return $this->getFamily();
     }
 }

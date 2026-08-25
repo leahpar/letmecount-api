@@ -150,6 +150,44 @@ class SessionApiTest extends AuthenticatedApiTestCase
         $this->assertSame('Chrome sur Linux', $this->sessions()[0]['label']);
     }
 
+    /**
+     * Le client reçoit de quoi se reconnaître dans la liste, et ce repère ne
+     * bouge pas d'un renouvellement à l'autre — sinon il faudrait le remettre à
+     * jour à chaque fois, et il serait périmé dès qu'un autre onglet renouvelle.
+     */
+    public function testIssuedTokensCarryTheSessionKey(): void
+    {
+        $tokens = $this->openMcpSession();
+
+        $this->assertArrayHasKey('session_key', $tokens);
+        $this->assertSame($tokens['session_key'], $this->sessions()[0]['sessionKey']);
+
+        $this->post('/token', [
+            'grant_type' => 'refresh_token',
+            'refresh_token' => $tokens['refresh_token'],
+        ]);
+        $this->assertResponseIsSuccessful();
+
+        $this->assertSame($tokens['session_key'], $this->json()['session_key']);
+        $this->assertSame($tokens['session_key'], $this->sessions()[0]['sessionKey']);
+    }
+
+    /**
+     * Se déconnecter ferme la session côté serveur. Sans cet appel, la ligne
+     * survivrait un an et la connexion suivante en ajouterait une deuxième :
+     * c'est ce qui donnait l'impression de doublons dans la liste.
+     */
+    public function testLoggingOutClosesTheSession(): void
+    {
+        $tokens = $this->openMcpSession();
+        $this->assertCount(1, $this->sessions());
+
+        $this->post('/auth/logout', ['refresh_token' => $tokens['refresh_token']]);
+
+        $this->assertResponseIsSuccessful();
+        $this->assertSame([], $this->sessions());
+    }
+
     public function testSessionsOfOtherUsersAreNeitherListedNorDeletable(): void
     {
         $this->openMcpSession();

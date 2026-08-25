@@ -2847,6 +2847,14 @@
                             "id": {
                                 "readOnly": true,
                                 "type": "integer"
+                            },
+                            "sessionKey": {
+                                "readOnly": true,
+                                "description": "Le rep\u00e8re par lequel un client reconna\u00eet sa propre session dans la liste.",
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
                             }
                         }
                     }
