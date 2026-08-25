@@ -201,20 +201,37 @@ et dans le gestionnaire de mots de passe, pour tous les enrôlements suivants.
 resserrement des regex de `PushSubscription` (`f0dbc4e`). Un `make doc` le remet
 à jour, mais le diff n'a rien à voir avec la migration.
 
-**La base a trois dérives distinctes**, qui n'ont pas la même origine et que
-`migrations:diff` remonte toutes à chaque appel — c'est ce qui a obligé à réduire
-à la main la migration `family` :
+### ✅ Les trois dérives de schéma sont résorbées
 
-| Écart | Origine | Effet réel |
+**Fait le 2026-08-25.** `doctrine:migrations:diff` répond désormais *« No changes
+detected in your mapping information »* : c'est ce qui manquait, et c'est ce qui
+avait obligé à réduire à la main la migration `family`.
+
+Elles n'avaient pas la même origine, et donc pas le même correctif :
+
+| Écart | Origine | Correctif |
 |---|---|---|
-| `log.libelle` et `log.montant` nullables en base, non-nullables dans l'entité | `9a9a528` (2025-09-15) a resserré `Log` sans migration de suivi ; la table a été créée nullable la veille par `Version20250915092158` | la base tolère des `NULL` que le code n'écrit jamais — `Log::__construct()` les prend sur la dépense. Zéro ligne concernée en dev, à vérifier en prod avant tout `NOT NULL` |
-| index `UNIQ_IDENTIFIER_GOOGLE_SUB` / `UNIQ_IDENTIFIER_APPLE_SUB` sur `user` | migrations OAuth écrites à la main (2026-08-23 et 24) avec des noms lisibles, alors que `#[ORM\Column(unique: true)]` fait générer `UNIQ_<hash>` à Doctrine | aucun. `diff` propose un `RENAME INDEX` perpétuel |
-| commentaires `(DC2Type:datetime_immutable)` sur `push_subscription.created_at`, `webauthn_credential.created_at` et `.last_used_at` | DBAL 3 les écrivait ; DBAL 4 ne les écrit ni ne les lit | cosmétique — le seul des trois causé par cette migration |
+| `log.libelle` et `log.montant` nullables en base, non-nullables dans l'entité | `9a9a528` (2025-09-15) a resserré `Log` sans migration de suivi ; la table avait été créée nullable la veille par `Version20250915092158` | `NOT NULL`, précédé d'un remplissage |
+| index `UNIQ_IDENTIFIER_GOOGLE_SUB` / `_APPLE_SUB` sur `user` | migrations OAuth écrites à la main (2026-08-23 et 24) avec des noms lisibles, alors que `#[ORM\Column(unique: true)]` fait générer un `UNIQ_<hash>` à Doctrine | **aucun `ALTER`** : les contraintes sont nommées sur l'entité |
+| commentaires `(DC2Type:datetime_immutable)` sur `push_subscription.created_at`, `webauthn_credential.created_at` et `.last_used_at` | DBAL 3 les écrivait ; DBAL 4 ne les écrit ni ne les lit | suppression, purement cosmétique |
 
-Le correctif de la deuxième ligne ne touche pas la base : déclarer les
-`#[ORM\UniqueConstraint]` nommées sur l'entité, comme c'est déjà fait pour
-`UNIQ_IDENTIFIER_USERNAME`, aligne Doctrine sur ce que la prod a réellement.
-Les deux autres demandent un `ALTER TABLE`, dont un seul est plus qu'esthétique.
+**L'index se corrige du côté du code, pas de la base.** `username` montrait déjà
+la bonne forme : pas de `unique: true` sur la colonne, une
+`#[ORM\UniqueConstraint]` nommée sur la classe. `googleSub` et `appleSub` suivent
+maintenant le même modèle, avec exactement les noms que les migrations OAuth ont
+posés en production. Rien à migrer, et le `RENAME INDEX` perpétuel disparaît.
+
+**Le `NOT NULL` sur `log` ne fait qu'écrire en base ce que le code exigeait
+déjà.** `Log::$libelle` est un `string` et `$montant` un `float` — des propriétés
+typées non nullables — toujours renseignées par le constructeur depuis la
+dépense. Une valeur nulle en base ferait échouer l'hydratation : si la production
+en contenait, `GET /logs` serait déjà cassé. Le remplissage qui précède l'`ALTER`
+n'est donc qu'une ceinture, mais il rend la migration sûre quel qu'ait été le
+contenu : il récupère la valeur sur la dépense quand elle existe encore, et se
+rabat sur `''` / `0` sinon. Éprouvé en insérant deux lignes nulles avant de
+migrer — l'une rattachée à une dépense, qui a bien récupéré son titre et son
+montant, l'autre orpheline, qui a pris le repli. Aller-retour `up`/`down` vérifié
+lui aussi.
 
 ### Le point de calendrier a changé de sens
 

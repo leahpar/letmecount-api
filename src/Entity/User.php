@@ -22,6 +22,12 @@ use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_USERNAME', fields: ['username'])]
+// Les index de `googleSub` et `appleSub` sont nommés ici, et non déduits d'un
+// `unique: true` sur la colonne : les migrations OAuth les ont créés sous ces
+// noms-là, et un `unique: true` ferait générer un `UNIQ_<hash>` que Doctrine
+// proposerait de renommer à chaque `migrations:diff`.
+#[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_GOOGLE_SUB', fields: ['googleSub'])]
+#[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_APPLE_SUB', fields: ['appleSub'])]
 #[ApiResource(
     operations: [
         new Get(uriTemplate: '/users/{id}', requirements: ['id' => '\d+']),
