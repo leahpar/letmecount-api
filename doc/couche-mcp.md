@@ -1,6 +1,7 @@
 # Couche MCP sur l'API — plan de déploiement
 
-Statut : **conception validée, rien d'implémenté**. Date : 2026-08-24.
+Statut : **lot 1 fait le 2026-08-25** (endpoint et surface d'outils, sous le
+firewall existant). Lots 2 et 3 à ouvrir. Date de conception : 2026-08-24.
 Suite de `doc/authentification-oauth.md` §3, dont ce document révise l'argumentaire
 (§3 ci-dessous) sans en changer la conclusion.
 
@@ -10,12 +11,13 @@ et sans configuration manuelle côté client.
 
 **Mise à jour du 2026-08-25 — l'application est passée en Symfony 8.1.** Ce
 document a été écrit sur 7.4 et le dit à plusieurs endroits ; la conclusion ne
-bouge pas, mais les chiffres du §1 si. Résolution revérifiée
-(`composer require api-platform/mcp --dry-run`) : **8 paquets installés au lieu
-de 15, toujours aucune mise à jour ni suppression** de l'existant — les PSR,
-`nyholm/psr7` et `symfony/psr-http-message-bridge` sont déjà là. `mcp/sdk` passe
-en 0.8.0, et `symfony/object-mapper` arrive en v8.1.5 : la condition que
-`ApiPlatformExtension` vérifie avant d'activer le bloc MCP reste remplie.
+bouge pas, mais les chiffres du §1 si. Le relevé définitif est celui de
+l'installation, au §4.1 : **10 paquets, aucune mise à jour ni suppression**.
+
+*Un relevé intermédiaire annonçait ici 8 paquets et `mcp/sdk` en 0.8.0 : il
+avait été mesuré sur `api-platform/mcp` seul. `symfony/mcp-bundle` n'est pas
+tiré comme dépendance — il faut le demander — et sa 0.12 plafonne `mcp/sdk` à
+`^0.7`.*
 
 **`doc/openapi.json` est repris par ce chantier.** Le fichier est périmé depuis
 `f0dbc4e` (regex de `PushSubscription` resserrées), indépendamment de la
@@ -42,24 +44,20 @@ API Platform, et c'est ici que la spécification sera reprise avec son contexte.
   que la note OAuth demandait de poser d'avance (§3, « à câbler dès l'étape
   OAuth »). Elle a tenu, et c'est elle qui rend le lot 3 abordable.
 
-Résolution de dépendances vérifiée (`composer require --dry-run`) : 15 paquets
-installés, **aucune mise à jour ni suppression** de l'existant.
-
-```
-api-platform/mcp v4.3.13     symfony/mcp-bundle v0.12.0   mcp/sdk v0.7.1
-nyholm/psr7 1.8.2            symfony/psr-http-message-bridge v7.4.8
-symfony/object-mapper v7.4.17  opis/json-schema 2.6.0     php-http/discovery + PSR-*
-```
+Résolution de dépendances : voir §4.1, le relevé de ce paragraphe ayant été
+établi sur Symfony 7.4 et sur des versions qui ne s'installent plus telles
+quelles.
 
 ### Ce qui est à jeter
 
-`api/mcp-server/` contient un serveur MCP Python (FastMCP + httpx) qui proxifie
-l'API. Il est **mort depuis le chantier OAuth** : son premier outil est
-`auth_login(username, password)`, et le mot de passe n'existe plus depuis
-`Version20260727135854`. Il expose aussi `users_update_credentials`, supprimé
-avec `UserCredentialsProcessor`.
+**Supprimé le 2026-08-25**, `.ruff_cache/` compris, et les renvois Ruff et
+FastMCP du `README.md` avec.
 
-Suppression pure et simple, `.ruff_cache/` compris.
+`api/mcp-server/` contenait un serveur MCP Python (FastMCP + httpx) qui
+proxifiait l'API. Il était **mort depuis le chantier OAuth** : son premier outil
+était `auth_login(username, password)`, et le mot de passe n'existe plus depuis
+`Version20260727135854`. Il exposait aussi `users_update_credentials`, supprimé
+avec `UserCredentialsProcessor`.
 
 ---
 
@@ -200,6 +198,89 @@ surface d'outils est la bonne. Il serait dommage de construire un serveur
 d'autorisation autour d'un jeu d'outils qu'on refait ensuite.
 
 **Chiffrage : 0,5 à 1 jour.**
+
+### 4.1 Lot 1 — ce qui a réellement été livré
+
+**Fait le 2026-08-25**, en trois commits : le câblage, la surface d'outils, puis
+le ménage. `make tests` → **120 tests au vert** (106 + 14 pour MCP), `make stan`
+sans erreur, et `doc/openapi.json` régénéré — **les opérations MCP n'y
+apparaissent pas**, vérifié par comparaison : `getMcp()` est séparé de
+`getOperations()`, et la fabrique OpenAPI n'itère que sur la seconde.
+
+La marche à suivre du lot 1 tenait ; ce sont ses hypothèses sur le
+fonctionnement des outils qui étaient fausses, et c'est tout le §7 qui est à
+relire dans sa version révisée.
+
+#### Les dépendances ne s'installent pas comme annoncé
+
+`composer require api-platform/mcp symfony/mcp-bundle` : **10 paquets installés,
+0 mise à jour, 0 suppression**. `nyholm/psr7` était déjà là.
+
+Deux corrections au relevé d'origine :
+
+- **`symfony/mcp-bundle` doit être demandé explicitement.** Il n'est pas une
+  dépendance d'`api-platform/mcp` ; c'est `ApiPlatformExtension` qui garde le
+  chargement du bloc MCP derrière `class_exists(Symfony\AI\McpBundle\McpBundle::class)`.
+  Sans lui, installer `api-platform/mcp` ne câble rien du tout, en silence.
+- **`psr/simple-cache` est requis en plus.** Le `store: cache` de M1 passe par
+  `Psr16SessionStore`, et Symfony 8 ne tire plus l'interface PSR-16. Sans elle le
+  conteneur casse au **boot** — donc les 106 tests existants d'un coup, avec un
+  `Interface "Psr\SimpleCache\CacheInterface" not found` qui ne désigne pas MCP.
+
+#### `api-platform/mcp` n'a pas de tag utilisable
+
+C'est le piège le plus coûteux du lot, et il ne se voit qu'à l'exécution.
+
+Le DI d'`api-platform/symfony` **4.3.17** référence `ApiPlatform\Mcp\Server\ListHandler`.
+Cette classe n'apparaît dans `api-platform/mcp` qu'à partir de sa propre 4.3.16 —
+les deux paquets sont des splits du même monorepo, et s'alignent tag pour tag.
+Mais `api-platform/mcp` 4.3.14 à 4.3.17 exigent `mcp/sdk ^0.6`, dont la seule
+version, **0.6.0, porte CVE-2026-53965** (avis Packagist PKSA-p9gd-j6gr-6f9t),
+corrigée précisément en **0.7.1**. Composer refuse donc de l'installer.
+
+| `api-platform/mcp` | `mcp/sdk` exigé | `ListHandler` |
+|---|---|---|
+| v4.3.13 | `>=0.4 <1.0` | **non** |
+| v4.3.14 – v4.3.17 | `^0.6` — bloqué par la CVE | oui |
+| branche `4.3` | `^0.6 \|\| ^0.7` | oui |
+
+Le résolveur choisit donc v4.3.13, qui s'installe très bien et **casse le
+conteneur au premier boot**. Le symptôme — « Class ListHandler not found » alors
+que le service est bien déclaré — n'oriente pas vers un problème de version.
+
+La branche `4.3` a déjà élargi la contrainte ; le tag n'est pas sorti. Décision :
+on s'accroche à **`api-platform/mcp: 4.3.x-dev`**, `composer.lock` épinglant le
+commit, donc la production installe exactement ce code. **À repasser sur
+`~4.3.18` dès que le tag sort** — c'est une ligne de `composer.json`.
+
+Les deux options écartées : attendre le tag, ce qui bloquait tout le lot sur une
+date que personne ne peut annoncer ; et inscrire une exception
+`policy.advisories.ignore` pour prendre 4.3.17 avec le SDK 0.6.0. Cette CVE vise
+le *client* `HttpTransport` SSE et nous sommes serveur, donc l'impact réel est
+nul — mais l'exception, elle, reste inscrite dans le dépôt et se réévalue mal.
+
+#### Le reste s'est passé comme prévu
+
+- `allowed_hosts` (M1) : correctement anticipé.
+- **`security.yaml` n'a pas bougé**, comme annoncé. `/mcp` tombe sous
+  `^/ → IS_AUTHENTICATED_FULLY`, et un appel sans jeton rend un **401 portant
+  déjà `WWW-Authenticate: Bearer`** — le lot 2 n'aura qu'à y ajouter le
+  paramètre `resource_metadata`.
+- `allow-contrib` est passé à `true`. La recette de `mcp-bundle` se limite à
+  enregistrer le bundle : `mcp.yaml` et la route restent à écrire à la main.
+  Le réglage vaut pour **toutes** les recettes contrib à venir, pas seulement
+  celles-ci.
+
+#### Ce qu'il reste à faire avant de brancher un vrai client
+
+Le lot 1 est vérifié par les tests, **pas encore par un client MCP réel**. C'est
+l'étape que le §8 recommande avant d'ouvrir les lots 2 et 3, et elle reste
+entière :
+
+```bash
+claude mcp add --transport http let-me-count https://letmecountapi.lasoireefille.fr/mcp \
+  --header "Authorization: Bearer <jwt>"
+```
 
 ### Lot 2 — Resource server conforme (étapes 1 à 4, moitié ressource)
 
@@ -467,14 +548,123 @@ problème.
 
 ---
 
-## 7. Surface d'outils proposée
+## 7. Surface d'outils — livrée
 
-Vérifié dans le code : le `Handler` de `api-platform/mcp` passe par
-`api_platform.state_provider.main`, dans lequel `AccessCheckerProvider` décore
-`api_platform.state_provider.read`. **Les expressions `security:` des opérations
-MCP sont donc bien évaluées** — c'est la réponse à la question laissée ouverte au
-§3 de la note OAuth. Et comme la route MCP est sous le firewall, le token storage
-est peuplé quand elles s'évaluent.
+**Révisé le 2026-08-25**, à l'écriture. La version d'origine est conservée en fin
+de section : sa liste d'outils était bonne, son modèle mental faux.
+
+### Ce que la conception avait mal vu
+
+Le §7 d'origine décrivait `McpTool` comme « une opération déclarée à part », dont
+il suffirait de ne pas déclarer les variantes admin. C'est vrai, et M5 tient. Mais
+il en déduisait qu'un outil déclaré **réutilise le pipeline REST tout seul** :
+provider Doctrine, extensions, filtres, validation. Il n'en est rien.
+
+`api-platform/mcp` vise un modèle **CQRS**, documenté sur api-platform.com : une
+classe dont les propriétés forment l'`inputSchema`, plus un `processor` qui fait
+le travail. En l'absence de provider déclaré, le `Handler` installe son
+`ToolProvider`, qui se contente de mapper les arguments sur un objet avec
+`object_mapper`. Il ne lit pas la base, ne dénormalise rien, et `validate` comme
+`deserialize` sont explicitement mis à `false`.
+
+**Un outil n'hérite de rien** — ni des opérations HTTP de la même entité, ni des
+défauts de la ressource. Tout ce dont il a besoin se déclare sur lui.
+
+### Les outils livrés
+
+Les dix outils prévus, tous couverts par `tests/Api/McpTest.php`.
+
+| Outil            | Ressource | Ce qu'il a fallu déclarer                                        |
+|------------------|-----------|------------------------------------------------------------------|
+| `depenses_list`  | `Depense` | `input`, `filters`, `provider` (`McpCollectionProvider`)          |
+| `depense_get`    | `Depense` | `uriVariables`, `provider` Doctrine item                          |
+| `depense_create` | `Depense` | `validate`, `provider` (`McpWriteInputProvider`), `processor`     |
+| `depense_update` | `Depense` | idem + `uriVariables`                                             |
+| `depense_delete` | `Depense` | `uriVariables`, `provider`, `processor` remove                    |
+| `tags_list`      | `Tag`     | `input` (`NoInput`), `provider`                                   |
+| `tag_create`     | `Tag`     | `validate`, `provider`, `processor`                               |
+| `users_list`     | `User`    | `input`, `filters`, `provider` — groupe `user:read`               |
+| `user_me`        | `User`    | `uriVariables: []`, `provider: CurrentUserProvider`               |
+| `logs_list`      | `Log`     | `input` (`NoInput`), `provider`                                   |
+
+**Non exposés, volontairement** : `POST /users`, `PATCH /users/{id}`,
+`GET /users/{id}/token` (M5), et tout ce qui touche aux passkeys. Un test vérifie
+qu'aucun nom d'outil ne contient `token` ni `webauthn`.
+
+### Trois coutures, et pourquoi elles existent
+
+**M7 — `input:` est obligatoire sur toute liste.** Sans lui, le `Loader`
+construit l'`inputSchema` en passant l'opération de collection au
+`SchemaFactory`, qui rend un `type: array`. Le SDK refuse — *« Tool inputSchema
+must be a JSON Schema of type object »* — et **le serveur ne démarre plus du
+tout**. Ce n'est pas une subtilité : c'est le premier mur du lot. Les tests du
+`Loader` en amont mockent le `SchemaFactory`, donc le cas n'y est pas couvert.
+
+D'où `App\Dto\Mcp\NoInput` pour les listes sans argument, et un DTO nommé quand
+il y en a. Ce que ça donne au passage est meilleur que le défaut : un outil de
+liste décrit désormais **ses arguments**, pas la forme de sa sortie.
+
+**M8 — `McpCollectionProvider` fait passer les arguments pour des filtres.** Les
+filtres et la pagination d'API Platform se lisent dans `$context['filters']`, que
+seul le pipeline HTTP remplit depuis la query string. Une requête MCP n'en a pas.
+Sans ce relais de quinze lignes, les arguments déclarés sont acceptés puis
+**ignorés en silence** : l'outil annonce un filtre qui ne filtre rien, ce qui est
+pire que ne rien annoncer. Vérifié par un test avant correctif.
+
+Corollaire : les filtres déclarés par `#[ApiFilter]` sont attachés aux opérations
+HTTP générées, **pas** aux outils. Chaque outil nomme les siens dans `filters:`,
+avec l'identifiant de service `annotated_app_entity_<entité>_...`.
+
+**M9 — `McpWriteInputProvider` reconstruit l'entrée des écritures.** Le
+`ToolProvider` par défaut convient au modèle CQRS — des propriétés scalaires. Nos
+entités portent des relations en IRI et une collection de détails imbriquée, et
+`object_mapper` rend *« Expected argument of type App\Entity\Detail, array
+given »*. On repasse donc par le dénormaliseur d'API Platform, celui des requêtes
+HTTP : IRI résolues, groupes respectés, et pour une modification l'objet existant
+chargé puis complété via `OBJECT_TO_POPULATE`.
+
+Il faut aussi nommer le `processor:` — `persist_processor` ou `remove_processor`.
+Sans lui le `WriteProcessor` ne trouve rien dans son locator et **ne persiste
+pas**, sans erreur : l'outil répond joyeusement et rien n'est écrit.
+
+### Deux pièges qui ne lèvent aucune erreur
+
+Ce sont les plus dangereux du lot : dans les deux cas l'outil répond, et répond
+faux. Chacun a un test qui échoue si on retire le correctif — vérifié dans les
+deux sens.
+
+**`validate: true` sur les écritures.** Annoncé au §7 d'origine, et confirmé : le
+`Handler` fait `withValidate(false)` quand l'opération ne tranche pas. Contrôle
+fait en le retirant : une dépense dont les montants ne totalisent pas le montant
+annoncé **est persistée**, là où `DepenseConstraint` l'interdit au front.
+
+**`uriVariables` explicites sur les outils d'élément.** Non anticipé. Un
+`McpTool` d'élément n'en reçoit **aucune** par défaut, et la forme courte
+`uriVariables: ['id']` ne suffit pas — elle produit une liste indexée et casse
+sur *« Call to a member function withKey() on string »*. Il faut la forme
+complète : `['id' => new Link(fromClass: self::class, identifiers: ['id'])]`.
+
+Le danger tient à ce qui se passe sans : `depense_get` **fonctionne** — il rend
+simplement le premier enregistrement venu, quel que soit l'`id` demandé. Le
+premier test écrit passait, parce qu'il n'y avait qu'une dépense en base. Tout
+test sur une opération d'élément doit poser **deux** enregistrements.
+
+### Ce qui s'est confirmé
+
+- **Les `security:` sont bien évaluées**, comme le §7 l'annonçait :
+  `AccessCheckerProvider` est dans la chaîne `state_provider.main`, et la route
+  étant sous le firewall, le token storage est peuplé. Chaque outil porte
+  `is_granted('IS_AUTHENTICATED_FULLY')`.
+- **`CurrentUserDepenseExtension` s'applique** à `depenses_list` — à condition de
+  déclarer le provider Doctrine de collection, ce que fait `McpCollectionProvider`
+  en le décorant. Un test vérifie qu'une dépense d'un tiers ne remonte pas.
+- **Les IRI sortent**, contrairement à la crainte exprimée : un `depenses_list`
+  rend `@id`, `tag: /tags/…` et `payePar: /users/…`. Le court-circuit de
+  `Mcp\Routing\IriConverter` ne concerne que les opérations d'élément, où
+  `gen_id: false` est posé délibérément.
+- **`/historique`** reste hors périmètre, comme prévu.
+
+### Le relevé d'origine
 
 | Outil            | Ressource | Opération                         | Remarque                                 |
 |------------------|-----------|-----------------------------------|------------------------------------------|
@@ -489,40 +679,29 @@ est peuplé quand elles s'évaluent.
 | `user_me`        | `User`    | `McpTool` + `CurrentUserProvider` |                                          |
 | `logs_list`      | `Log`     | `McpToolCollection`               | lecture seule côté entité                |
 
-**Non exposés, volontairement** : `POST /users`, `PATCH /users/{id}`,
-`GET /users/{id}/token` (M5), et tout ce qui touche aux passkeys.
-
-Trois points à vérifier en écrivant :
-
-- **La validation.** Le `Handler` fait `withValidate(false)` quand l'opération ne
-  tranche pas. Or `Depense` porte un `#[DepenseConstraint]` de classe qui garantit
-  la cohérence des montants — sans lui, un agent peut écrire une dépense
-  incohérente là où le front ne le peut pas. Mettre `validate: true`
-  explicitement sur les outils d'écriture.
-- **Le format et les IRI.** `api_platform.mcp.format` vaut `jsonld` par défaut,
-  ce qui est le bon choix a priori : `Depense.payePar`, `Depense.tag` et
-  `Detail.user` sont des IRI, un agent doit pouvoir les lire pour les réécrire.
-  Mais `ApiPlatform\Mcp\Routing\IriConverter` renvoie `null` sur
-  `getIriFromResource` pour les opérations MCP sans `item_uri_template` : à
-  vérifier sur un `tools/call` réel que les IRI des relations sortent bien. C'est
-  le premier endroit où regarder si les sorties paraissent amputées.
-- **`/historique`** est un contrôleur, pas une ressource API Platform : pas
-  exposable en `McpTool` tel quel. À laisser de côté ; s'il s'avère utile à un
-  agent, en faire une ressource avec un provider dédié.
-
 ---
 
 ## 8. Chiffrage et séquencement
 
 | Lot | Étapes | Contenu                                           | Coût      |
 |-----|--------|---------------------------------------------------|-----------|
-| 1   | 9      | Endpoint + outils, sous le firewall existant      | 0,5 – 1 j |
+| 1   | 9      | Endpoint + outils, sous le firewall existant      | **fait**  |
 | 2   | 1–4    | RFC 9728, `WWW-Authenticate`, audience URI        | 2 – 3 h   |
 | 3   | 4–8    | `/register`, `/authorize`, `/token`, consentement | 1 – 1,5 j |
 
-**Total : 2 à 3 jours.**
+**Total : 2 à 3 jours**, dont le lot 1 est fait.
 
-Une réserve honnête : sur ce projet, le coût n'a jamais été dans le volume de code
+La réserve ci-dessous s'est vérifiée sur le lot 1, et par le mécanisme annoncé :
+le volume de code était trivial — quelques attributs et deux petits providers —
+et tout le temps est parti dans l'écart entre ce que la documentation d'amont
+décrit et ce que le code fait. Trois blocages durs (le tag manquant, l'inputSchema
+en `array`, la persistance muette) et deux pièges silencieux (`validate`,
+`uriVariables`), aucun visible avant d'exécuter. Les lots 2 et 3 touchent du
+protocole écrit à la main plutôt que du framework expérimental, ce qui devrait
+mieux se comporter — mais le premier branchement d'un vrai client reste devant
+nous.
+
+La réserve d'origine : sur ce projet, le coût n'a jamais été dans le volume de code
 mais dans l'aller-retour réel. Le chantier OAuth a produit « trois corrections
 d'intégration », les 401 parasites au retour de Google, et deux jours perdus sur
 la vérification de domaine Apple — tout ça **après** que le code était écrit. Le
@@ -537,10 +716,20 @@ serveur d'autorisation inexistant n'avance à rien).
 
 ## 9. Points ouverts
 
-- **Le rendu `jsonld` est-il digeste pour un agent ?** `@context`, `@id`, `@type`
-  sur chaque nœud, ça fait du bruit dans une fenêtre de contexte. `json` est plus
-  compact mais perd les IRI. À mesurer sur un vrai `depenses_list` pendant le lot
-  1, plutôt qu'à décider a priori.
+- ~~**Le rendu `jsonld` est-il digeste pour un agent ?**~~ **Tranché le
+  2026-08-25, et pas par la mesure prévue : `json` n'est pas disponible.** Le
+  projet ne déclare que `jsonld` dans `api_platform.formats`, et
+  `FormatsResourceMetadataCollectionFactory` refuse tout format MCP absent de
+  cette liste. Basculer supposerait d'ajouter `json` à l'API entière, donc de
+  toucher la négociation de contenu du front, pour un gain incertain. `jsonld`
+  reste, et il rend les IRI dont un agent a besoin pour réécrire les relations.
+
+  Ce qui reste vrai du grief : la sortie est bavarde. Le protocole duplique la
+  charge utile entre `content[0].text` et `structuredContent` — c'est conforme,
+  l'un est l'affichage et l'autre la donnée. S'y ajoute un bloc hydra `search` /
+  `IriTemplate` sur les listes filtrables, inutile à un agent, et dont le
+  `template` annonce `/mcp{?tag}`, ce qui est trompeur. À regarder si la fenêtre
+  de contexte devient un sujet ; pas avant.
 - **CIMD.** Voir M4 : à ajouter si un client refuse DCR. ChatGPT est le premier
   candidat.
 - **Libellé des sessions.** Les refresh tokens sont déjà une ligne par session.
