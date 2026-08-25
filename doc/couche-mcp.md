@@ -1,10 +1,10 @@
 # Couche MCP sur l'API — plan de déploiement
 
-Statut : **les trois lots sont faits, le 2026-08-25** — endpoint et surface
-d'outils (§4.1, avec une passe de corrections après validation par un agent
-réel : §7, M10), découverte OAuth côté ressource (§4.2), serveur d'autorisation
-complet (§4.3). Ce qui reste est du branchement réel, pas du code. Date de
-conception : 2026-08-24.
+Statut : **chantier terminé le 2026-08-25** — endpoint et surface d'outils
+(§4.1, avec une passe de corrections après validation par un agent réel : §7,
+M10), découverte OAuth côté ressource (§4.2), serveur d'autorisation complet
+(§4.3), et un vrai client MCP branché de bout en bout sur le flow standard. Ce
+qui reste est au §9. Date de conception : 2026-08-24.
 Suite de `doc/authentification-oauth.md` §3, dont ce document révise l'argumentaire
 (§3 ci-dessous) sans en changer la conclusion.
 
@@ -539,9 +539,13 @@ de test : 401 portant le pointeur, les deux documents `.well-known`,
 ses paramètres, et les refus de `/authorize` et `/token`. La migration est
 passée sur la base de développement.
 
-Ce qui **n'a pas** été rejoué : le branchement d'un vrai client MCP de bout en
-bout, qui demande le front lancé et un client qui ouvre un navigateur. C'est le
-prochain pas, et d'après le lot 1 c'est là que se trouvent les surprises.
+**Le branchement d'un vrai client MCP de bout en bout a suivi, le même jour, et
+il a marché du premier coup** — découverte, enregistrement, consentement à
+l'écran, retour au client, appels d'outils. Contrairement au lot 1, qui avait
+rapporté onze corrections (M10), celui-ci n'en a rapporté aucune. La différence
+est celle qu'annonçait le §8 : le lot 1 se battait avec un framework
+expérimental et sa documentation, les lots 2 et 3 n'appliquent que des RFC
+écrites.
 
 ---
 
