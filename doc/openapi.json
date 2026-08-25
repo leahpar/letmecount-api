@@ -1036,6 +1036,134 @@
                 ]
             }
         },
+        "/sessions": {
+            "get": {
+                "operationId": "api_sessions_get_collection",
+                "tags": [
+                    "Session"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Session collection",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "type": "object",
+                                    "description": "Session.jsonld-session.read collection.",
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/HydraCollectionBaseSchema"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "required": [
+                                                "member"
+                                            ],
+                                            "properties": {
+                                                "member": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Session.jsonld-session.read"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Retrieves the collection of Session resources.",
+                "description": "Retrieves the collection of Session resources.",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "The collection page number",
+                        "required": false,
+                        "deprecated": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        },
+                        "style": "form",
+                        "explode": true
+                    }
+                ]
+            }
+        },
+        "/sessions/{id}": {
+            "delete": {
+                "operationId": "api_sessions_id_delete",
+                "tags": [
+                    "Session"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Session resource deleted"
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error.jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "links": {}
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error.jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "links": {}
+                    }
+                },
+                "summary": "Removes the Session resource.",
+                "description": "Removes the Session resource.",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Session identifier",
+                        "required": true,
+                        "deprecated": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "style": "simple",
+                        "explode": false
+                    }
+                ]
+            }
+        },
         "/tags": {
             "get": {
                 "operationId": "api_tags_get_collection",
@@ -2693,6 +2821,38 @@
                 ],
                 "description": "Un navigateur abonn\u00e9 aux notifications push, pour un utilisateur.\n\nLes trois champs techniques viennent tels quels du PushSubscription du\nnavigateur, mais \u00e0 plat : celui-ci s\u00e9rialise en {endpoint, keys: {p256dh, auth}},\net aplatir c\u00f4t\u00e9 front \u00e9vite un DTO et un denormalizer pour trois cha\u00eenes.\n\nL'endpoint est unique : le front le repousse \u00e0 chaque d\u00e9marrage (le navigateur\npeut le renouveler sans pr\u00e9venir), et le processor fait un upsert dessus."
             },
+            "Session.jsonld-session.read": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/HydraItemBaseSchema"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "label": {
+                                "description": "Ce que l'utilisateur lit dans la liste : le nom du client OAuth pour une\nsession MCP, l'appareil d\u00e9duit du User-Agent sinon.",
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "createdAt": {
+                                "description": "Date d'\u00e9mission de *ce* jeton. Comme la rotation en remplace un par un\nautre \u00e0 chaque renouvellement, c'est la derni\u00e8re activit\u00e9 de la session,\net c'est ce qui distingue deux sessions du m\u00eame appareil.",
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "date-time"
+                            },
+                            "id": {
+                                "readOnly": true,
+                                "type": "integer"
+                            }
+                        }
+                    }
+                ],
+                "description": "Un refresh token, c'est-\u00e0-dire une session : le t\u00e9l\u00e9phone, le navigateur du\nbureau, ou un client MCP (Claude, ChatGPT\u2026).\n\nExpos\u00e9 sous le nom `Session`, qui est ce que l'utilisateur en voit. Rien du\njeton lui-m\u00eame ne sort : seuls les champs portant `session:read` sont\ns\u00e9rialis\u00e9s, et ni `refreshToken` ni `username` n'en portent.\n\nSupprimer une session coupe le renouvellement, pas l'acc\u00e8s en cours : le\njeton d'acc\u00e8s d\u00e9j\u00e0 \u00e9mis reste valable jusqu'\u00e0 son expiration, une heure au\nplus."
+            },
             "Tag-tag.write": {
                 "type": "object",
                 "required": [
@@ -3015,6 +3175,10 @@
         {
             "name": "PushSubscription",
             "description": "Un navigateur abonn\u00e9 aux notifications push, pour un utilisateur.\n\nLes trois champs techniques viennent tels quels du PushSubscription du\nnavigateur, mais \u00e0 plat : celui-ci s\u00e9rialise en {endpoint, keys: {p256dh, auth}},\net aplatir c\u00f4t\u00e9 front \u00e9vite un DTO et un denormalizer pour trois cha\u00eenes.\n\nL'endpoint est unique : le front le repousse \u00e0 chaque d\u00e9marrage (le navigateur\npeut le renouveler sans pr\u00e9venir), et le processor fait un upsert dessus."
+        },
+        {
+            "name": "Session",
+            "description": "Un refresh token, c'est-\u00e0-dire une session : le t\u00e9l\u00e9phone, le navigateur du\nbureau, ou un client MCP (Claude, ChatGPT\u2026).\n\nExpos\u00e9 sous le nom `Session`, qui est ce que l'utilisateur en voit. Rien du\njeton lui-m\u00eame ne sort : seuls les champs portant `session:read` sont\ns\u00e9rialis\u00e9s, et ni `refreshToken` ni `username` n'en portent.\n\nSupprimer une session coupe le renouvellement, pas l'acc\u00e8s en cours : le\njeton d'acc\u00e8s d\u00e9j\u00e0 \u00e9mis reste valable jusqu'\u00e0 son expiration, une heure au\nplus."
         },
         {
             "name": "Tag",

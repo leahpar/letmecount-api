@@ -32,6 +32,10 @@ final class AuthorizationCodeStore
     {
         $this->codes->deleteExpired();
 
+        // Ce qui tient un client en vie, c'est qu'un humain l'autorise : c'est
+        // ici, et pas à l'enregistrement, que se mesure son activité.
+        $request->client->lastUsedAt = new \DateTimeImmutable();
+
         $code = bin2hex(random_bytes(32));
 
         $entity = new OAuthAuthorizationCode();
@@ -50,13 +54,17 @@ final class AuthorizationCodeStore
     }
 
     /**
-     * Échange le code contre l'humain qui l'a autorisé, et le détruit.
+     * Échange le code contre ce qu'il autorisait, et le détruit.
+     *
+     * Rend le code consommé plutôt que son seul utilisateur : l'appelant a aussi
+     * besoin du client, dont le nom donne son libellé à la session ouverte.
+     * L'objet reste lisible après suppression, seule sa ligne est partie.
      *
      * Toutes les erreurs rendent le même `invalid_grant` avec des descriptions
      * distinctes : le code d'erreur ne doit pas dire au client *pourquoi* il a
      * échoué, faute de quoi il devient un oracle sur les codes des autres.
      */
-    public function consume(string $code, string $clientId, string $redirectUri, string $codeVerifier, ?string $resource): User
+    public function consume(string $code, string $clientId, string $redirectUri, string $codeVerifier, ?string $resource): OAuthAuthorizationCode
     {
         $entity = $this->codes->findOneByCodeHash(self::hash($code));
 
@@ -66,7 +74,6 @@ final class AuthorizationCodeStore
             throw OAuthException::invalidGrant('Code d\'autorisation inconnu, expiré ou déjà utilisé.');
         }
 
-        $user = $entity->user;
         $valid = !$entity->isExpired()
             && $entity->client->clientId === $clientId
             && hash_equals($entity->redirectUri, $redirectUri)
@@ -83,7 +90,7 @@ final class AuthorizationCodeStore
             throw OAuthException::invalidGrant('Code d\'autorisation inconnu, expiré ou déjà utilisé.');
         }
 
-        return $user;
+        return $entity;
     }
 
     /**

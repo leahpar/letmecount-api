@@ -57,9 +57,11 @@ class OAuthTokenController
         $redirectUri = self::required($params, 'redirect_uri');
         $verifier = self::required($params, 'code_verifier');
 
-        $user = $codes->consume($code, $clientId, $redirectUri, $verifier, $validator->resource($params));
+        $authorized = $codes->consume($code, $clientId, $redirectUri, $verifier, $validator->resource($params));
 
-        return $issuer->issue($user);
+        // Le nom du client devient le libellé de la session : c'est lui que
+        // l'utilisateur lira dans « Mes appareils ».
+        return $issuer->issue($authorized->user, $authorized->client->clientName);
     }
 
     /**

@@ -3,8 +3,9 @@
 Statut : **chantier terminé le 2026-08-25** — endpoint et surface d'outils
 (§4.1, avec une passe de corrections après validation par un agent réel : §7,
 M10), découverte OAuth côté ressource (§4.2), serveur d'autorisation complet
-(§4.3), et un vrai client MCP branché de bout en bout sur le flow standard. Ce
-qui reste est au §9. Date de conception : 2026-08-24.
+(§4.3), un vrai client MCP branché de bout en bout sur le flow standard, et
+l'écran de révocation des connexions qui va avec (§10). Ce qui reste est au §9.
+Date de conception : 2026-08-24.
 Suite de `doc/authentification-oauth.md` §3, dont ce document révise l'argumentaire
 (§3 ci-dessous) sans en changer la conclusion.
 
@@ -1118,15 +1119,78 @@ serveur d'autorisation inexistant n'avance à rien).
   de contexte devient un sujet ; pas avant.
 - **CIMD.** Voir M4 : à ajouter si un client refuse DCR. ChatGPT est le premier
   candidat.
-- **Libellé des sessions.** Les refresh tokens sont déjà une ligne par session.
-  Avec plusieurs clients MCP enregistrés, un écran de révocation distinguant
-  « téléphone » de « Claude » de « ChatGPT » devient nettement plus utile qu'il ne
-  l'était. Une colonne de libellé, comme `name` sur les passkeys. **Le lot 3 est
-  passé : c'est maintenant qu'il faut le reconsidérer**, et le rapprochement est
-  facile — le code d'autorisation connaît son `OAuthClient`, donc le nom du client
-  est disponible au moment exact où le refresh token est créé.
-- **Ménage des clients enregistrés.** Rien ne supprime un `oauth_client`, et
-  `/register` est ouvert : le rate limiter borne le débit, pas le total. Sans
-  conséquence à l'échelle de l'app — une ligne fait quelques centaines d'octets et
-  ne donne aucun droit — mais un client sans code ni jeton depuis des mois n'a
-  aucune raison de rester. À voir en même temps que le libellé des sessions.
+- ~~**Libellé des sessions.**~~ ~~**Ménage des clients enregistrés.**~~ **Faits
+  tous les deux le 2026-08-25**, voir §10.
+- **Reconnaître la session courante.** L'écran des connexions ne dit pas laquelle
+  est le navigateur qu'on a sous les yeux : on peut donc se déconnecter soi-même
+  sans le vouloir. Rien de grave — il suffit de se reconnecter — mais c'est la
+  première chose qui manquera à l'usage.
+
+---
+
+## 10. Après-coup — les sessions ont un nom
+
+**Fait le 2026-08-25**, dans la foulée du lot 3, sur les deux points que le §9
+laissait ouverts. `make tests` → **157 tests au vert** (150 + 7).
+
+### Ce que l'utilisateur voit
+
+Une troisième section « 🔗 Connexions » sur l'écran « Mes appareils », à côté des
+passkeys et des notifications : une ligne par session, son libellé, sa dernière
+activité, et un bouton pour la révoquer. `GET /sessions` et
+`DELETE /sessions/{id}`, calqués sur `PushSubscription`.
+
+Le point ouvert du §9 disait « un écran de révocation devient nettement plus
+utile » ; il n'y en avait en réalité aucun. C'est donc l'écran qui a été fait,
+le libellé n'étant que ce qui le rend lisible.
+
+`RefreshToken` devient une ressource API sous le nom **`Session`**, qui est ce
+que la chose est pour l'utilisateur. Rien du jeton ne sort : seuls trois champs
+portent `session:read` — `id`, `label`, `createdAt` — et ni `refreshToken` ni
+`username` n'en portent. Vérifié sur le schéma OpenAPI, pas seulement à
+l'exécution.
+
+Révoquer coupe le **renouvellement**, pas l'accès en cours : le jeton d'accès
+déjà émis vit sa dernière heure. C'est dit à l'écran plutôt que corrigé — une
+liste de révocation immédiate demanderait de vérifier chaque jeton d'accès en
+base à chaque requête, ce qui est exactement ce que le choix du JWT écarte.
+
+### Le libellé s'hérite, sinon il se perd
+
+C'est le seul vrai piège du lot, et il ne se voit qu'au deuxième appel.
+
+La rotation **remplace** le refresh token à chaque renouvellement. Un libellé
+posé à l'ouverture disparaîtrait donc au premier refresh, et la session MCP
+nommée « Claude » se retrouverait rebaptisée d'après le User-Agent du client.
+
+`RefreshTokenLabelListener` s'accroche donc **deux fois** au même événement,
+autour de celui de gesdinet : à priorité 10 il lit le libellé du jeton présenté,
+à priorité -10 il le pose sur le jeton émis. Entre les deux, l'ancien a été
+détruit. Le libellé retenu voyage sur la requête, pas sur le service : un service
+partagé garderait la valeur d'une requête à l'autre.
+
+À l'ouverture d'une session, faute d'héritage, le libellé vient soit du nom du
+client OAuth, soit de `DeviceNameResolver` — celui des passkeys, sur le
+User-Agent. Le nom du client transite par un attribut de requête, posé par
+`TokenIssuer` : l'émission passe par un événement qui ne transporte que
+l'utilisateur et les données de réponse, il n'y a pas d'autre canal.
+
+Conséquence appréciable : les sessions déjà ouvertes, qui n'ont pas de libellé,
+en reçoivent un à leur prochain renouvellement. Rien à migrer.
+
+### Le ménage se fait à l'inscription, pas au cron
+
+`ClientRegistrar::register()` balaie les clients périmés avant d'en créer un —
+comme l'émission d'un code balaie les codes expirés. L'endpoint qui fait grossir
+la table est exactement celui qui la nettoie, et il n'y a **aucune tâche
+planifiée à installer**.
+
+Le seuil n'est pas un chiffre rond : c'est `gesdinet_jwt_refresh_token.ttl`, la
+durée de vie d'un refresh token, lu depuis le conteneur. Au-delà, aucune session
+ouverte depuis ce client ne peut plus être renouvelée, donc plus rien ne s'appuie
+sur sa ligne. Et ce qui compte est `lastUsedAt` — posé à l'**émission d'un code**,
+c'est-à-dire quand un humain autorise, et non à l'inscription — donc un client
+inscrit il y a deux ans mais utilisé hier reste.
+
+Si le ménage se trompait malgré tout, le client recevrait `invalid_client` et se
+réenregistrerait : le DCR rend l'erreur réparable toute seule.

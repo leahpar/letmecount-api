@@ -223,6 +223,54 @@ class OAuthAuthorizationServerTest extends AuthenticatedApiTestCase
         $this->assertSame('invalid_client_metadata', $this->json()['error']);
     }
 
+    /**
+     * `/register` est ouvert : le limiteur borne le débit, pas le total. C'est
+     * l'enregistrement lui-même qui fait le ménage, comme l'émission d'un code
+     * balaie les codes expirés — pas de tâche planifiée à installer.
+     */
+    public function testStaleClientsAreRemovedWhenANewOneRegisters(): void
+    {
+        // Enregistré il y a deux ans et jamais autorisé par personne.
+        $abandonne = $this->registerClient('Client abandonné');
+        $abandonne->createdAt = new \DateTimeImmutable('-2 years');
+
+        // Aussi vieux, mais toujours utilisé : c'est la dernière autorisation
+        // qui compte, pas la date d'inscription.
+        $fidele = $this->registerClient('Client fidèle');
+        $fidele->createdAt = new \DateTimeImmutable('-2 years');
+        $fidele->lastUsedAt = new \DateTimeImmutable('-1 day');
+
+        $this->em->flush();
+
+        $this->client->setServerParameter('HTTP_Authorization', '');
+        $this->post('/register', [
+            'client_name' => 'Nouveau venu',
+            'redirect_uris' => [self::REDIRECT_URI],
+        ]);
+        $this->assertResponseStatusCodeSame(201);
+
+        $this->em->clear();
+        $repository = $this->em->getRepository(OAuthClient::class);
+
+        $this->assertNull($repository->findOneBy(['clientId' => $abandonne->clientId]));
+        $this->assertNotNull($repository->findOneBy(['clientId' => $fidele->clientId]));
+    }
+
+    /**
+     * Autoriser, c'est utiliser : c'est ce qui remet le compteur à zéro et
+     * garde le client en vie.
+     */
+    public function testConsentMarksTheClientAsUsed(): void
+    {
+        $client = $this->registerClient();
+        $this->assertNull($client->lastUsedAt);
+
+        $this->issueCode($client);
+        $this->em->refresh($client);
+
+        $this->assertNotNull($client->lastUsedAt);
+    }
+
     // --- /authorize ----------------------------------------------------------
 
     public function testUnknownClientIsRefusedWithoutRedirecting(): void

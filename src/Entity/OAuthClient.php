@@ -50,6 +50,14 @@ class OAuthClient
     #[ORM\Column]
     public \DateTimeImmutable $createdAt;
 
+    /**
+     * Dernière fois qu'un humain a autorisé ce client, c'est-à-dire la dernière
+     * émission d'un code. Null tant qu'il n'a jamais servi : un client qui
+     * s'enregistre et abandonne existe, et c'est même le cas le plus courant.
+     */
+    #[ORM\Column(nullable: true)]
+    public ?\DateTimeImmutable $lastUsedAt = null;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();

@@ -3,7 +3,9 @@
 namespace App\Service\OAuth\AuthorizationServer;
 
 use App\Entity\OAuthClient;
+use App\Repository\OAuthClientRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * L'enregistrement dynamique de clients (RFC 7591).
@@ -12,12 +14,18 @@ use Doctrine\ORM\EntityManagerInterface;
  * pas un accès (M4). Un client enregistré ne peut rien faire tant qu'un humain
  * déjà lié à un compte n'a pas donné son consentement sur `/authorize`. Le
  * limiteur de débit est posé sur le contrôleur, lui, parce qu'écrire une ligne
- * par requête anonyme mérite une borne.
+ * par requête anonyme mérite une borne — et le ménage ci-dessous fait le reste :
+ * le limiteur borne le débit, pas le total.
  */
 final class ClientRegistrar
 {
     public function __construct(
         private readonly EntityManagerInterface $em,
+        private readonly OAuthClientRepository $clients,
+        // La durée de vie d'un refresh token borne aussi celle d'un client :
+        // au-delà, plus aucune session ouverte depuis lui n'est renouvelable.
+        #[Autowire('%gesdinet_jwt_refresh_token.ttl%')]
+        private readonly int $staleAfter,
     ) {
     }
 
@@ -26,6 +34,11 @@ final class ClientRegistrar
      */
     public function register(array $metadata): OAuthClient
     {
+        // Le ménage se fait ici, comme celui des codes expirés se fait à
+        // l'émission du suivant : la table reste bornée sans tâche planifiée, et
+        // l'endpoint qui la fait grossir est exactement celui qui la nettoie.
+        $this->clients->deleteStale($this->staleAfter);
+
         $client = new OAuthClient();
         $client->clientId = bin2hex(random_bytes(16));
         $client->clientName = $this->clientName($metadata);

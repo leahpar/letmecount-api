@@ -20,4 +20,25 @@ class OAuthClientRepository extends ServiceEntityRepository
     {
         return $this->findOneBy(['clientId' => $clientId]);
     }
+
+    /**
+     * Supprime les clients dont plus rien ne dépend.
+     *
+     * Le seuil est celui de la durée de vie d'un refresh token, et ce n'est pas
+     * un chiffre rond choisi au hasard : passé ce délai, aucune session ouverte
+     * depuis ce client ne peut plus être renouvelée, donc plus rien ne s'appuie
+     * sur sa ligne. Un client toujours actif, lui, voit `lastUsedAt` avancer à
+     * chaque nouvelle autorisation.
+     *
+     * @return int le nombre de clients supprimés
+     */
+    public function deleteStale(int $ttl): int
+    {
+        return (int) $this->createQueryBuilder('c')
+            ->delete()
+            ->where('COALESCE(c.lastUsedAt, c.createdAt) < :limite')
+            ->setParameter('limite', new \DateTimeImmutable(sprintf('-%d seconds', $ttl)))
+            ->getQuery()
+            ->execute();
+    }
 }

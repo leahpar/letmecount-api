@@ -3,9 +3,11 @@
 namespace App\Service\OAuth\AuthorizationServer;
 
 use App\Entity\User;
+use App\EventListener\RefreshTokenLabelListener;
 use Lexik\Bundle\JWTAuthenticationBundle\Security\Http\Authentication\AuthenticationSuccessHandler;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Le point unique d'émission des jetons — la couture que le reste du serveur
@@ -26,11 +28,25 @@ final class TokenIssuer
     public function __construct(
         private readonly AuthenticationSuccessHandler $successHandler,
         private readonly JWTTokenManagerInterface $jwtManager,
+        private readonly RequestStack $requestStack,
     ) {
     }
 
-    public function issue(User $user): JsonResponse
+    /**
+     * `$sessionLabel` nomme la session ouverte — le nom du client OAuth. Il
+     * voyage par la requête parce que c'est là que `RefreshTokenLabelListener`
+     * peut le lire : l'émission passe par un événement, qui ne transporte que
+     * l'utilisateur et les données de réponse.
+     */
+    public function issue(User $user, ?string $sessionLabel = null): JsonResponse
     {
+        if (null !== $sessionLabel) {
+            $this->requestStack->getCurrentRequest()?->attributes->set(
+                RefreshTokenLabelListener::CLIENT_NAME,
+                $sessionLabel,
+            );
+        }
+
         $data = json_decode((string) $this->successHandler->handleAuthenticationSuccess($user)->getContent(), true);
 
         if (!is_array($data) || !isset($data['token']) || !is_string($data['token'])) {
