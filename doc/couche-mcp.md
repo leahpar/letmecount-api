@@ -777,13 +777,24 @@ au lieu d'être un piège. Un test couvre le cas.
 
 ### M12 — Une session cliente ouverte ne voit pas les changements
 
-Constaté deux fois, dans les deux sens : une session d'agent déjà ouverte a
-continué de servir les anciennes descriptions après correction, puis n'a pas vu
-`solde_detail` du tout — ni par son nom, ni par recherche sur ses champs.
+Constaté plusieurs fois pendant la validation : une session d'agent déjà ouverte
+n'a pas vu `solde_detail` du tout — ni par son nom, ni par recherche sur ses
+champs — tandis que les descriptions, elles, apparaissaient à jour.
 
-Conséquence pratique : **tout test d'ergonomie sur une description modifiée ou un
+Conséquence pratique, et c'est elle qui compte : **tout test d'ergonomie sur un
 outil ajouté exige un client neuf.** Ce n'est pas une précaution théorique, c'est
 ce qui a fait perdre le plus de temps dans les allers-retours de validation.
+
+*Hypothèse, pas certitude — aucun de nous n'a pu tester le mécanisme :* ce qui
+gèle serait la **liste** des outils, arrêtée à l'ouverture de la session, tandis
+que le **texte** de leurs définitions est rafraîchi. Trois observations s'y
+rangent sans rien ajouter : l'outil neuf reste invisible ; les descriptions
+corrigées apparaissent bien ; et un bloc de définitions relu affiche le texte
+d'aujourd'hui à une position ancienne. Une quatrième ne s'y range pas — une
+lecture qui semblait servir d'anciennes descriptions alors que le serveur
+répondait déjà avec les nouvelles. Assez pour orienter, pas pour conclure. Si
+l'hypothèse tient, corriger une description peut atteindre une session ouverte,
+mais ajouter un outil jamais.
 
 Deux corollaires moins évidents :
 
