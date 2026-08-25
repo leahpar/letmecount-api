@@ -1061,6 +1061,13 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *                 options_handler?: scalar|Param|null, // Default: "Webauthn\\Bundle\\Security\\Handler\\DefaultCreationOptionsHandler"
  *             },
  *         },
+ *         refresh_jwt?: array{
+ *             check_path?: scalar|Param|null, // The path the refresh endpoint answers on, as a path or a route name. It has to be the route you defined for refreshing: the authenticator only takes over requests matching it, and one left at this default never sees them, which surfaces as the router reporting that the route has no controller. // Default: "/login_check"
+ *             provider?: scalar|Param|null,
+ *             success_handler?: scalar|Param|null,
+ *             failure_handler?: scalar|Param|null,
+ *             invalidate_token_on_logout?: bool|Param, // When enabled, the refresh token will be invalided on logout. // Default: true
+ *         },
  *         x509?: array{
  *             provider?: scalar|Param|null,
  *             user?: scalar|Param|null, // Default: "SSL_CLIENT_S_DN_Email"
@@ -1257,12 +1264,6 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *             samesite?: null|"lax"|"strict"|"none"|Param, // Default: null
  *             always_remember_me?: bool|Param, // Default: false
  *             remember_me_parameter?: scalar|Param|null, // Default: "_remember_me"
- *         },
- *         refresh_jwt?: array{
- *             check_path?: scalar|Param|null, // Default: null
- *             provider?: scalar|Param|null,
- *             success_handler?: scalar|Param|null,
- *             failure_handler?: scalar|Param|null,
  *         },
  *     }>,
  *     access_control?: list<array{ // Default: []
@@ -1937,23 +1938,33 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     ...<string, mixed>
  * }
  * @psalm-type GesdinetJwtRefreshTokenConfig = array{
- *     ttl?: int|Param, // The default TTL for all authenticators. // Default: 2592000
+ *     ttl?: int|Param, // How long a refresh token lasts, in seconds, for all authenticators. There is no value meaning never: a token is valid until this many seconds after it was issued, so a long lived one is a large number, 315360000 being ten years. // Default: 2592000
+ *     max_tokens_per_user?: int|Param, // How many refresh tokens a user may hold at once. Each login stores one, so this is a limit on signed-in devices: signing in beyond it revokes the session that has gone longest without being refreshed. Unlimited when not set. // Default: null
  *     ttl_update?: bool|Param, // The default update TTL flag for all authenticators. // Default: false
- *     firewall?: scalar|Param|null, // Deprecated: The "firewall" node is deprecated without replacement. // Default: "api"
- *     user_provider?: scalar|Param|null, // Deprecated: The "user_provider" node is deprecated without replacement. // Default: null
- *     user_identity_field?: scalar|Param|null, // Deprecated: The "user_identity_field" node is deprecated without replacement. // Default: "username"
+ *     single_use_ttl_update?: bool|Param, // Whether a token issued in place of a single use one starts its ttl over. Turn it off to have it expire when the one it replaced would have, so that refreshing cannot be chained indefinitely. // Default: true
  *     manager_type?: scalar|Param|null, // Set the type of object manager to use (default: orm) // Default: "orm"
- *     refresh_token_class?: scalar|Param|null, // Set the refresh token class to use (default: Gesdinet\JWTRefreshTokenBundle\Entity\RefreshToken) // Default: null
- *     object_manager?: scalar|Param|null, // Set the object manager to use (default: doctrine.orm.entity_manager) // Default: null
- *     user_checker?: scalar|Param|null, // Deprecated: The "user_checker" node is deprecated without replacement. // Default: "security.user_checker"
- *     refresh_token_entity?: scalar|Param|null, // Deprecated: The "refresh_token_entity" node is deprecated, use the "refresh_token_class" node instead. // Set the refresh token class to use (default: Gesdinet\JWTRefreshTokenBundle\Entity\RefreshToken) // Default: null
- *     entity_manager?: scalar|Param|null, // Deprecated: The "entity_manager" node is deprecated, use the "object_manager" node instead. // Set the entity manager to use // Default: null
+ *     refresh_token_class?: scalar|Param|null, // Set the refresh token class to use
+ *     hash_tokens?: bool|array{ // Stores the hash of a refresh token instead of the token, so a copy of the database cannot be used to refresh. Off by default.
+ *         enabled?: bool|Param, // Default: false
+ *         accept_stored_in_the_clear?: bool|Param, // Whether a token stored before this was turned on is still accepted, and rewritten hashed the first time it is used. Turn it off once they have all expired, so that a token read from an old backup cannot be used. // Default: true
+ *     },
+ *     api_platform?: bool|array{ // Documents the refresh token in the OpenAPI specification API Platform generates. Off by default, since an application that already documents it by hand would end up with it twice.
+ *         enabled?: bool|Param, // Default: false
+ *     },
+ *     refresh_token_manager?: scalar|Param|null, // Set your own service implementing RefreshTokenManagerInterface, storing the tokens however you like. Nothing Doctrine is wired when this is set, so the bundle works without it. Mutually exclusive with object_manager and dbal_connection. // Default: null
+ *     object_manager?: scalar|Param|null, // The object manager service to store the tokens through, as a service id rather than the name an entity manager is configured under: an entity manager named "foo" is the service "doctrine.orm.foo_entity_manager". Defaults to doctrine.orm.entity_manager. Mutually exclusive with dbal_connection. // Default: null
+ *     dbal_connection?: scalar|Param|null, // Set the DBAL connection to use for direct database access. Mutually exclusive with object_manager. // Default: null
+ *     dbal_table_name?: scalar|Param|null, // The table name for refresh tokens when using DBAL // Default: "refresh_tokens"
+ *     dbal_auto_create_table?: bool|Param, // Create the refresh tokens table on the first request when it does not exist. Off by default: it runs DDL while serving traffic, so the connection needs rights to alter the schema. Prefer a migration. // Default: false
+ *     dbal_columns?: array<string, array{ // Default: []
+ *         name?: scalar|Param|null, // The actual column name in the database
+ *         type?: scalar|Param|null, // The DBAL type (integer, string, datetime, etc.)
+ *     }>,
  *     single_use?: scalar|Param|null, // When true, generate a new refresh token on consumption (deleting the old one) // Default: false
  *     token_parameter_name?: scalar|Param|null, // The default request parameter name containing the refresh token for all authenticators. // Default: "refresh_token"
- *     doctrine_mappings?: bool|Param, // Deprecated: The "doctrine_mappings" node is deprecated without replacement. // When true, resolving of Doctrine mapping is done automatically to use either ORM or ODM object manager // Default: true
  *     cookie?: bool|array{
  *         enabled?: bool|Param, // Default: false
- *         same_site?: "none"|"lax"|"strict"|Param, // Default: "lax"
+ *         same_site?: scalar|Param|null, // One of "none", "lax" or "strict", or empty to leave the attribute off the cookie, which is what Symfony's Cookie takes an empty value to mean. Matched without regard to case, as Cookie does. // Default: "lax"
  *         path?: scalar|Param|null, // Default: "/"
  *         domain?: scalar|Param|null, // Default: null
  *         http_only?: scalar|Param|null, // Default: true
@@ -1961,9 +1972,9 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         partitioned?: scalar|Param|null, // Default: false
  *         remove_token_from_body?: scalar|Param|null, // Default: true
  *     },
- *     logout_firewall?: scalar|Param|null, // Name of the firewall that triggers the logout event to hook into (default: api) // Default: "api"
  *     return_expiration?: scalar|Param|null, // When true, the response will include the token expiration timestamp // Default: false
  *     return_expiration_parameter_name?: scalar|Param|null, // The default response parameter name containing the refresh token expiration timestamp // Default: "refresh_token_expiration"
+ *     default_invalid_batch_size?: int|Param, // The default batch size when clearing invalid tokens // Default: 1000
  * }
  * @psalm-type MonologConfig = array{
  *     use_microseconds?: scalar|Param|null, // Default: true
