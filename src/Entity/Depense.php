@@ -166,9 +166,13 @@ class Depense
     public string $titre;
 
     /**
-     * Mode de partage de la dépense.<br>
-     * - Si "parts" : les parts dans les détails servent à calculer la répartition proportionnelle<br>
-     * - Si "montants" : les montants des détails doivent être exacts et valides
+     * Mode de partage de la dépense — une indication d'intention, pas une règle
+     * de calcul : dans les deux cas le client fournit le montant de chaque
+     * détail, et la validation vérifie seulement que leur somme vaut le montant
+     * total.<br>
+     * - Si "parts" : la répartition a été calculée au prorata des parts, que le
+     *   client a converties en montants avant l'envoi<br>
+     * - Si "montants" : les montants ont été saisis un par un
      */
     #[ORM\Column(length: 255)]
     #[Groups(['depense:read', 'depense:write'])]
@@ -176,12 +180,14 @@ class Depense
     #[Assert\Choice(choices: ['parts', 'montants'])]
     public string $partage;
 
+    #[ApiProperty(example: '/tags/3')]
     #[ORM\ManyToOne(targetEntity: Tag::class, inversedBy: 'depenses')]
     #[ORM\JoinColumn(nullable: false)]
     #[Groups(['depense:read', 'depense:write'])]
     #[Assert\NotBlank]
     public ?Tag $tag = null;
 
+    #[ApiProperty(example: '/users/4')]
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'depenses')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     #[Groups(['depense:read', 'depense:write'])]
