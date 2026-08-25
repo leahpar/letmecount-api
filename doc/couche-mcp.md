@@ -8,6 +8,21 @@ Objectif : exposer l'API Let-me-count comme serveur MCP **conforme au standard**
 utilisable par n'importe quel client — Claude, ChatGPT, Gemini — sans IdP tiers
 et sans configuration manuelle côté client.
 
+**Mise à jour du 2026-08-25 — l'application est passée en Symfony 8.1.** Ce
+document a été écrit sur 7.4 et le dit à plusieurs endroits ; la conclusion ne
+bouge pas, mais les chiffres du §1 si. Résolution revérifiée
+(`composer require api-platform/mcp --dry-run`) : **8 paquets installés au lieu
+de 15, toujours aucune mise à jour ni suppression** de l'existant — les PSR,
+`nyholm/psr7` et `symfony/psr-http-message-bridge` sont déjà là. `mcp/sdk` passe
+en 0.8.0, et `symfony/object-mapper` arrive en v8.1.5 : la condition que
+`ApiPlatformExtension` vérifie avant d'activer le bloc MCP reste remplie.
+
+**`doc/openapi.json` est repris par ce chantier.** Le fichier est périmé depuis
+`f0dbc4e` (regex de `PushSubscription` resserrées), indépendamment de la
+migration Symfony. Le régénérer par un `make doc` isolé n'aurait fait que
+déplacer le problème : la couche MCP se construit sur les mêmes métadonnées
+API Platform, et c'est ici que la spécification sera reprise avec son contexte.
+
 ---
 
 ## 1. État des lieux

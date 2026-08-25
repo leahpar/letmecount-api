@@ -183,24 +183,6 @@ Aucune autre référence dans les deux dépôts. Le fichier reste listé dans
 `symfony.lock` au titre de la recette : c'est sans effet, `composer recipes`
 signalera simplement un écart.
 
-### Ce qui reste ouvert, et qui n'appartient pas à ce chantier
-
-**`webauthn…rp.name` : ne pas supprimer la ligne.** C'est la seule dépréciation
-qui subsiste au démarrage, émise par `web-auth/webauthn-symfony-bundle` 5.3.0
-sur `creation_profiles.default.rp.name`, « removed in the next major release »
-sans remplacement annoncé. Mais le nœud vaut `'LetMeCount'`, et
-`PublicKeyCredentialCreationOptionsFactory::createRpEntity()` se rabat sur
-`rp.id` quand il est vide — c'est-à-dire sur `%env(WEBAUTHN_RP_ID)%`, un nom
-d'hôte. Or `PublicKeyCredentialEntity.name` est requis par l'IDL du W3C et
-c'est **le nom affiché dans l'invite passkey du système** : retirer la ligne
-aujourd'hui remplacerait « LetMeCount » par le domaine dans la boîte de dialogue
-et dans le gestionnaire de mots de passe, pour tous les enrôlements suivants.
-À reprendre quand la 6.0 dira par quoi remplacer le nœud, pas avant.
-
-**`doc/openapi.json` est périmé**, indépendamment d'ici : il date d'avant le
-resserrement des regex de `PushSubscription` (`f0dbc4e`). Un `make doc` le remet
-à jour, mais le diff n'a rien à voir avec la migration.
-
 ### ✅ Les trois dérives de schéma sont résorbées
 
 **Fait le 2026-08-25.** `doctrine:migrations:diff` répond désormais *« No changes
@@ -232,6 +214,25 @@ rabat sur `''` / `0` sinon. Éprouvé en insérant deux lignes nulles avant de
 migrer — l'une rattachée à une dépense, qui a bien récupéré son titre et son
 montant, l'autre orpheline, qui a pris le repli. Aller-retour `up`/`down` vérifié
 lui aussi.
+
+### Le seul point qui reste ouvert
+
+**`webauthn…rp.name` : ne pas supprimer la ligne.** C'est la seule dépréciation
+qui subsiste au démarrage, émise par `web-auth/webauthn-symfony-bundle` 5.3.0
+sur `creation_profiles.default.rp.name`, « removed in the next major release »
+sans remplacement annoncé. Mais le nœud vaut `'LetMeCount'`, et
+`PublicKeyCredentialCreationOptionsFactory::createRpEntity()` se rabat sur
+`rp.id` quand il est vide — c'est-à-dire sur `%env(WEBAUTHN_RP_ID)%`, un nom
+d'hôte. Or `PublicKeyCredentialEntity.name` est requis par l'IDL du W3C et
+c'est **le nom affiché dans l'invite passkey du système** : retirer la ligne
+aujourd'hui remplacerait « LetMeCount » par le domaine dans la boîte de dialogue
+et dans le gestionnaire de mots de passe, pour tous les enrôlements suivants.
+À reprendre quand la 6.0 dira par quoi remplacer le nœud, pas avant.
+
+C'est tout. `doc/openapi.json`, périmé depuis `f0dbc4e` et sans rapport avec
+cette migration, **est repris par le chantier MCP** et n'a pas à être régénéré
+ici : la couche MCP se construit sur les métadonnées API Platform, et c'est là
+que la spécification sera reprise avec son contexte.
 
 ### Le point de calendrier a changé de sens
 
