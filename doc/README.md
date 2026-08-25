@@ -19,7 +19,7 @@ Un document par chantier, écrit avant l'implémentation puis tenu à jour penda
 |---|---|
 | [authentification-oauth.md](authentification-oauth.md) | **Fait.** Connexion Google et Apple, passkeys conservés, le code à 6 chiffres devenu jeton d'invitation. Contient le montage https local, nécessaire pour tester Apple. |
 | [notifications-push.md](notifications-push.md) | **Fait** (lots 0 à 4). Web Push / VAPID, ciblage sur les utilisateurs concernés, distinction activité / notifications. Le lot 5 (solde bas) reste à cadrer. |
-| [couche-mcp.md](couche-mcp.md) | **Lot 1 fait** (endpoint `/mcp` et dix outils, sous le firewall existant). Lots 2 et 3 — serveur d'autorisation — à ouvrir. Exposer l'API comme serveur MCP conforme, sans IdP tiers. |
+| [couche-mcp.md](couche-mcp.md) | **Lot 1 fait**, validé par un agent réel (§7, M10 — à lire avant d'exposer quoi que ce soit d'autre en MCP). Lots 2 et 3 — serveur d'autorisation — à ouvrir. |
 
 ## Sécurité et autorisations
 

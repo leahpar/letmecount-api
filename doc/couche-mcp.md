@@ -1,7 +1,8 @@
 # Couche MCP sur l'API — plan de déploiement
 
-Statut : **lot 1 fait le 2026-08-25** (endpoint et surface d'outils, sous le
-firewall existant). Lots 2 et 3 à ouvrir. Date de conception : 2026-08-24.
+Statut : **lot 1 fait le 2026-08-25** — endpoint, surface d'outils, et une passe
+de corrections après validation par un agent réel (§7, M10). Lots 2 et 3 à
+ouvrir. Date de conception : 2026-08-24.
 Suite de `doc/authentification-oauth.md` §3, dont ce document révise l'argumentaire
 (§3 ci-dessous) sans en changer la conclusion.
 
@@ -271,11 +272,10 @@ nul — mais l'exception, elle, reste inscrite dans le dépôt et se réévalue 
   Le réglage vaut pour **toutes** les recettes contrib à venir, pas seulement
   celles-ci.
 
-#### Ce qu'il reste à faire avant de brancher un vrai client
+#### Le branchement d'un vrai client — fait
 
-Le lot 1 est vérifié par les tests, **pas encore par un client MCP réel**. C'est
-l'étape que le §8 recommande avant d'ouvrir les lots 2 et 3, et elle reste
-entière :
+**Fait le 2026-08-25**, et il a rapporté onze corrections : voir M10 au §7. La
+recette, pour la rejouer :
 
 ```bash
 claude mcp add --transport http let-me-count https://letmecountapi.lasoireefille.fr/mcp \
@@ -648,6 +648,82 @@ Le danger tient à ce qui se passe sans : `depense_get` **fonctionne** — il re
 simplement le premier enregistrement venu, quel que soit l'`id` demandé. Le
 premier test écrit passait, parce qu'il n'y avait qu'une dépense en base. Tout
 test sur une opération d'élément doit poser **deux** enregistrements.
+
+### M10 — Ce qu'un agent a trouvé et pas les tests
+
+Le §8 recommandait d'éprouver le lot 1 avec un vrai client avant d'ouvrir la
+suite. Fait le 2026-08-25 : une session Claude Code branchée sur le serveur, sans
+accès au code, a joué le parcours complet — découverte, lecture, écriture,
+modification, suppression, échecs volontaires. **Cinq des six ambiguïtés qu'elle
+a notées avant son premier appel se sont révélées fondées.**
+
+C'est le meilleur retour sur investissement du chantier, et pour une raison
+précise : mes tests appellent les outils **en sachant** ce qu'ils attendent. Ils
+ne lisent jamais le schéma publié. Tout ce qui relève de l'écart entre ce que
+l'outil déclare et ce qu'il lit leur est structurellement invisible.
+
+**Les schémas d'entrée mentaient.** M7 vaut aussi pour les outils d'élément, ce
+que je n'avais pas vu : sans `input`, `depense_get` et `depense_delete`
+annonçaient le corps complet d'une dépense, six champs `required` que le serveur
+n'ouvre jamais, et **pas** l'identifiant qui est leur seul argument utile. Un
+agent qui fait confiance au schéma fabrique une fausse dépense pour lire — ou
+pour supprimer. `user_me` publiait la ressource `User` entière, jusqu'au jeton de
+liaison à usage unique. Corrigé par un DTO par outil, et **verrouillé par un test
+qui lit `tools/list`** au lieu d'appeler les outils.
+
+**Une description fausse est pire qu'une description absente.** Celle de
+`partage: "parts"` annonçait une répartition proportionnelle calculée par le
+serveur. `DepenseConstraintValidator` ne fait rien de tel : il vérifie que la
+somme des `montant` vaut le total, dans les deux modes. J'avais recopié le
+commentaire de `Depense::$partage`, qui décrit une intention jamais implémentée
+et que `Detail::$parts` contredit trois classes plus loin. L'agent a perdu là son
+seul aller-retour, et **tout agent l'aurait perdu**.
+
+**Deux malentendus de sa part, qui apprennent autant.** Elle conclut de
+`logs_list` que les écritures MCP ne sont pas journalisées : c'est faux, le
+listener est un *entity listener* Doctrine et ignore l'origine de l'écriture.
+Le vrai mécanisme est ailleurs et pire — `Log::$depense` porte
+`onDelete: CASCADE`, donc **supprimer une dépense efface tous ses logs, y compris
+le DELETE que le listener vient d'écrire**. Reproduit : 4 logs, suppression,
+retour à 3. Bug de domaine préexistant, hors périmètre MCP, laissé ouvert
+sciemment. Elle réclame par ailleurs un solde entre deux personnes : le produit
+ne fonctionne pas ainsi, le solde est vis-à-vis du groupe, et l'absence de
+remboursement est délibérée — l'équilibrage se fait en laissant payer la
+prochaine dépense aux soldes les plus bas. Ce n'était donc pas un outil manquant
+mais **une description manquante**, désormais écrite dans `user_me` avec la
+convention de signe.
+
+**Le bruit, chiffré.** Un `depenses_list` sans filtre rend 39 Ko pour 30 dépenses.
+Un seul poste a été traité, parce qu'il est net et sans risque : les `@id`
+anonymes `/.well-known/genid/…` des détails, qui **changent à chaque
+sérialisation** et donnent l'illusion que la donnée bouge entre deux appels.
+`#[ApiProperty(genId: false)]` sur `Depense::$details` les supprime sans toucher
+aux IRI des relations — vérifié que le front ne les lit pas, son type
+`ExpenseDetail` ne les déclare pas.
+
+Restent deux postes, non traités et chiffrés ici pour qui les reprendra :
+
+| Poste | Part de la réponse | Pourquoi c'est laissé |
+|---|---|---|
+| `content[0].text` duplique `structuredContent` | ~56 % | Conforme au protocole — l'un est l'affichage, l'autre la donnée. `structuredContent: false` supprimerait la duplication mais prive les clients qui préfèrent le champ structuré. Arbitrage de protocole, pas de code. |
+| Blocs hydra `search` / `view` sur les collections | ~5 % | Plomberie d'un client HTTP : `IriTemplate` annonce `/mcp{?tag}` et `view` des URLs `?page=2` qu'un agent ne peut pas appeler. Les retirer suppose de toucher au normaliseur Hydra, pour un gain dix fois moindre que le poste ci-dessus. |
+
+**Les messages d'erreur sont la documentation de dernier recours.** Le SDK
+transforme toute `Throwable` en erreur JSON-RPC portant son `getMessage()` : ce
+message est donc tout ce dont un agent dispose pour se corriger. Les erreurs
+métier étaient déjà bonnes — « Le montant de la dépense (60) ne correspond pas à
+la somme des détails (40) » se corrige seul. Les erreurs techniques ne l'étaient
+pas : « Not Found » ne distinguait pas l'identifiant inexistant, la ressource
+supprimée et le **nom d'argument erroné** — trois causes, une sortie, et un agent
+qui tourne en rond. `McpItemProvider` et `McpNotFoundException` nomment
+désormais la ressource et l'identifiant.
+
+Enfin `depense_delete`, seule opération irréversible de la surface, répondait
+`null` — indistinguable d'une erreur avalée, au point qu'il fallait un second
+appel pour savoir si la suppression avait eu lieu. Elle rend maintenant un
+`CallToolResult`, que `StructuredContentProcessor` laisse passer tel quel : une
+confirmation rendue en tableau associatif ressortait sérialisée en collection
+JSON-LD, `member: [true, "Depense", 160]`.
 
 ### Ce qui s'est confirmé
 
