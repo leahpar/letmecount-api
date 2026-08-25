@@ -230,7 +230,7 @@ C'est donc au propriétaire du dépôt de trancher — les supprimer pour un `ma
 stan` vert, ou les garder si elles doivent couvrir du code à venir.
 
 > **Levé le 2026-08-25** : les deux lignes ont été commentées, `make stan` rend
-> désormais *No errors*. À noter pour qui reprendrait le dépôt ailleurs :
-> `phpstan.neon` est dans `.gitignore`, c'est une configuration **locale et non
-> versionnée** — le correctif ne suit pas le dépôt et sera à refaire sur un autre
-> poste.
+> désormais *No errors*. `phpstan.neon` était jusque-là dans `.gitignore` — la
+> configuration de l'analyse ne suivait donc pas le dépôt. Elle est désormais
+> **versionnée** : la ligne a été retirée du bloc `###> phpstan/phpstan ###`, et
+> le fichier est suivi comme n'importe quelle autre configuration du projet.
