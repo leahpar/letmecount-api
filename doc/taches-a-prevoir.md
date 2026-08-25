@@ -166,23 +166,55 @@ y compris celui que `composer install` déclenche par `post-install-cmd`. Avec
 nouveau `vendor/` et l'ancien cache, c'est-à-dire hors service. Rencontré en
 local, où le premier `composer update` a échoué exactement ainsi.
 
+### La route `/api/token/refresh` est supprimée
+
+Vestige de la recette Flex de gesdinet — `config/routes/gesdinet_jwt_refresh_token.yaml`
+déclarait un chemin sans contrôleur, que rien n'a jamais servi. Le `check_path`
+du pare-feu pointe sur `api_refresh_token` (`/auth/refresh`), qui est aussi ce
+que le front appelle (`front/src/plugins/axios.ts`). Vérifié avant de la
+retirer :
+
+| Requête | Réponse |
+|---|---|
+| sans JWT | **401** — `access_control` sur `^/` intercepte avant le routeur |
+| avec un JWT valide | **404** *« Unable to find the controller for path "/api/token/refresh". The route is wrongly configured. »* |
+
+Aucune autre référence dans les deux dépôts. Le fichier reste listé dans
+`symfony.lock` au titre de la recette : c'est sans effet, `composer recipes`
+signalera simplement un écart.
+
 ### Ce qui reste ouvert, et qui n'appartient pas à ce chantier
 
-- **`webauthn.creation_profiles.default.rp.name` est déprécié** depuis
-  `web-auth/webauthn-symfony-bundle` 5.3.0 — la seule dépréciation qui subsiste
-  au démarrage. Elle porte sur le nom affiché dans l'invite passkey : à traiter
-  en lisant ce que la 6.0 attend à la place, pas en supprimant la ligne.
-- **`doc/openapi.json` est périmé**, indépendamment d'ici : il date d'avant le
-  resserrement des regex de `PushSubscription`. Un `make doc` le remet à jour,
-  mais le diff n'a rien à voir avec la migration.
-- **La route `gesdinet_jwt_refresh_token` (`/api/token/refresh`) est morte** :
-  vestige de la recette Flex, sans contrôleur, et le `check_path` du pare-feu
-  pointe sur `api_refresh_token` (`/auth/refresh`), qui est ce que le front
-  appelle. Elle répond aujourd'hui par une erreur de route mal configurée.
-- **Le schéma de la base de dev a dérivé** des entités : `log.libelle` et
-  `log.montant` y sont encore nullables, et deux index de `user` portent des
-  noms d'une génération antérieure. `migrations:diff` les remonte à chaque fois.
-  La migration commitée a été réduite aux seules colonnes `family`.
+**`webauthn…rp.name` : ne pas supprimer la ligne.** C'est la seule dépréciation
+qui subsiste au démarrage, émise par `web-auth/webauthn-symfony-bundle` 5.3.0
+sur `creation_profiles.default.rp.name`, « removed in the next major release »
+sans remplacement annoncé. Mais le nœud vaut `'LetMeCount'`, et
+`PublicKeyCredentialCreationOptionsFactory::createRpEntity()` se rabat sur
+`rp.id` quand il est vide — c'est-à-dire sur `%env(WEBAUTHN_RP_ID)%`, un nom
+d'hôte. Or `PublicKeyCredentialEntity.name` est requis par l'IDL du W3C et
+c'est **le nom affiché dans l'invite passkey du système** : retirer la ligne
+aujourd'hui remplacerait « LetMeCount » par le domaine dans la boîte de dialogue
+et dans le gestionnaire de mots de passe, pour tous les enrôlements suivants.
+À reprendre quand la 6.0 dira par quoi remplacer le nœud, pas avant.
+
+**`doc/openapi.json` est périmé**, indépendamment d'ici : il date d'avant le
+resserrement des regex de `PushSubscription` (`f0dbc4e`). Un `make doc` le remet
+à jour, mais le diff n'a rien à voir avec la migration.
+
+**La base a trois dérives distinctes**, qui n'ont pas la même origine et que
+`migrations:diff` remonte toutes à chaque appel — c'est ce qui a obligé à réduire
+à la main la migration `family` :
+
+| Écart | Origine | Effet réel |
+|---|---|---|
+| `log.libelle` et `log.montant` nullables en base, non-nullables dans l'entité | `9a9a528` (2025-09-15) a resserré `Log` sans migration de suivi ; la table a été créée nullable la veille par `Version20250915092158` | la base tolère des `NULL` que le code n'écrit jamais — `Log::__construct()` les prend sur la dépense. Zéro ligne concernée en dev, à vérifier en prod avant tout `NOT NULL` |
+| index `UNIQ_IDENTIFIER_GOOGLE_SUB` / `UNIQ_IDENTIFIER_APPLE_SUB` sur `user` | migrations OAuth écrites à la main (2026-08-23 et 24) avec des noms lisibles, alors que `#[ORM\Column(unique: true)]` fait générer `UNIQ_<hash>` à Doctrine | aucun. `diff` propose un `RENAME INDEX` perpétuel |
+| commentaires `(DC2Type:datetime_immutable)` sur `push_subscription.created_at`, `webauthn_credential.created_at` et `.last_used_at` | DBAL 3 les écrivait ; DBAL 4 ne les écrit ni ne les lit | cosmétique — le seul des trois causé par cette migration |
+
+Le correctif de la deuxième ligne ne touche pas la base : déclarer les
+`#[ORM\UniqueConstraint]` nommées sur l'entité, comme c'est déjà fait pour
+`UNIQ_IDENTIFIER_USERNAME`, aligne Doctrine sur ce que la prod a réellement.
+Les deux autres demandent un `ALTER TABLE`, dont un seul est plus qu'esthétique.
 
 ### Le point de calendrier a changé de sens
 
