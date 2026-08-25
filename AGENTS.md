@@ -1,6 +1,7 @@
-# GEMINI.md
+# AGENTS
 
-This file provides guidance when working with code in this repository.
+This file provides guidance for developers working on the Let-me-count API project.
+It outlines the coding standards, tools, and practices to follow to ensure a clean and maintainable codebase.
 
 ## Contexte
 
