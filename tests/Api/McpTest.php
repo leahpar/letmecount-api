@@ -25,7 +25,13 @@ class McpTest extends McpTestCase
         );
 
         $this->assertResponseStatusCodeSame(401);
-        $this->assertResponseHasHeader('WWW-Authenticate');
+        // Le pointeur RFC 9728 par lequel le client découvre où s'authentifier :
+        // c'est sur cette réponse-là qu'il compte, elle est vérifiée en propre
+        // dans OAuthMetadataTest.
+        $this->assertStringContainsString(
+            'resource_metadata=',
+            $this->client->getResponse()->headers->get('WWW-Authenticate') ?? '',
+        );
     }
 
     public function testToolsListExposesTheExpectedSurface(): void

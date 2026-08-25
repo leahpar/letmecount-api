@@ -1,8 +1,9 @@
 # Couche MCP sur l'API — plan de déploiement
 
-Statut : **lot 1 fait le 2026-08-25** — endpoint, surface d'outils, et une passe
-de corrections après validation par un agent réel (§7, M10). Lots 2 et 3 à
-ouvrir. Date de conception : 2026-08-24.
+Statut : **lots 1 et 2 faits le 2026-08-25** — endpoint, surface d'outils, une
+passe de corrections après validation par un agent réel (§7, M10), puis la
+découverte OAuth côté ressource (§4.2). Lot 3 à ouvrir. Date de conception :
+2026-08-24.
 Suite de `doc/authentification-oauth.md` §3, dont ce document révise l'argumentaire
 (§3 ci-dessous) sans en changer la conclusion.
 
@@ -154,10 +155,14 @@ Poser `aud` en avance a bien évité le changement cassant sur *l'absence* du
 claim, mais pas sur *sa valeur* : `JwtAudienceListener` tolère un jeton sans
 `aud` et rejette un `aud` erroné. Changer la valeur déconnecterait tout le parc.
 
-Traitement au lot 2 : faire accepter au listener **une liste** d'audiences,
-émettre la nouvelle, garder l'ancienne le temps que le parc tourne. Un jeton
-d'accès vit 1 h — quelques jours suffisent — puis on retire l'ancienne valeur.
-C'est la seule vraie dette laissée par le chantier OAuth, et elle est petite.
+Traitement au lot 2, **fait** : le listener accepte **une liste** d'audiences,
+émet la nouvelle, garde l'ancienne le temps que le parc tourne. Un jeton d'accès
+vit 1 h — quelques jours suffisent — puis on retire l'ancienne valeur. C'est la
+seule vraie dette laissée par le chantier OAuth, et elle est petite.
+
+La nouvelle valeur est devenue la **source unique** de l'identité de la
+ressource : les métadonnées et l'issuer du serveur d'autorisation en sont
+dérivés, plus rien n'est saisi deux fois. Voir §4.2.
 
 ---
 
@@ -301,6 +306,103 @@ Ce qui manque pour qu'un client *découvre* comment s'authentifier.
 4. **L'audience** : `JwtAudienceListener` accepte une liste (cf. §3).
 
 ≈ 55 lignes en tout. **Chiffrage : 2 à 3 heures.**
+
+### 4.2 Lot 2 — ce qui a réellement été livré
+
+**Fait le 2026-08-25.** `make tests` → **134 tests au vert** (130 + 4), `make stan`
+sans erreur. Volume réel : ~75 lignes de PHP, 3 de configuration, ~70 de tests —
+l'estimation de 55 lignes visait juste sur le code de production.
+
+La marche à suivre tenait, et pour une fois sans mauvaise surprise d'intégration :
+ce lot est du protocole écrit à la main, pas du framework expérimental, exactement
+comme le §8 le pariait. Cinq écarts, tous des choix, aucun un blocage.
+
+#### Une seule source de vérité pour l'URI de ressource
+
+C'est la décision structurante du lot, et elle n'était pas dans le plan.
+
+`JWT_AUDIENCE` porte désormais l'URI canonique du serveur MCP
+(`https://letmecountapi.lasoireefille.fr/mcp`). Tout le reste en est **dérivé**
+par `App\Service\OAuth\ProtectedResourceMetadata` : l'origine donne l'`issuer`
+du futur serveur d'autorisation, et l'URL du document de métadonnées s'obtient en
+insérant le suffixe entre l'hôte et le chemin. Aucune valeur n'est saisie deux
+fois, donc rien ne peut diverger entre ce qu'on émet dans les jetons et ce qu'on
+annonce dans les métadonnées — or c'est précisément ce genre de divergence qui
+produit des 401 incompréhensibles côté client.
+
+**Corollaire à connaître avant de déployer : le service refuse de démarrer si
+`JWT_AUDIENCE` n'est pas une URI absolue.** Une valeur laissée à `letmecount-api`
+casse le conteneur au boot, donc **toute** l'API et pas seulement MCP. C'est
+délibéré — l'alternative silencieuse serait de publier une identité de ressource
+fausse — mais ça impose un ordre : **mettre à jour l'environnement en même temps
+que le code**. Le message d'exception nomme la variable.
+
+#### On annonce la forme canonique, pas la forme racine
+
+Le point 2 du plan faisait pointer le `WWW-Authenticate` vers
+`/.well-known/oauth-protected-resource`. C'est la RFC 9728 §3.1 qui tranche
+autrement : le suffixe s'insère **entre l'hôte et le chemin** de la ressource, donc
+la forme canonique pour `…/mcp` est `/.well-known/oauth-protected-resource/mcp`.
+C'est elle qu'on publie. La forme racine reste servie — même contrôleur, deux
+routes, comme prévu au point 1 — mais en secours pour les clients qui la tentent.
+
+#### Pas de `scopes_supported`
+
+Le point 1 du plan l'incluait dans le document. Retiré : il n'y a qu'un seul
+niveau d'accès (M6), le champ est facultatif dans la RFC, et le déclarer **vide**
+ne dit pas « pas de scope » mais « aucun scope n'est acceptable ». Un client qui
+ne voit pas le champ n'envoie pas de `scope`, ce qui est le comportement voulu.
+Ajouté en revanche : `resource_name`, que l'écran de consentement du lot 3
+affichera.
+
+Le `ProtectedResourceMetadata` du SDK a servi de référence de format, comme M2 le
+prévoyait, et il tranche dans le même sens : son `jsonSerialize()` **omet**
+`scopes_supported` quand la liste est vide. Notre classe porte le même nom dans
+notre espace de noms — c'est le même objet du protocole, pas une copie du code.
+
+#### Le `WWW-Authenticate` s'accroche à `kernel.response`
+
+Le plan proposait l'`entry_point` du firewall ou un événement Lexik. Ni l'un ni
+l'autre : le 401 sort de **deux** endroits — l'entry point quand il n'y a pas de
+jeton, le failure handler quand il y en a un mauvais — et les deux fabriquent le
+même `JWTAuthenticationFailureResponse`, qui pose un `WWW-Authenticate: Bearer`
+nu. Un listener de réponse qui complète cet en-tête les couvre tous les deux en
+une quinzaine de lignes, et couvrira aussi les 401 qu'on n'a pas prévus. Il
+ignore ce qui ne commence pas par `Bearer`, donc le `Basic` du profiler.
+
+#### L'audience : deux variables, pas une liste
+
+`JwtAudienceListener` accepte une liste, comme prévu, mais elle se compose de
+`JWT_AUDIENCE` (émise) et de `JWT_AUDIENCE_LEGACY` (acceptée seulement, virgules
+séparatrices). Une seule variable portant la liste aurait mélangé les deux rôles ;
+là, le retrait de la transition est **« vider `JWT_AUDIENCE_LEGACY` »**, et rien
+d'autre. À faire quelques jours après le déploiement.
+
+Deux tests gardent la transition : un jeton portant l'ancienne audience passe, un
+jeton portant n'importe quelle autre est rejeté. Le test « sans `aud` » du
+chantier OAuth reste vert, lui aussi.
+
+#### La règle `security.yaml` est plus étroite que prévu
+
+Le point 3 disait « les deux chemins `.well-known` en `PUBLIC_ACCESS` ». Un seul
+préfixe suffit — `^/\.well-known/oauth-` — et il couvrira aussi les métadonnées
+du serveur d'autorisation au lot 3. Ouvrir tout `.well-known` aurait embarqué au
+passage le `genid` d'API Platform et le `/.well-known/webauthn` du bundle
+passkey, qui n'ont rien demandé.
+
+#### Ce qui n'a pas bougé
+
+`nelmio_cors.yaml` était déjà bon : le lot 1 avait exposé `WWW-Authenticate` en
+prévision, et `paths: '^/'` couvre `.well-known`. `doc/openapi.json` non plus :
+ces routes sont des contrôleurs Symfony ordinaires, invisibles d'API Platform.
+
+#### Reste à faire pour que le lot serve
+
+Rien côté code, mais la découverte ne mène nulle part tant que le lot 3 n'existe
+pas : les métadonnées annoncent un serveur d'autorisation qui ne publie pas encore
+les siennes. C'est le séquencement annoncé au §8 — les lots 2 et 3 d'une traite —
+et la seule chose qu'un client puisse faire d'ici là reste le `--header
+"Authorization: Bearer <jwt>"` du lot 1.
 
 ### Lot 3 — Serveur d'autorisation (étapes 4 à 8)
 
@@ -848,10 +950,11 @@ Deux corollaires moins évidents :
 | Lot | Étapes | Contenu                                           | Coût      |
 |-----|--------|---------------------------------------------------|-----------|
 | 1   | 9      | Endpoint + outils, sous le firewall existant      | **fait**  |
-| 2   | 1–4    | RFC 9728, `WWW-Authenticate`, audience URI        | 2 – 3 h   |
+| 2   | 1–4    | RFC 9728, `WWW-Authenticate`, audience URI        | **fait**  |
 | 3   | 4–8    | `/register`, `/authorize`, `/token`, consentement | 1 – 1,5 j |
 
-**Total : 2 à 3 jours**, dont le lot 1 est fait.
+**Total : 2 à 3 jours**, dont les lots 1 et 2 sont faits — le second dans son
+enveloppe (§4.2).
 
 La réserve ci-dessous s'est vérifiée sur le lot 1, et par le mécanisme annoncé :
 le volume de code était trivial — quelques attributs et deux petits providers —

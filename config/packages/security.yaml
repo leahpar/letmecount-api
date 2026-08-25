@@ -58,6 +58,10 @@ security:
     access_control:
 #        - { path: ^/$, roles: PUBLIC_ACCESS } # Allows accessing the Swagger UI
         - { path: ^/docs, roles: PUBLIC_ACCESS } # Allows accessing the Swagger UI docs
+        # Métadonnées OAuth (RFC 9728) : un client MCP les lit avant d'avoir un jeton.
+        # Le préfixe `oauth-` plutôt que tout `.well-known` : les autres routes qui
+        # y vivent (genid d'API Platform, webauthn) ne sont pas concernées.
+        - { path: '^/\.well-known/oauth-', roles: PUBLIC_ACCESS }
 #        - { path: ^/contexts, roles: PUBLIC_ACCESS } # Allows accessing the Swagger UI contexts
         # Enrôler un passkey suppose d'être déjà connecté : à garder AVANT la règle ^/auth
         - { path: ^/auth/webauthn/register, roles: IS_AUTHENTICATED_FULLY }

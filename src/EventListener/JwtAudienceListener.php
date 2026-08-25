@@ -11,18 +11,27 @@ use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 /**
  * Ajoute et vérifie le claim `aud` sur nos JWT.
  *
- * Une seule audience aujourd'hui : les jetons web et les futurs jetons MCP ne
- * sont pas distingués (cf. doc/authentification-oauth.md, §3). Le claim est
- * néanmoins posé dès maintenant, parce que la couche MCP devra valider
- * l'audience (RFC 8707) et que l'ajouter plus tard sur des jetons déjà en
- * circulation serait un changement cassant.
+ * Une seule audience émise — les jetons web et les jetons MCP ne sont pas
+ * distingués (doc/couche-mcp.md, M6) — mais plusieurs acceptées, parce que la
+ * valeur change avec la couche MCP : le spec exige l'URI canonique du serveur
+ * MCP là où on avait posé une chaîne opaque. Émettre la nouvelle tout en
+ * acceptant l'ancienne évite de déconnecter le parc ; `JWT_AUDIENCE_LEGACY` est
+ * à vider quelques jours après le déploiement, un jeton d'accès vivant 1 h.
  */
 class JwtAudienceListener
 {
+    /** @var list<string> L'audience émise, plus les anciennes encore en circulation. */
+    private readonly array $accepted;
+
     public function __construct(
         #[Autowire('%env(JWT_AUDIENCE)%')]
         private readonly string $audience,
+        #[Autowire('%env(JWT_AUDIENCE_LEGACY)%')]
+        string $legacyAudiences = '',
     ) {
+        $legacy = array_values(array_filter(array_map(trim(...), explode(',', $legacyAudiences))));
+
+        $this->accepted = [$audience, ...$legacy];
     }
 
     #[AsEventListener(event: Events::JWT_CREATED)]
@@ -48,7 +57,7 @@ class JwtAudienceListener
         // à l'encodage on écrit une chaîne, au décodage lcobucci rend un tableau.
         $audiences = (array) $payload['aud'];
 
-        if (!in_array($this->audience, $audiences, true)) {
+        if ([] === array_intersect($this->accepted, $audiences)) {
             $event->markAsInvalid();
         }
     }
