@@ -738,6 +738,63 @@ appel pour savoir si la suppression avait eu lieu. Elle rend maintenant un
 confirmation rendue en tableau associatif ressortait sérialisée en collection
 JSON-LD, `member: [true, "Depense", 160]`.
 
+### M11 — `solde_detail`, et deux pièges qu'il a révélés
+
+Ajouté le 2026-08-25, à la demande de Raphaël relayée par la session de
+validation. `user_me` donne le solde ; la question suivante est « pourquoi », et
+il fallait jusque-là rapatrier toutes les dépenses pour y répondre.
+
+L'outil rend, sur une fenêtre bornée à 28 jours par défaut et 60 au plus : le
+solde individuel, ce qu'il valait en début de période, le mouvement, les totaux
+payé et dû, le nombre de jours depuis le dernier paiement, et deux listes de cinq
+lignes triées par effet — l'effet déjà signé, le payeur nommé en clair. 356
+octets sur les données de dev. Au-delà de 60 jours, une erreur qui renvoie vers
+`depenses_list` : c'est ce qui garantit qu'un outil de synthèse ne devienne pas
+un export.
+
+Le choix qui porte l'outil est `soldeIndividuelDebutPeriode` : sans lui, on ne
+peut pas distinguer « tu viens de plonger » de « tu étais déjà dans le rouge et
+rien n'a bougé ». Avec `joursDepuisDernierPaiement`, **l'absence d'activité
+devient une explication formulable**, et c'est le cas le plus fréquent.
+
+**Un `McpTool` sur une classe en fait une ressource API Platform complète.** Le
+§7 notait que les opérations MCP ne polluent pas `openapi.json` — vrai des
+opérations, faux des ressources. Poser l'attribut sur une classe sans
+`ApiResource` explicite lui fait générer les opérations HTTP par défaut : un
+`/solde_details` avec ses verbes, **525 lignes de spécification**, et une route
+publique que rien ne teste. `#[ApiResource(operations: [])]` la referme. À
+vérifier — spec identique, route en 404 — pour tout outil qui n'est pas adossé à
+une entité existante.
+
+**Le nom d'un champ est une affirmation.** La première version rendait `solde`,
+calculé sans le conjoint pour que le total boucle avec les lignes listées. Or
+`user_me.solde` agrège le couple : pour Mathieu, le même nom aurait porté +295,84
+ici et −36,90 là — **deux nombres de signes opposés**. Un agent appelant les deux
+outils se serait contredit dans la même phrase. Le champ s'appelle donc
+`soldeIndividuel`, en reprenant le vocabulaire que `user_me` expose déjà. Le
+calcul n'a pas changé, seulement son nom, et la divergence est devenue lisible
+au lieu d'être un piège. Un test couvre le cas.
+
+### M12 — Une session cliente ouverte ne voit pas les changements
+
+Constaté deux fois, dans les deux sens : une session d'agent déjà ouverte a
+continué de servir les anciennes descriptions après correction, puis n'a pas vu
+`solde_detail` du tout — ni par son nom, ni par recherche sur ses champs.
+
+Conséquence pratique : **tout test d'ergonomie sur une description modifiée ou un
+outil ajouté exige un client neuf.** Ce n'est pas une précaution théorique, c'est
+ce qui a fait perdre le plus de temps dans les allers-retours de validation.
+
+Deux corollaires moins évidents :
+
+- Les tests d'intégration ne couvrent pas ce risque, et pour la raison du M10 :
+  ils appellent les outils en connaissant le schéma, là où un agent le lit.
+- **Aucune trace de définitions d'outils ne date quoi que ce soit.** Une longue
+  contestation a porté sur ce que le serveur publiait à un instant donné, sur la
+  foi d'un bloc de définitions relu dans une conversation. Seul le dépôt fait
+  foi : `git log --all -S "<phrase>"` sans pathspec, qui voit aussi les
+  déplacements de texte d'un fichier à l'autre.
+
 ### Ce qui s'est confirmé
 
 - **Les `security:` sont bien évaluées**, comme le §7 l'annonçait :

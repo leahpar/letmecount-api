@@ -22,7 +22,7 @@ use App\State\SoldeDetailProvider;
 #[ApiResource(operations: [])]
 #[McpTool(
     name: 'solde_detail',
-    description: 'Explique le solde de l\'utilisateur courant sur une fenêtre récente : ce qui a bougé, et pourquoi. Le solde vaut ce qu\'il a payé moins ce qu\'il doit, toutes dépenses confondues et tous tags confondus : négatif, il doit au groupe ; positif, le groupe lui doit. Le groupe, c\'est l\'ensemble des utilisateurs, et il n\'y en a qu\'un. Comparer `soldeDebutPeriode` à `solde` dit si la situation vient de bouger ou si elle était déjà là : un `mouvement` proche de zéro avec un `joursDepuisDernierPaiement` élevé décrit quelqu\'un qui n\'a rien payé depuis longtemps, ce qui est une explication en soi. Les montants sont en euros. Pour lister des dépenses au-delà de cette fenêtre, utiliser `depenses_list`.',
+    description: 'Explique le solde de l\'utilisateur courant sur une fenêtre récente : ce qui a bougé, et pourquoi. Il porte sur `soldeIndividuel`, celui de la personne seule — `user_me.solde` y ajoute le conjoint quand il y en a un, et peut donc être de signe opposé. Le solde vaut ce qu\'elle a payé moins ce qu\'elle doit, toutes dépenses confondues et tous tags confondus : négatif, il doit au groupe ; positif, le groupe lui doit. Le groupe, c\'est l\'ensemble des utilisateurs, et il n\'y en a qu\'un. Comparer `soldeIndividuelDebutPeriode` à `soldeIndividuel` dit si la situation vient de bouger ou si elle était déjà là : un `mouvement` proche de zéro avec un `joursDepuisDernierPaiement` élevé décrit quelqu\'un qui n\'a rien payé depuis longtemps, ce qui est une explication en soi. Les montants sont en euros. Pour lister des dépenses au-delà de cette fenêtre, utiliser `depenses_list`.',
     input: SoldeDetailInput::class,
     uriVariables: [],
     provider: SoldeDetailProvider::class,
@@ -31,11 +31,17 @@ use App\State\SoldeDetailProvider;
 class SoldeDetail
 {
     public function __construct(
-        /** Solde actuel : négatif, l'utilisateur doit au groupe ; positif, le groupe lui doit. */
-        public float $solde,
-        /** Ce que valait le solde au début de la fenêtre. */
-        public float $soldeDebutPeriode,
-        /** Variation du solde sur la fenêtre, soit `solde` moins `soldeDebutPeriode`. */
+        /**
+         * Solde de l'utilisateur seul, sans son conjoint : négatif, il doit au
+         * groupe ; positif, le groupe lui doit. C'est le `soldeIndividuel` de
+         * `user_me`, et non son `solde`, qui agrège le couple — pour quelqu'un
+         * qui a un conjoint, les deux peuvent être de signes opposés. C'est
+         * celui-ci que les lignes ci-dessous expliquent.
+         */
+        public float $soldeIndividuel,
+        /** Ce que valait `soldeIndividuel` au début de la fenêtre. */
+        public float $soldeIndividuelDebutPeriode,
+        /** Variation sur la fenêtre, soit `soldeIndividuel` moins `soldeIndividuelDebutPeriode`. */
         public float $mouvement,
         /** Début de la fenêtre observée, au format ISO 8601. */
         public string $debut,

@@ -77,8 +77,8 @@ class SoldeDetailTest extends McpTestCase
 
         // Le solde de départ est bien le solde actuel moins ce qui a bougé.
         $this->assertEqualsWithDelta(
-            $detail['solde'] - $detail['mouvement'],
-            $detail['soldeDebutPeriode'],
+            $detail['soldeIndividuel'] - $detail['mouvement'],
+            $detail['soldeIndividuelDebutPeriode'],
             0.001
         );
 
@@ -146,7 +146,33 @@ class SoldeDetailTest extends McpTestCase
         $this->assertSame([], $detail['aAvance']);
         $this->assertSame([], $detail['aCharge']);
         $this->assertGreaterThanOrEqual(299, $detail['joursDepuisDernierPaiement']);
-        $this->assertEqualsWithDelta($detail['solde'], $detail['soldeDebutPeriode'], 0.001);
+        $this->assertEqualsWithDelta($detail['soldeIndividuel'], $detail['soldeIndividuelDebutPeriode'], 0.001);
+    }
+
+    /**
+     * Le champ s'appelle `soldeIndividuel` et pas `solde` parce que celui de
+     * `user_me` agrège le conjoint : les deux peuvent être de signes opposés, et
+     * un agent qui appelle les deux outils se contredirait dans la même phrase.
+     */
+    public function testIndividualBalanceExcludesThePartner(): void
+    {
+        $conjoint = $this->createUser('conjoint');
+        $this->user->conjoint = $conjoint;
+        $conjoint->conjoint = $this->user;
+
+        // Lui avance 200 et n'en consomme aucune part : +200 pour lui seul.
+        $this->depenseDatee($this->user, 200.0, 'Avance', '-2 days', [[$conjoint, 200.0]]);
+        $this->em->flush();
+
+        $detail = $this->solde();
+        $moi = $this->content($this->rpc('tools/call', ['name' => 'user_me', 'arguments' => new \stdClass()])['result']);
+
+        // Le couple est à l'équilibre, lui seul est créditeur : les deux
+        // chiffres diffèrent, et c'est bien l'individuel que l'outil rend.
+        $this->assertEqualsWithDelta(200.0, $detail['soldeIndividuel'], 0.001);
+        $this->assertEqualsWithDelta(0.0, $moi['solde'], 0.001);
+        $this->assertEqualsWithDelta($detail['soldeIndividuel'], $moi['soldeIndividuel'], 0.001);
+        $this->assertArrayNotHasKey('solde', $detail, 'Pas de champ `solde` : le nom appartient à user_me');
     }
 
     public function testWindowIsBoundedAndSaysWhereToGoInstead(): void

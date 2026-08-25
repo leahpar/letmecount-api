@@ -52,8 +52,8 @@ class SoldeDetailCalculator
         $mouvement = round($totalPaye - $totalDu, 2);
 
         return new SoldeDetail(
-            solde: $solde,
-            soldeDebutPeriode: round($solde - $mouvement, 2),
+            soldeIndividuel: $solde,
+            soldeIndividuelDebutPeriode: round($solde - $mouvement, 2),
             mouvement: $mouvement,
             debut: $debut->format(\DateTimeInterface::ATOM),
             fin: $fin->format(\DateTimeInterface::ATOM),
