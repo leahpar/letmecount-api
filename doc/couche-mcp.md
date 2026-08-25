@@ -686,12 +686,25 @@ Le vrai mécanisme est ailleurs et pire — `Log::$depense` porte
 `onDelete: CASCADE`, donc **supprimer une dépense efface tous ses logs, y compris
 le DELETE que le listener vient d'écrire**. Reproduit : 4 logs, suppression,
 retour à 3. Bug de domaine préexistant, hors périmètre MCP, laissé ouvert
-sciemment. Elle réclame par ailleurs un solde entre deux personnes : le produit
-ne fonctionne pas ainsi, le solde est vis-à-vis du groupe, et l'absence de
-remboursement est délibérée — l'équilibrage se fait en laissant payer la
-prochaine dépense aux soldes les plus bas. Ce n'était donc pas un outil manquant
-mais **une description manquante**, désormais écrite dans `user_me` avec la
-convention de signe.
+sciemment. Elle réclame par ailleurs un solde entre deux personnes,
+puis un solde par tag : ni l'un ni l'autre n'existe. **Le solde est global —
+toutes dépenses et tous tags confondus — et le groupe est l'ensemble des
+utilisateurs, il n'y en a qu'un.** C'est le propos de l'application, qui existe
+pour supprimer la distinction entre groupes aux mêmes membres. L'absence de
+remboursement est délibérée dans la même logique : l'équilibrage se fait en
+laissant payer la prochaine dépense aux soldes les plus bas. Ce n'était donc pas
+un outil manquant mais **une description manquante**, désormais écrite dans
+`user_me` avec la convention de signe.
+
+Corollaire, qui a demandé deux passes pour être formulé juste : **un tag n'est
+pas un groupe**, contrairement à ce que sa présence d'un `users` suggère. Vérifié
+côté front, dans `ExpenseParticipantsList.vue` : `Tag::$users` sert à masquer par
+défaut, au formulaire de saisie, les personnes hors du tag qui n'ont aucun
+montant. De l'ergonomie, et rien d'autre — aucune contrainte sur les
+participants, la visibilité ou les calculs. Une première formulation en faisait
+« aussi un groupe » : plus fausse que l'absence de description qu'elle
+remplaçait. **La leçon vaut au-delà de ce champ : une description d'outil est du
+domaine, pas de la technique, et elle ne se déduit pas du schéma.**
 
 **Le bruit, chiffré.** Un `depenses_list` sans filtre rend 39 Ko pour 30 dépenses.
 Un seul poste a été traité, parce qu'il est net et sans risque : les `@id`
