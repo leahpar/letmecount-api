@@ -40,7 +40,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 // des opérations HTTP ci-dessus.
 #[McpToolCollection(
     name: 'tags_list',
-    description: 'Liste les tags. Un tag est à la fois une catégorie de dépense et un groupe de personnes : son `users` en liste les membres habituels. Ce n\'est pas une contrainte — une dépense taguée peut faire intervenir des gens hors de cette liste, et c\'est courant. Ne t\'en sers donc pas pour filtrer les participants possibles.',
+    description: 'Liste les tags. Un tag est une étiquette libre, pour classer et retrouver ses dépenses — pas un groupe : il n\'y a qu\'un seul groupe, l\'ensemble des utilisateurs. Son `users` n\'a aucune portée technique ; il sert au formulaire de saisie à réduire par défaut la liste des participants proposés, et ne restreint ni qui peut participer à une dépense, ni la visibilité, ni aucun calcul de solde. Une dépense taguée fait couramment intervenir des gens hors de cette liste.',
     normalizationContext: ['groups' => ['tag:read']],
     input: NoInput::class,
     provider: McpCollectionProvider::class,

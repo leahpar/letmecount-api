@@ -75,7 +75,7 @@ use Symfony\Component\Serializer\Attribute\Groups;
 #[McpTool(
     name: 'user_me',
     input: NoInput::class,
-    description: 'Renvoie l\'utilisateur courant, celui au nom de qui l\'agent agit. Son `solde` vaut ce qu\'il a payé moins ce qu\'il doit, vis-à-vis du groupe entier et non d\'une personne : négatif, il doit au groupe ; positif, le groupe lui doit. `soldeIndividuel` est le même calcul sans le conjoint, quand il y en a un. Il n\'existe volontairement pas de remboursement ni de suggestion de remboursement : l\'équilibrage se fait en laissant payer la prochaine dépense à ceux dont le solde est le plus bas.',
+    description: 'Renvoie l\'utilisateur courant, celui au nom de qui l\'agent agit. Son `solde` vaut ce qu\'il a payé moins ce qu\'il doit, toutes dépenses confondues et tous tags confondus : négatif, il doit au groupe ; positif, le groupe lui doit. Le groupe, c\'est l\'ensemble des utilisateurs, et il n\'y en a qu\'un. Il n\'existe pas de solde par tag — un tag classe les dépenses, il ne délimite pas un périmètre comptable —, ni de solde vis-à-vis d\'une personne en particulier. `soldeIndividuel` est le même calcul sans le conjoint, quand il y en a un. Il n\'existe volontairement pas de remboursement ni de suggestion de remboursement : l\'équilibrage se fait en laissant payer la prochaine dépense à ceux dont le solde est le plus bas.',
     uriVariables: [],
     normalizationContext: ['groups' => ['user:read']],
     provider: CurrentUserProvider::class,
