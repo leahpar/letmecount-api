@@ -790,11 +790,16 @@ gèle serait la **liste** des outils, arrêtée à l'ouverture de la session, ta
 que le **texte** de leurs définitions est rafraîchi. Trois observations s'y
 rangent sans rien ajouter : l'outil neuf reste invisible ; les descriptions
 corrigées apparaissent bien ; et un bloc de définitions relu affiche le texte
-d'aujourd'hui à une position ancienne. Une quatrième ne s'y range pas — une
-lecture qui semblait servir d'anciennes descriptions alors que le serveur
-répondait déjà avec les nouvelles. Assez pour orienter, pas pour conclure. Si
-l'hypothèse tient, corriger une description peut atteindre une session ouverte,
-mais ajouter un outil jamais.
+d'aujourd'hui à une position ancienne. Si l'hypothèse tient, corriger une
+description peut atteindre une session ouverte, mais ajouter un outil jamais.
+
+Une quatrième observation semblait d'abord contredire l'ensemble — une lecture
+qui aurait servi d'anciennes descriptions. Elle n'existe pas : c'était une
+inférence, tirée de deux blocs de définitions identiques à quelques heures
+d'écart. Sous l'hypothèse ci-dessus les deux étaient frais, donc identiques, et
+tous deux montraient le texte le plus récent. **Deux lectures identiques ne
+prouvent pas un cache** — elles prouvent seulement que rien n'a changé entre les
+deux rendus, ce qui est le comportement attendu quand les deux sont vivants.
 
 Deux corollaires moins évidents :
 
