@@ -135,14 +135,17 @@ Tout le reste est déjà prêt : `api-platform/symfony` 4.3.17 accepte `^8.0`,
 `lexik/jwt-authentication-bundle` 3.2 et `web-auth/webauthn-symfony-bundle` 5.3.5
 aussi, `nelmio/cors-bundle` et `jms/serializer-bundle` également.
 
-**Prérequis à vérifier avant tout :** Symfony 8.1 exige **PHP >= 8.4.1** (8.0
-exige 8.4). La machine de dev est en 8.5.9 ; **la version de PHP en production
-n'a pas été vérifiée** — c'est le premier point à lever, tout le reste en dépend.
-`composer.json` déclare encore `php: >=8.2`.
+**Prérequis levé le 2026-08-25 : la production est en PHP 8.5.** Symfony 8.1
+exige PHP >= 8.4.1 (8.0 exige 8.4), la machine de dev est en 8.5.9 : rien ne
+bloque de ce côté, ni en dev ni en prod. `composer.json` déclare encore
+`php: >=8.2`, à relever au moment du bump.
+
+Le blocage restant est donc entièrement dans les deux bundles ci-dessus, et
+l'étape 1 de la marche à suivre est faite.
 
 **Marche à suivre :**
 
-1. Vérifier le PHP de production.
+1. ~~Vérifier le PHP de production.~~ *(Fait : 8.5.)*
 2. Passer `doctrine/doctrine-bundle` en 3.x sur Symfony 7.4, seul, et voir ce que
    ça casse. C'est la majeure la plus risquée : elle touche la configuration
    Doctrine, le mapping et les migrations.
