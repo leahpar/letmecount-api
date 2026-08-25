@@ -8,10 +8,10 @@ Ne sont listés ici que les chantiers *à ouvrir*. La dette déjà inventoriée 
 détail vit dans `doc/dette-technique.md` ; la présente note y renvoie plutôt que
 de la répéter.
 
-**Mise à jour :** les tâches **1** (accès git en ssh, le 2026-08-25) et **2**
-(remise au vert des tests, le 2026-08-24) sont faites, et `dette-technique.md`
-est fusionnée sur `dev`. Restent la migration Symfony 8 et le service worker,
-dont le relevé d'origine est inchangé.
+**Mise à jour :** les tâches **1** (accès git en ssh, le 2026-08-25), **2**
+(remise au vert des tests, le 2026-08-24) et **3** (migration Symfony 8, le
+2026-08-25) sont faites, et `dette-technique.md` est fusionnée sur `dev`. Reste
+le service worker, dont le relevé d'origine est inchangé.
 
 ---
 
@@ -113,7 +113,137 @@ diagnostic n'est pour l'instant nulle part sur `dev`. *(Fait.)*
 
 ---
 
-## 3. Migration Symfony 8.x
+## 3. ✅ Migration Symfony 8.x
+
+**Fait le 2026-08-25**, en trois commits qui se déposent dans cet ordre :
+
+| Commit | Ce qu'il fait | Symfony pendant ce temps |
+|---|---|---|
+| `doctrine-bundle 3.x et DBAL 4.x` | doctrine-bundle 2.19 → 3.3.1, DBAL 3.10 → 4.4.4, `php: >=8.4` | reste en 7.4 |
+| `gesdinet 2.2` | gesdinet 1.5.0 → 2.2.2, + couverture de `/auth/refresh` | reste en 7.4 |
+| `Symfony 8.1` | 8.1.5, gesdinet → 3.0.0, monolog-bundle → 4.0.2, migration `family` | le saut |
+
+**106 tests au vert, `make stan` sans erreur**, cache prod reconstruit, et
+**plus aucune dépréciation à l'exécution** sur `/depenses`, `/users`, `/tags`,
+`/logs` et `/docs`. Les ~23 000 de `symfony/property-info` venaient de
+`DoctrineExtractor::getTypes()`, qui n'existe plus en 8.x ; celles de
+`var-exporter` tombent avec les proxies Doctrine, remplacés par les objets
+paresseux natifs de PHP 8.4.
+
+### Trois choses que le relevé d'origine ne voyait pas
+
+**1. DBAL 4 était le vrai risque, pas doctrine-bundle.** Le bundle 3.x exige
+`doctrine/dbal ^4.0` : le tableau ci-dessous annonçait une majeure, il y en
+avait deux. C'est aussi celle qui n'a rien cassé — aucun code de `src/` ou de
+`tests/` ne touche DBAL directement, il n'y a pas de type Doctrine personnalisé,
+et `doctrine:schema:update --dump-sql` n'a produit aucune différence. Ce qui a
+demandé du travail, ce sont **cinq options de configuration supprimées** :
+`dbal.use_savepoints`, `orm.auto_generate_proxy_classes`, `orm.proxy_dir`,
+`orm.enable_lazy_ghost_objects` et `orm.report_fields_where_declared`, plus
+`orm.controller_resolver.auto_mapping` qui est déprécié. Le container refuse de
+se construire tant qu'elles sont là, donc elles se découvrent une par une.
+
+**2. gesdinet ne se saute pas d'un coup.** Le relevé lisait « v1.5.0 →
+v3.0.0 » comme une seule marche ; c'est deux majeures, et la 2.2 est un palier
+qui tourne encore sur Symfony 7.4. Le faire seul là a permis de constater que
+la configuration n'avait rien à changer avant d'y ajouter le bruit du saut de
+framework. La 3.0 demande en revanche **une migration de schéma obligatoire** :
+elle donne une `family` aux tokens, Doctrine lit tous les champs mappés, et la
+première requête échoue tant que les colonnes ne sont pas là.
+
+**3. `symfony/monolog-bundle` bloquait aussi**, en 3.11.2 plafonnée à Symfony 7.
+Passée en 4.0.2. Elle n'était nulle part dans le relevé, qui ne listait que les
+deux bundles trouvés par lecture des contraintes — celle-ci ne se voit qu'en
+tentant la résolution.
+
+### Le déploiement avait besoin d'un correctif
+
+`.github/workflows/deploy.yml` supprime maintenant `var/cache/*` avant
+`composer install`. Le cache compilé de Symfony 7.4 référence des classes
+internes qui n'existent plus en 8.1, et `cache:clear` échoue en le chargeant —
+y compris celui que `composer install` déclenche par `post-install-cmd`. Avec
+`set -e`, le déploiement se serait interrompu là, laissant le serveur avec le
+nouveau `vendor/` et l'ancien cache, c'est-à-dire hors service. Rencontré en
+local, où le premier `composer update` a échoué exactement ainsi.
+
+### La route `/api/token/refresh` est supprimée
+
+Vestige de la recette Flex de gesdinet — `config/routes/gesdinet_jwt_refresh_token.yaml`
+déclarait un chemin sans contrôleur, que rien n'a jamais servi. Le `check_path`
+du pare-feu pointe sur `api_refresh_token` (`/auth/refresh`), qui est aussi ce
+que le front appelle (`front/src/plugins/axios.ts`). Vérifié avant de la
+retirer :
+
+| Requête | Réponse |
+|---|---|
+| sans JWT | **401** — `access_control` sur `^/` intercepte avant le routeur |
+| avec un JWT valide | **404** *« Unable to find the controller for path "/api/token/refresh". The route is wrongly configured. »* |
+
+Aucune autre référence dans les deux dépôts. Le fichier reste listé dans
+`symfony.lock` au titre de la recette : c'est sans effet, `composer recipes`
+signalera simplement un écart.
+
+### ✅ Les trois dérives de schéma sont résorbées
+
+**Fait le 2026-08-25.** `doctrine:migrations:diff` répond désormais *« No changes
+detected in your mapping information »* : c'est ce qui manquait, et c'est ce qui
+avait obligé à réduire à la main la migration `family`.
+
+Elles n'avaient pas la même origine, et donc pas le même correctif :
+
+| Écart | Origine | Correctif |
+|---|---|---|
+| `log.libelle` et `log.montant` nullables en base, non-nullables dans l'entité | `9a9a528` (2025-09-15) a resserré `Log` sans migration de suivi ; la table avait été créée nullable la veille par `Version20250915092158` | `NOT NULL`, précédé d'un remplissage |
+| index `UNIQ_IDENTIFIER_GOOGLE_SUB` / `_APPLE_SUB` sur `user` | migrations OAuth écrites à la main (2026-08-23 et 24) avec des noms lisibles, alors que `#[ORM\Column(unique: true)]` fait générer un `UNIQ_<hash>` à Doctrine | **aucun `ALTER`** : les contraintes sont nommées sur l'entité |
+| commentaires `(DC2Type:datetime_immutable)` sur `push_subscription.created_at`, `webauthn_credential.created_at` et `.last_used_at` | DBAL 3 les écrivait ; DBAL 4 ne les écrit ni ne les lit | suppression, purement cosmétique |
+
+**L'index se corrige du côté du code, pas de la base.** `username` montrait déjà
+la bonne forme : pas de `unique: true` sur la colonne, une
+`#[ORM\UniqueConstraint]` nommée sur la classe. `googleSub` et `appleSub` suivent
+maintenant le même modèle, avec exactement les noms que les migrations OAuth ont
+posés en production. Rien à migrer, et le `RENAME INDEX` perpétuel disparaît.
+
+**Le `NOT NULL` sur `log` ne fait qu'écrire en base ce que le code exigeait
+déjà.** `Log::$libelle` est un `string` et `$montant` un `float` — des propriétés
+typées non nullables — toujours renseignées par le constructeur depuis la
+dépense. Une valeur nulle en base ferait échouer l'hydratation : si la production
+en contenait, `GET /logs` serait déjà cassé. Le remplissage qui précède l'`ALTER`
+n'est donc qu'une ceinture, mais il rend la migration sûre quel qu'ait été le
+contenu : il récupère la valeur sur la dépense quand elle existe encore, et se
+rabat sur `''` / `0` sinon. Éprouvé en insérant deux lignes nulles avant de
+migrer — l'une rattachée à une dépense, qui a bien récupéré son titre et son
+montant, l'autre orpheline, qui a pris le repli. Aller-retour `up`/`down` vérifié
+lui aussi.
+
+### Le seul point qui reste ouvert
+
+**`webauthn…rp.name` : ne pas supprimer la ligne.** C'est la seule dépréciation
+qui subsiste au démarrage, émise par `web-auth/webauthn-symfony-bundle` 5.3.0
+sur `creation_profiles.default.rp.name`, « removed in the next major release »
+sans remplacement annoncé. Mais le nœud vaut `'LetMeCount'`, et
+`PublicKeyCredentialCreationOptionsFactory::createRpEntity()` se rabat sur
+`rp.id` quand il est vide — c'est-à-dire sur `%env(WEBAUTHN_RP_ID)%`, un nom
+d'hôte. Or `PublicKeyCredentialEntity.name` est requis par l'IDL du W3C et
+c'est **le nom affiché dans l'invite passkey du système** : retirer la ligne
+aujourd'hui remplacerait « LetMeCount » par le domaine dans la boîte de dialogue
+et dans le gestionnaire de mots de passe, pour tous les enrôlements suivants.
+À reprendre quand la 6.0 dira par quoi remplacer le nœud, pas avant.
+
+C'est tout. `doc/openapi.json`, périmé depuis `f0dbc4e` et sans rapport avec
+cette migration, **est repris par le chantier MCP** et n'a pas à être régénéré
+ici : la couche MCP se construit sur les métadonnées API Platform, et c'est là
+que la spécification sera reprise avec son contexte.
+
+### Le point de calendrier a changé de sens
+
+Le relevé notait que 7.4 est une LTS supportée jusqu'à fin 2028, comme argument
+pour attendre. C'est maintenant l'argument inverse qu'il faut avoir en tête :
+**8.1 n'est pas une LTS** et sort de support vers janvier 2027. La prochaine
+LTS est la 8.4 (novembre 2027). D'ici là, il faudra suivre les versions
+intermédiaires tous les six mois — ce qui, vu comment celle-ci s'est passée,
+devrait être une formalité, mais n'est plus « rien ne presse ».
+
+Le relevé d'origine :
 
 **Ce qui bloque n'est pas le code applicatif.** Vérifié : les dépréciations
 émises à l'exécution viennent toutes de dépendances, aucune de `src/`.

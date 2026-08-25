@@ -32,7 +32,7 @@ trait UserSecurityTrait
      * Identifiant Google (claim `sub`) de l'utilisateur, une fois son compte lié.
      * Stable et opaque : on ne stocke ni email ni nom (cf. doc/authentification-oauth.md).
      */
-    #[ORM\Column(length: 255, unique: true, nullable: true)]
+    #[ORM\Column(length: 255, nullable: true)]
     #[Ignore]
     private ?string $googleSub = null;
 
@@ -40,7 +40,7 @@ trait UserSecurityTrait
      * Identifiant Apple (claim `sub`), même rôle que {@see $googleSub}.
      * Un compte n'est lié qu'à un seul provider (cf. décision D7).
      */
-    #[ORM\Column(length: 255, unique: true, nullable: true)]
+    #[ORM\Column(length: 255, nullable: true)]
     #[Ignore]
     private ?string $appleSub = null;
 
