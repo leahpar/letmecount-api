@@ -8,10 +8,10 @@ Ne sont listés ici que les chantiers *à ouvrir*. La dette déjà inventoriée 
 détail vit dans `doc/dette-technique.md` ; la présente note y renvoie plutôt que
 de la répéter.
 
-**Mise à jour :** les tâches **1** (accès git en ssh, le 2026-08-25) et **2**
-(remise au vert des tests, le 2026-08-24) sont faites, et `dette-technique.md`
-est fusionnée sur `dev`. Restent la migration Symfony 8 et le service worker,
-dont le relevé d'origine est inchangé.
+**Mise à jour :** les tâches **1** (accès git en ssh, le 2026-08-25), **2**
+(remise au vert des tests, le 2026-08-24) et **3** (migration Symfony 8, le
+2026-08-25) sont faites, et `dette-technique.md` est fusionnée sur `dev`. Reste
+le service worker, dont le relevé d'origine est inchangé.
 
 ---
 
@@ -113,7 +113,87 @@ diagnostic n'est pour l'instant nulle part sur `dev`. *(Fait.)*
 
 ---
 
-## 3. Migration Symfony 8.x
+## 3. ✅ Migration Symfony 8.x
+
+**Fait le 2026-08-25**, en trois commits qui se déposent dans cet ordre :
+
+| Commit | Ce qu'il fait | Symfony pendant ce temps |
+|---|---|---|
+| `doctrine-bundle 3.x et DBAL 4.x` | doctrine-bundle 2.19 → 3.3.1, DBAL 3.10 → 4.4.4, `php: >=8.4` | reste en 7.4 |
+| `gesdinet 2.2` | gesdinet 1.5.0 → 2.2.2, + couverture de `/auth/refresh` | reste en 7.4 |
+| `Symfony 8.1` | 8.1.5, gesdinet → 3.0.0, monolog-bundle → 4.0.2, migration `family` | le saut |
+
+**106 tests au vert, `make stan` sans erreur**, cache prod reconstruit, et
+**plus aucune dépréciation à l'exécution** sur `/depenses`, `/users`, `/tags`,
+`/logs` et `/docs`. Les ~23 000 de `symfony/property-info` venaient de
+`DoctrineExtractor::getTypes()`, qui n'existe plus en 8.x ; celles de
+`var-exporter` tombent avec les proxies Doctrine, remplacés par les objets
+paresseux natifs de PHP 8.4.
+
+### Trois choses que le relevé d'origine ne voyait pas
+
+**1. DBAL 4 était le vrai risque, pas doctrine-bundle.** Le bundle 3.x exige
+`doctrine/dbal ^4.0` : le tableau ci-dessous annonçait une majeure, il y en
+avait deux. C'est aussi celle qui n'a rien cassé — aucun code de `src/` ou de
+`tests/` ne touche DBAL directement, il n'y a pas de type Doctrine personnalisé,
+et `doctrine:schema:update --dump-sql` n'a produit aucune différence. Ce qui a
+demandé du travail, ce sont **cinq options de configuration supprimées** :
+`dbal.use_savepoints`, `orm.auto_generate_proxy_classes`, `orm.proxy_dir`,
+`orm.enable_lazy_ghost_objects` et `orm.report_fields_where_declared`, plus
+`orm.controller_resolver.auto_mapping` qui est déprécié. Le container refuse de
+se construire tant qu'elles sont là, donc elles se découvrent une par une.
+
+**2. gesdinet ne se saute pas d'un coup.** Le relevé lisait « v1.5.0 →
+v3.0.0 » comme une seule marche ; c'est deux majeures, et la 2.2 est un palier
+qui tourne encore sur Symfony 7.4. Le faire seul là a permis de constater que
+la configuration n'avait rien à changer avant d'y ajouter le bruit du saut de
+framework. La 3.0 demande en revanche **une migration de schéma obligatoire** :
+elle donne une `family` aux tokens, Doctrine lit tous les champs mappés, et la
+première requête échoue tant que les colonnes ne sont pas là.
+
+**3. `symfony/monolog-bundle` bloquait aussi**, en 3.11.2 plafonnée à Symfony 7.
+Passée en 4.0.2. Elle n'était nulle part dans le relevé, qui ne listait que les
+deux bundles trouvés par lecture des contraintes — celle-ci ne se voit qu'en
+tentant la résolution.
+
+### Le déploiement avait besoin d'un correctif
+
+`.github/workflows/deploy.yml` supprime maintenant `var/cache/*` avant
+`composer install`. Le cache compilé de Symfony 7.4 référence des classes
+internes qui n'existent plus en 8.1, et `cache:clear` échoue en le chargeant —
+y compris celui que `composer install` déclenche par `post-install-cmd`. Avec
+`set -e`, le déploiement se serait interrompu là, laissant le serveur avec le
+nouveau `vendor/` et l'ancien cache, c'est-à-dire hors service. Rencontré en
+local, où le premier `composer update` a échoué exactement ainsi.
+
+### Ce qui reste ouvert, et qui n'appartient pas à ce chantier
+
+- **`webauthn.creation_profiles.default.rp.name` est déprécié** depuis
+  `web-auth/webauthn-symfony-bundle` 5.3.0 — la seule dépréciation qui subsiste
+  au démarrage. Elle porte sur le nom affiché dans l'invite passkey : à traiter
+  en lisant ce que la 6.0 attend à la place, pas en supprimant la ligne.
+- **`doc/openapi.json` est périmé**, indépendamment d'ici : il date d'avant le
+  resserrement des regex de `PushSubscription`. Un `make doc` le remet à jour,
+  mais le diff n'a rien à voir avec la migration.
+- **La route `gesdinet_jwt_refresh_token` (`/api/token/refresh`) est morte** :
+  vestige de la recette Flex, sans contrôleur, et le `check_path` du pare-feu
+  pointe sur `api_refresh_token` (`/auth/refresh`), qui est ce que le front
+  appelle. Elle répond aujourd'hui par une erreur de route mal configurée.
+- **Le schéma de la base de dev a dérivé** des entités : `log.libelle` et
+  `log.montant` y sont encore nullables, et deux index de `user` portent des
+  noms d'une génération antérieure. `migrations:diff` les remonte à chaque fois.
+  La migration commitée a été réduite aux seules colonnes `family`.
+
+### Le point de calendrier a changé de sens
+
+Le relevé notait que 7.4 est une LTS supportée jusqu'à fin 2028, comme argument
+pour attendre. C'est maintenant l'argument inverse qu'il faut avoir en tête :
+**8.1 n'est pas une LTS** et sort de support vers janvier 2027. La prochaine
+LTS est la 8.4 (novembre 2027). D'ici là, il faudra suivre les versions
+intermédiaires tous les six mois — ce qui, vu comment celle-ci s'est passée,
+devrait être une formalité, mais n'est plus « rien ne presse ».
+
+Le relevé d'origine :
 
 **Ce qui bloque n'est pas le code applicatif.** Vérifié : les dépréciations
 émises à l'exécution viennent toutes de dépendances, aucune de `src/`.
