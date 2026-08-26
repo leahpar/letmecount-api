@@ -6,13 +6,9 @@ Let-me-count est une application web pour la gestion des comptes entre amis.
 
 ### Divers
 
-**Ruff**: python linter, formatter et analyseur de code :
-
-https://github.com/astral-sh/ruff
-
-**FastMCP** authentification  :
-
-https://gofastmcp.com/servers/auth/authentication
+**MCP** : l'API est elle-même un serveur MCP, sur `/mcp`. Voir
+`doc/couche-mcp.md`. Les références Ruff et FastMCP qui figuraient ici
+concernaient le serveur Python `mcp-server/`, supprimé.
 
 **Claude MCP** :
 

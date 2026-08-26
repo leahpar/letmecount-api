@@ -75,71 +75,6 @@ class UserApiTest extends AuthenticatedApiTestCase
         $this->assertArrayHasKey('id', $data);
     }
 
-    public function testUpdateCredentialsWithValidToken(): void
-    {
-        $token = 'test-token-123';
-        $this->user->setToken($token);
-        $this->em->flush();
-
-        $updateData = [
-            'token' => $token,
-            'username' => 'newusername',
-            'password' => 'newpassword123'
-        ];
-
-        $this->call('PATCH', '/users', [], $updateData);
-
-        $this->assertResponseIsSuccessful();
-
-        $content = $this->client->getResponse()->getContent();
-        $data = json_decode($content, true);
-
-        // Vérifier que les données ont été mises à jour en base
-        $updatedUser = $this->em->getRepository(User::class)->find($this->user->id);
-        $this->assertEquals('newusername', $updatedUser->getUsername());
-    }
-
-    public function testUpdateCredentialsWithInvalidToken(): void
-    {
-        $updateData = [
-            'token' => 'invalid-token',
-            'username' => 'newusername'
-        ];
-
-        $this->call('PATCH', '/users', [], $updateData);
-
-        $this->assertResponseStatusCodeSame(401);
-    }
-
-    public function testUpdateCredentialsWithoutToken(): void
-    {
-        $updateData = [
-            'username' => 'newusername'
-        ];
-
-        $this->call('PATCH', '/users', [], $updateData);
-
-        $this->assertResponseStatusCodeSame(422);
-    }
-
-    public function testUpdateCredentialsWithExistingUsername(): void
-    {
-        $existingUser = $this->createUser('existinguser');
-
-        $token = 'test-token-123';
-        $this->user->setToken($token);
-        $this->em->flush();
-
-        $updateData = [
-            'token' => $token,
-            'username' => 'existinguser'
-        ];
-
-        $this->call('PATCH', '/users', [], $updateData);
-
-        $this->assertResponseStatusCodeSame(409);
-    }
-
     public function testGenerateTokenWithoutAdminRole(): void
     {
         $this->call('GET', '/users/' . $this->user->id . '/token');
@@ -183,90 +118,100 @@ class UserApiTest extends AuthenticatedApiTestCase
         $this->assertResponseStatusCodeSame(404);
     }
 
+    /**
+     * La relation conjoint est un OneToOne non inversé, sans synchronisation :
+     * elle est unidirectionnelle et assumée comme telle. Poser un conjoint sur
+     * A ne pose rien sur B.
+     */
     public function testSetConjoint(): void
     {
         $conjoint = $this->createUser('conjoint');
-        
-        // Définir la relation conjoint
-        $this->user->setConjoint($conjoint);
+
+        $this->user->conjoint = $conjoint;
         $this->em->flush();
 
-        // Vérifier que la relation est bidirectionnelle
-        $this->assertEquals($conjoint, $this->user->getConjoint());
-        $this->assertEquals($this->user, $conjoint->getConjoint());
+        $this->assertSame($conjoint, $this->user->conjoint);
+        $this->assertNull($conjoint->conjoint);
     }
 
     public function testSoldeWithConjoint(): void
     {
         $conjoint = $this->createUser('conjoint');
-        
-        // Créer des dépenses et détails pour les deux utilisateurs
+
+        // Créer des dépenses et détails pour les deux utilisateurs. Les détails
+        // sont rattachés explicitement : sans dépense, createDetail() en crée
+        // une de plus, payée par l'utilisateur courant.
         $depense1 = $this->createDepense($this->user, 100.0);
         $depense2 = $this->createDepense($conjoint, 50.0);
-        
-        $detail1 = $this->createDetail($this->user, 30.0);
-        $detail2 = $this->createDetail($conjoint, 20.0);
-        
+
+        $this->createDetail($this->user, 30.0, $depense1);
+        $this->createDetail($conjoint, 20.0, $depense2);
+
+        // Les deux User sont dans l'identity map depuis leur création : sans
+        // refresh, leurs collections restent celles du constructeur, vides.
+        $this->em->refresh($this->user);
+        $this->em->refresh($conjoint);
+
         // Sans conjoint, les soldes sont indépendants
         $this->assertEquals(70.0, $this->user->getSolde()); // 100 - 30
         $this->assertEquals(30.0, $conjoint->getSolde()); // 50 - 20
-        
-        // Définir la relation conjoint
-        $this->user->setConjoint($conjoint);
+
+        $this->user->conjoint = $conjoint;
         $this->em->flush();
-        
-        // Avec conjoint, les soldes sont partagés
-        $expectedSolde = 100.0 + 50.0 - 30.0 - 20.0; // 100
-        $this->assertEquals($expectedSolde, $this->user->getSolde());
-        $this->assertEquals($expectedSolde, $conjoint->getSolde());
+
+        // Le solde de l'utilisateur intègre celui de son conjoint...
+        $this->assertEquals(100.0, $this->user->getSolde()); // 100 + 50 - 30 - 20
+        // ...mais la réciproque n'est pas vraie, faute de relation inverse.
+        $this->assertEquals(30.0, $conjoint->getSolde());
+
+        // Le solde individuel, lui, ignore le conjoint des deux côtés
+        $this->assertEquals(70.0, $this->user->getSoldeIndividuel());
+        $this->assertEquals(30.0, $conjoint->getSoldeIndividuel());
     }
 
     public function testGetUserIncludesConjoint(): void
     {
         $conjoint = $this->createUser('conjoint');
-        $this->user->setConjoint($conjoint);
+        $this->user->conjoint = $conjoint;
         $this->em->flush();
 
         $this->call('GET', '/users/' . $this->user->id);
         $this->assertResponseIsSuccessful();
 
+        // conjoint est sérialisé en IRI (ApiProperty readableLink: false),
+        // ce que le front attend : `conjoint?: string`.
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertArrayHasKey('conjoint', $data);
-        $this->assertEquals($conjoint->id, $data['conjoint']['id']);
-        $this->assertEquals($conjoint->getUsername(), $data['conjoint']['username']);
+        $this->assertEquals('/users/' . $conjoint->id, $data['conjoint']);
     }
 
     public function testRemoveConjoint(): void
     {
         $conjoint = $this->createUser('conjoint');
-        
-        // Définir puis supprimer la relation
-        $this->user->setConjoint($conjoint);
-        $this->user->setConjoint(null);
+
+        $this->user->conjoint = $conjoint;
         $this->em->flush();
 
-        // Vérifier que la relation a été supprimée des deux côtés
-        $this->assertNull($this->user->getConjoint());
-        $this->assertNull($conjoint->getConjoint());
+        $this->user->conjoint = null;
+        $this->em->flush();
+
+        $this->assertNull($this->user->conjoint);
     }
 
     public function testChangeConjoint(): void
     {
         $conjoint1 = $this->createUser('conjoint1');
         $conjoint2 = $this->createUser('conjoint2');
-        
-        // Définir la première relation
-        $this->user->setConjoint($conjoint1);
-        $this->assertEquals($conjoint1, $this->user->getConjoint());
-        $this->assertEquals($this->user, $conjoint1->getConjoint());
-        
-        // Changer de conjoint
-        $this->user->setConjoint($conjoint2);
+
+        $this->user->conjoint = $conjoint1;
         $this->em->flush();
-        
-        // Vérifier que l'ancienne relation a été supprimée
-        $this->assertEquals($conjoint2, $this->user->getConjoint());
-        $this->assertEquals($this->user, $conjoint2->getConjoint());
-        $this->assertNull($conjoint1->getConjoint());
+        $this->assertSame($conjoint1, $this->user->conjoint);
+
+        $this->user->conjoint = $conjoint2;
+        $this->em->flush();
+
+        $this->assertSame($conjoint2, $this->user->conjoint);
+        // L'ancien conjoint n'avait pas de relation retour : rien à détacher.
+        $this->assertNull($conjoint1->conjoint);
     }
 }

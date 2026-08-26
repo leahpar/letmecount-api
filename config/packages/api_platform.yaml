@@ -6,6 +6,15 @@ api_platform:
         cache_headers:
             vary: ['Content-Type', 'Authorization', 'Origin']
 
+    # Le nœud est activé par défaut, mais son câblage est conditionné à la
+    # présence de McpBundle : autant que le fichier dise ce qui est vrai.
+    # Le format reste jsonld, seul format déclaré dans api_platform.formats :
+    # passer les outils en `json` supposerait de l'ajouter à l'API entière, donc
+    # de toucher la négociation de contenu du front. jsonld rend par ailleurs
+    # les IRI des relations, dont un agent a besoin pour les réécrire.
+    mcp:
+        enabled: true
+
     swagger:
         api_keys:
             JWT:

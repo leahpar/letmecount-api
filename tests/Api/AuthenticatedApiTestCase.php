@@ -5,6 +5,7 @@ namespace App\Tests\Api;
 use App\Entity\User;
 use App\Entity\Depense;
 use App\Entity\Detail;
+use App\Entity\Tag;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -67,7 +68,29 @@ class AuthenticatedApiTestCase extends WebTestCase
         $this->client->setServerParameter('HTTP_Authorization', sprintf('Bearer %s', $jwtManager->create($user)));
     }
 
-    protected function createDepense(User $payePar, float $montant, string $titre = 'Test Depense'): Depense
+    /**
+     * @param list<User> $users
+     */
+    protected function createTag(string $libelle = 'Test Tag', array $users = []): Tag
+    {
+        $tag = new Tag();
+        $tag->libelle = $libelle;
+        foreach ($users as $user) {
+            $tag->addUser($user);
+        }
+
+        $this->em->persist($tag);
+        $this->em->flush();
+
+        return $tag;
+    }
+
+    /**
+     * Depense::$tag est obligatoire en base comme à la validation : sans tag
+     * explicite, on en pose un par défaut plutôt que de laisser le test partir
+     * sur une contrainte d'intégrité.
+     */
+    protected function createDepense(User $payePar, float $montant, string $titre = 'Test Depense', ?Tag $tag = null): Depense
     {
         $depense = new Depense();
         $depense->titre = $titre;
@@ -75,10 +98,11 @@ class AuthenticatedApiTestCase extends WebTestCase
         $depense->date = new \DateTime();
         $depense->partage = 'montants';
         $depense->payePar = $payePar;
-        
+        $depense->tag = $tag ?? $this->createTag();
+
         $this->em->persist($depense);
         $this->em->flush();
-        
+
         return $depense;
     }
 

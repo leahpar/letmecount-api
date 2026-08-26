@@ -1,0 +1,42 @@
+includes:
+	# Doctrine
+	- vendor/phpstan/phpstan-doctrine/extension.neon
+	- vendor/phpstan/phpstan-doctrine/rules.neon
+
+	# Symfony
+	- vendor/phpstan/phpstan-symfony/extension.neon
+	- vendor/phpstan/phpstan-symfony/rules.neon
+
+parameters:
+	level: 6
+	paths:
+		- src
+	excludePaths:
+#		- src/Migrations/*
+
+	ignoreErrors:
+
+		- identifier: missingType.generics
+#		- identifier: missingType.iterableValue
+#		- identifier: missingType.return
+		- identifier: doctrine.associationType
+		- identifier: doctrine.columnType
+
+		# Champs hérités de CredentialRecord : le bundle WebAuthn les mappe en XML,
+		# or phpstan-doctrine ne lit ici que les mappings par attribut.
+		-
+			identifier: doctrine.findByArgument
+			path: src/Repository/WebauthnCredentialRepository.php
+		-
+			identifier: doctrine.findOneByArgument
+			path: src/Repository/WebauthnCredentialRepository.php
+#		- identifier: function.strict
+#		- identifier: nullCoalesce.offset
+#		- identifier: typePerfect.noArrayAccessOnObject
+
+		# Doctrine template
+#		- "#^Unable to resolve the template type T in call to method#"
+
+		# Callable peut être un string (nom de fonction interne)
+#		- "#^Parameter \\#2 \\$callback of function array_filter expects#"
+

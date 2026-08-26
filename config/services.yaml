@@ -19,6 +19,25 @@ services:
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 
+    # Les outils MCP d'écriture reconstruisent leur entrée avec le dénormaliseur
+    # d'API Platform plutôt qu'avec object_mapper, cf. la classe.
+    App\State\McpWriteInputProvider:
+        arguments:
+            $denormalizer: '@api_platform.serializer'
+            $itemProvider: '@api_platform.doctrine.orm.state.item_provider'
+
+    App\State\McpDeleteProcessor:
+        arguments:
+            $removeProcessor: '@api_platform.doctrine.orm.state.remove_processor'
+
+    App\State\McpItemProvider:
+        arguments:
+            $itemProvider: '@api_platform.doctrine.orm.state.item_provider'
+
+    App\State\McpCollectionProvider:
+        arguments:
+            $collectionProvider: '@api_platform.doctrine.orm.state.collection_provider'
+
     # Stockage du challenge WebAuthn entre l'appel /options et l'appel /result.
     # En cache et non en session : le firewall est stateless (JWT).
     app.webauthn.options_storage:

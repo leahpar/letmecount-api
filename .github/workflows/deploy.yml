@@ -24,6 +24,13 @@ jobs:
           set -e
           cd ${{ secrets.DEPLOY_PATH }}
           git pull origin master
+
+          # Le cache compilé contient des références aux classes internes du
+          # framework. Après une montée de version majeure il n'est plus
+          # lisible, et `cache:clear` échoue en le chargeant — y compris celui
+          # que `composer install` déclenche, ce qui interromprait le
+          # déploiement. On le supprime d'abord ; il est reconstruit juste après.
+          rm -rf var/cache/*
           composer install --no-dev --optimize-autoloader
           php bin/console cache:clear --env=prod
 

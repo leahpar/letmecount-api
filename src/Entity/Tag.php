@@ -8,7 +8,12 @@ use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\McpTool;
+use ApiPlatform\Metadata\McpToolCollection;
+use App\Dto\Mcp\NoInput;
 use App\Repository\TagRepository;
+use App\State\McpCollectionProvider;
+use App\State\McpWriteInputProvider;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -30,6 +35,27 @@ use Symfony\Component\Validator\Constraints as Assert;
         ),
         new Delete()
     ]
+)]
+// Outils MCP : voir Depense pour ce que chaque option règle. Rien n'est hérité
+// des opérations HTTP ci-dessus.
+#[McpToolCollection(
+    name: 'tags_list',
+    description: 'Liste les tags. Un tag est une étiquette libre, pour classer et retrouver ses dépenses — pas un groupe : il n\'y a qu\'un seul groupe, l\'ensemble des utilisateurs. Son `users` n\'a aucune portée technique ; il sert au formulaire de saisie à réduire par défaut la liste des participants proposés, et ne restreint ni qui peut participer à une dépense, ni la visibilité, ni aucun calcul de solde. Une dépense taguée fait couramment intervenir des gens hors de cette liste.',
+    normalizationContext: ['groups' => ['tag:read']],
+    input: NoInput::class,
+    provider: McpCollectionProvider::class,
+    security: "is_granted('IS_AUTHENTICATED_FULLY')"
+)]
+#[McpTool(
+    name: 'tag_create',
+    description: 'Crée un tag.',
+    method: 'POST',
+    normalizationContext: ['groups' => ['tag:read']],
+    denormalizationContext: ['groups' => ['tag:write']],
+    validate: true,
+    provider: McpWriteInputProvider::class,
+    processor: 'api_platform.doctrine.orm.state.persist_processor',
+    security: "is_granted('IS_AUTHENTICATED_FULLY')"
 )]
 class Tag
 {

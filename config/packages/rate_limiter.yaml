@@ -1,7 +1,16 @@
 framework:
     rate_limiter:
-        # Limite les tentatives de connexion par code à 6 chiffres (GET /auth/{token})
-        auth_code:
+        # Limite les tentatives de liaison de compte (POST /auth/oauth) par IP.
+        # Le jeton d'invitation ne fait que 6 chiffres : on borne le bruteforce.
+        auth_link:
             policy: 'sliding_window'
-            limit: 3
+            limit: 10
             interval: '10 minutes'
+
+        # Enregistrement dynamique d'un client OAuth (POST /register) par IP.
+        # L'endpoint est public et écrit une ligne : un client normal s'enregistre
+        # une fois pour toutes, donc la limite est basse sans gêner personne.
+        oauth_register:
+            policy: 'sliding_window'
+            limit: 5
+            interval: '1 hour'

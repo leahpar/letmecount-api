@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiProperty;
 use App\Repository\DetailRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
@@ -22,12 +23,15 @@ class Detail
     #[ORM\ManyToOne(inversedBy: 'details')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     #[Groups(['depense:read', 'depense:write'])]
+    #[ApiProperty(example: '/users/4')]
     #[Assert\NotBlank]
     public User $user;
 
     /**
      * Nombre de parts pour ce détail.<br>
-     * Utilisé uniquement pour l'affichage dans le cas la répartition par parts.
+     * Utilisé uniquement pour l'affichage dans le cas de la répartition par
+     * parts. Reste obligatoire quand le partage est en montants : y mettre 0,
+     * qui est la valeur neutre.
      */
     #[ORM\Column]
     #[Groups(['depense:read', 'depense:write'])]

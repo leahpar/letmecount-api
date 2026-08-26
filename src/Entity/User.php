@@ -9,21 +9,31 @@ use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\ApiFilter;
+use ApiPlatform\Metadata\McpTool;
+use ApiPlatform\Metadata\McpToolCollection;
 use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use App\Dto\Mcp\NoInput;
+use App\Dto\Mcp\UserListInput;
+use App\State\McpCollectionProvider;
 use App\Provider\CurrentUserProvider;
-use App\State\UserCredentialsProcessor;
 use App\State\GenerateTokenProvider;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use JMS\Serializer\Annotation as JMS;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Attribute\Ignore;
 use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_USERNAME', fields: ['username'])]
+// Les index de `googleSub`, `appleSub` et `pocketIdSub` sont nommés ici, et non
+// déduits d'un `unique: true` sur la colonne : les migrations OAuth les ont
+// créés sous ces noms-là, et un `unique: true` ferait générer un `UNIQ_<hash>`
+// que Doctrine proposerait de renommer à chaque `migrations:diff`.
+#[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_GOOGLE_SUB', fields: ['googleSub'])]
+#[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_APPLE_SUB', fields: ['appleSub'])]
+#[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_POCKETID_SUB', fields: ['pocketIdSub'])]
 #[ApiResource(
     operations: [
         new Get(uriTemplate: '/users/{id}', requirements: ['id' => '\d+']),
@@ -39,13 +49,6 @@ use Symfony\Component\Serializer\Attribute\Groups;
             normalizationContext: ['groups' => ['user:write']],
             security: "is_granted('ROLE_ADMIN')"
         ),
-        new Patch(
-            uriTemplate: '/users',
-            denormalizationContext: ['groups' => ['user:credentials']],
-            security: 'true',
-            input: UpdateCredentialsDto::class,
-            processor: UserCredentialsProcessor::class
-        ),
         new Get(
             uriTemplate: '/users/{id}/token',
             requirements: ['id' => '\d+'],
@@ -57,6 +60,28 @@ use Symfony\Component\Serializer\Attribute\Groups;
     normalizationContext: ['groups' => ['user:read']],
 )]
 #[ApiFilter(SearchFilter::class, properties: ['username' => 'partial'])]
+// Outils MCP. Volontairement absents : POST /users, PATCH /users/{id} et
+// GET /users/{id}/token, qui fabriquent des jetons d'invitation, ainsi que tout
+// ce qui touche aux passkeys. Un outil n'existe que s'il est déclaré ici, donc
+// ne rien déclarer suffit à ne rien exposer.
+#[McpToolCollection(
+    name: 'users_list',
+    description: 'Liste les utilisateurs, pour retrouver l\'IRI d\'une personne à qui rattacher une dépense. Chacun porte son solde, de même convention que dans `user_me`.',
+    normalizationContext: ['groups' => ['user:read']],
+    input: UserListInput::class,
+    filters: ['annotated_app_entity_user_api_platform_doctrine_orm_filter_search_filter'],
+    provider: McpCollectionProvider::class,
+    security: "is_granted('IS_AUTHENTICATED_FULLY')"
+)]
+#[McpTool(
+    name: 'user_me',
+    input: NoInput::class,
+    description: 'Renvoie l\'utilisateur courant, celui au nom de qui l\'agent agit. Son `solde` vaut ce qu\'il a payé moins ce qu\'il doit, toutes dépenses confondues et tous tags confondus : négatif, il doit au groupe ; positif, le groupe lui doit. Le groupe, c\'est l\'ensemble des utilisateurs, et il n\'y en a qu\'un. Il n\'existe pas de solde par tag — un tag classe les dépenses, il ne délimite pas un périmètre comptable —, ni de solde vis-à-vis d\'une personne en particulier. `soldeIndividuel` est le même calcul sans le conjoint, quand il y en a un. Il n\'existe volontairement pas de remboursement ni de suggestion de remboursement : l\'équilibrage se fait en laissant payer la prochaine dépense à ceux dont le solde est le plus bas.',
+    uriVariables: [],
+    normalizationContext: ['groups' => ['user:read']],
+    provider: CurrentUserProvider::class,
+    security: "is_granted('IS_AUTHENTICATED_FULLY')"
+)]
 class User implements UserInterface
 {
     use UserSecurityTrait;
@@ -98,6 +123,11 @@ class User implements UserInterface
     public function __construct()
     {
         $this->tags = new ArrayCollection();
+        // Doctrine les remplace à l'hydratation, mais un User neuf doit pouvoir
+        // calculer son solde : sans ça, getSolde() est un fatal sur une entité
+        // qui n'a pas encore fait l'aller-retour en base.
+        $this->details = new ArrayCollection();
+        $this->depenses = new ArrayCollection();
     }
 
     public function addTag(Tag $tag): self
@@ -119,7 +149,6 @@ class User implements UserInterface
      * Si l'utilisateur a un conjoint, le solde inclut celui du conjoint.
      * C'est-à-dire la somme des montants de ses détails et de ceux de son conjoint.
      */
-    #[JMS\VirtualProperty('solde')]
     #[Groups(['user:read'])]
     public function getSolde(bool $withConjoint = true): float
     {
@@ -141,7 +170,6 @@ class User implements UserInterface
         return round($solde, 2);
     }
 
-    #[JMS\VirtualProperty('soldeIndividuel')]
     #[Groups(['user:read'])]
     public function getSoldeIndividuel(): float
     {

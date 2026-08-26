@@ -4,6 +4,7 @@ namespace App\Tests\Api;
 
 use App\Entity\Depense;
 use App\Entity\Detail;
+use App\Entity\Tag;
 use DateTime;
 
 class DepenseApiTest extends AuthenticatedApiTestCase
@@ -21,11 +22,14 @@ class DepenseApiTest extends AuthenticatedApiTestCase
 
     public function testCreateDepense(): void
     {
+        $tag = $this->createTag();
+
         $depenseData = [
             'date' => '2024-01-15T00:00:00+00:00',
             'montant' => 50.00,
             'titre' => 'Test Restaurant',
             'partage' => 'parts',
+            'tag' => '/tags/' . $tag->id,
             'payePar' => '/users/' . $this->user->id,
             'details' => [
                 [
@@ -55,6 +59,7 @@ class DepenseApiTest extends AuthenticatedApiTestCase
             'montant' => 50.00,
             'titre' => 'Test Invalid',
             'partage' => 'parts',
+            'tag' => '/tags/' . $this->createTag()->id,
             'payePar' => '/users/' . $this->user->id,
             'details' => [
                 [
@@ -83,6 +88,7 @@ class DepenseApiTest extends AuthenticatedApiTestCase
             'montant' => 60.00,
             'titre' => 'Updated Restaurant',
             'partage' => 'montants',
+            'tag' => '/tags/' . $depense->tag->id,
             'payePar' => '/users/' . $this->user->id,
             'details' => [
                 [
@@ -109,12 +115,15 @@ class DepenseApiTest extends AuthenticatedApiTestCase
     public function testDeleteDepense(): void
     {
         $depense = $this->createTestDepense();
+        // Doctrine remet l'identifiant à null sur l'objet supprimé : le retenir
+        // avant l'appel, sinon le find() qui suit part sans identifiant.
+        $id = $depense->id;
 
-        $this->call('DELETE', '/depenses/' . $depense->id);
+        $this->call('DELETE', '/depenses/' . $id);
         $this->assertResponseStatusCodeSame(204);
 
         // Vérifier que la dépense a été supprimée
-        $deletedDepense = $this->em->getRepository(Depense::class)->find($depense->id);
+        $deletedDepense = $this->em->getRepository(Depense::class)->find($id);
         $this->assertNull($deletedDepense);
     }
 
@@ -137,12 +146,13 @@ class DepenseApiTest extends AuthenticatedApiTestCase
         $depense1 = $this->createTestDepense();
 
         // Créer un autre utilisateur et une dépense pour lui
-        $otherUser = $this->createUser('other@example.com', 'password', 'otheruser');
+        $otherUser = $this->createUser('otheruser');
         $depense2 = new Depense();
         $depense2->date = new DateTime('2024-01-16');
         $depense2->montant = 75.00;
         $depense2->titre = 'Other User Depense';
         $depense2->partage = 'parts';
+        $depense2->tag = $this->createTag();
         $depense2->payePar = $otherUser;
 
         $detail2 = new Detail();
@@ -174,13 +184,13 @@ class DepenseApiTest extends AuthenticatedApiTestCase
     public function testFilterDepensesByTag(): void
     {
         // Créer des tags
-        $tagRestaurant = $this->createTestTag('Restaurant');
-        $tagTransport = $this->createTestTag('Transport');
+        $tagRestaurant = $this->createTag('Restaurant');
+        $tagTransport = $this->createTag('Transport');
 
         // Créer des dépenses avec différents tags
-        $depense1 = $this->createTestDepenseWithTag($tagRestaurant, 'Dépense Restaurant');
-        $depense2 = $this->createTestDepenseWithTag($tagTransport, 'Dépense Transport');
-        $depense3 = $this->createTestDepense(); // Sans tag
+        $depense1 = $this->createTestDepense($tagRestaurant, 'Dépense Restaurant');
+        $depense2 = $this->createTestDepense($tagTransport, 'Dépense Transport');
+        $depense3 = $this->createTestDepense(); // Sur un troisième tag
 
         // Tester le filtre par tag restaurant
         $this->call('GET', '/depenses?tag=' . $tagRestaurant->id);
@@ -206,48 +216,15 @@ class DepenseApiTest extends AuthenticatedApiTestCase
         $this->assertNotContains('Test Depense', $depensesTitres);
     }
 
-    private function createTestDepense(): Depense
-    {
-        $depense = new Depense();
-        $depense->date = new DateTime('2024-01-15');
-        $depense->montant = 50.00;
-        $depense->titre = 'Test Depense';
-        $depense->partage = 'parts';
-        $depense->payePar = $this->user;
-
-        $detail = new Detail();
-        $detail->user = $this->user;
-        $detail->parts = 1;
-        $detail->montant = 50.00;
-
-        $depense->addDetail($detail);
-
-        $this->em->persist($depense);
-        $this->em->flush();
-
-        return $depense;
-    }
-
-    private function createTestTag(string $libelle): \App\Entity\Tag
-    {
-        $tag = new \App\Entity\Tag();
-        $tag->libelle = $libelle;
-
-        $this->em->persist($tag);
-        $this->em->flush();
-
-        return $tag;
-    }
-
-    private function createTestDepenseWithTag(\App\Entity\Tag $tag, string $titre = 'Test Depense avec Tag'): Depense
+    private function createTestDepense(?Tag $tag = null, string $titre = 'Test Depense'): Depense
     {
         $depense = new Depense();
         $depense->date = new DateTime('2024-01-15');
         $depense->montant = 50.00;
         $depense->titre = $titre;
         $depense->partage = 'parts';
-        $depense->tag = $tag;
         $depense->payePar = $this->user;
+        $depense->tag = $tag ?? $this->createTag();
 
         $detail = new Detail();
         $detail->user = $this->user;

@@ -19,9 +19,37 @@ trait UserSecurityTrait
     #[Groups(['user:read'])]
     private array $roles = [];
 
+    /**
+     * Jeton de liaison à usage unique, généré par l'admin.
+     * Sert uniquement à rattacher une identité externe (Google ou Apple) à ce
+     * compte lors de la première connexion : ce n'est plus un moyen de connexion.
+     */
     #[ORM\Column(nullable: true)]
     #[Groups(['user:token'])]
     private ?string $token = null;
+
+    /**
+     * Identifiant Google (claim `sub`) de l'utilisateur, une fois son compte lié.
+     * Stable et opaque : on ne stocke ni email ni nom (cf. doc/authentification-oauth.md).
+     */
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Ignore]
+    private ?string $googleSub = null;
+
+    /**
+     * Identifiant Apple (claim `sub`), même rôle que {@see $googleSub}.
+     * Un compte n'est lié qu'à un seul provider (cf. décision D7).
+     */
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Ignore]
+    private ?string $appleSub = null;
+
+    /**
+     * Identifiant PocketID (claim `sub`), même rôle que {@see $googleSub}.
+     */
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Ignore]
+    private ?string $pocketIdSub = null;
 
     public function getUsername(): ?string
     {
@@ -78,6 +106,53 @@ trait UserSecurityTrait
         $this->token = $token;
 
         return $this;
+    }
+
+    public function getGoogleSub(): ?string
+    {
+        return $this->googleSub;
+    }
+
+    public function setGoogleSub(?string $googleSub): static
+    {
+        $this->googleSub = $googleSub;
+
+        return $this;
+    }
+
+    public function getAppleSub(): ?string
+    {
+        return $this->appleSub;
+    }
+
+    public function setAppleSub(?string $appleSub): static
+    {
+        $this->appleSub = $appleSub;
+
+        return $this;
+    }
+
+    public function getPocketIdSub(): ?string
+    {
+        return $this->pocketIdSub;
+    }
+
+    public function setPocketIdSub(?string $pocketIdSub): static
+    {
+        $this->pocketIdSub = $pocketIdSub;
+
+        return $this;
+    }
+
+    /**
+     * Un compte est « lié » dès qu'une identité externe y est rattachée, quel que
+     * soit le provider : c'est ce qui interdit à un jeton d'invitation fuité de
+     * détourner un compte déjà actif.
+     */
+    #[Ignore]
+    public function isLinked(): bool
+    {
+        return null !== $this->googleSub || null !== $this->appleSub || null !== $this->pocketIdSub;
     }
 
     #[\Deprecated]
