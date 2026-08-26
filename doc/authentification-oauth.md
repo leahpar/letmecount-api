@@ -485,6 +485,28 @@ Pièges rencontrés : Vite 7 rejette les Host headers inconnus, d'où
 sans redirection, une redirection vers l'apex suffit à faire échouer la
 vérification.
 
+### Fait — PocketID (branches `feat/oauth-pocketid`, API et front)
+
+Troisième provider, ajouté sur `dev` (Google + Apple déjà fusionnés). Les deux
+points de couture prévus (`OAuthProviderInterface` + les deux `match` de
+`OAuthLoginService`) ont de nouveau suffi, comme pour Apple.
+
+- `PocketIdOAuthProvider` : même flow que Google (PKCE S256, pas de `nonce`),
+  seule différence structurelle : PocketID est **auto-hébergé**, donc pas
+  d'endpoint fixe en dur. `POCKETID_BASE_URL` est fourni en env et les
+  endpoints en sont dérivés : `{base}/authorize` (front) et
+  `{base}/api/oidc/token` (API), issuer attendu = `{base}` sans slash final.
+- `User.pocketIdSub` (unique, nullable) + migration `Version20260826090000`,
+  sur le modèle de `googleSub`/`appleSub`. `isLinked()` étendu.
+- Front : `useOAuth.ts` traite `pocketid` comme `google` pour le choix
+  PKCE/nonce (`provider !== 'apple'` plutôt qu'une troisième branche dupliquée),
+  et dérive `AUTH_URLS.pocketid` de `VITE_POCKETID_BASE_URL` au lieu d'une
+  constante — seul provider dont l'URL d'autorisation n'est pas fixe.
+- **L'issuer exact (`iss`) reste à confirmer avec un vrai id_token PocketID**,
+  au même titre que les deux formes d'issuer découvertes chez Google : la
+  valeur retenue (`POCKETID_BASE_URL` tel quel) est une hypothèse raisonnable,
+  pas une certitude vérifiée en conditions réelles.
+
 ### Reste à faire
 
 - ~~Créer le client OAuth et faire le premier aller-retour réel.~~ **Fait le
@@ -510,6 +532,10 @@ vérification.
 - ~~Apple, si le compte développeur est pris.~~ **Fait le 2026-08-24 :
   « Continuer avec Apple » fonctionne de bout en bout en local**, via le
   montage https décrit ci-dessus. Reste à valider en production.
+- **PocketID** : configurer un client OIDC sur une vraie instance, faire le
+  premier aller-retour réel pour confirmer l'issuer (cf. ci-dessus), puis
+  créer les variables de dépôt `VITE_POCKETID_BASE_URL` et
+  `VITE_POCKETID_CLIENT_ID` côté front (publiques, même mécanisme que Google).
 - Serveur d'autorisation + couche MCP.
 - Dette technique repérée en marge de ce chantier : voir `doc/dette-technique.md`
   (branche `chore/dette-technique`), dont la disparition de `solde` des réponses

@@ -74,6 +74,7 @@ class OAuthLoginService
         return match ($providerName) {
             'google' => ['property' => 'googleSub', 'column' => 'google_sub'],
             'apple' => ['property' => 'appleSub', 'column' => 'apple_sub'],
+            'pocketid' => ['property' => 'pocketIdSub', 'column' => 'pocket_id_sub'],
             default => throw new BadRequestHttpException(sprintf('Fournisseur "%s" inconnu', $providerName)),
         };
     }
@@ -100,7 +101,7 @@ class OAuthLoginService
         // colonnes sont contrôlées, pour que la course couvre aussi le cas ci-dessus.
         $affected = $this->em->getConnection()->executeStatement(
             sprintf(
-                'UPDATE user SET %s = :subject, token = NULL WHERE token = :token AND google_sub IS NULL AND apple_sub IS NULL',
+                'UPDATE user SET %s = :subject, token = NULL WHERE token = :token AND google_sub IS NULL AND apple_sub IS NULL AND pocket_id_sub IS NULL',
                 $column,
             ),
             ['subject' => $subject, 'token' => $linkToken],

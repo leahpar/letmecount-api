@@ -44,6 +44,13 @@ trait UserSecurityTrait
     #[Ignore]
     private ?string $appleSub = null;
 
+    /**
+     * Identifiant PocketID (claim `sub`), même rôle que {@see $googleSub}.
+     */
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Ignore]
+    private ?string $pocketIdSub = null;
+
     public function getUsername(): ?string
     {
         return $this->username;
@@ -125,6 +132,18 @@ trait UserSecurityTrait
         return $this;
     }
 
+    public function getPocketIdSub(): ?string
+    {
+        return $this->pocketIdSub;
+    }
+
+    public function setPocketIdSub(?string $pocketIdSub): static
+    {
+        $this->pocketIdSub = $pocketIdSub;
+
+        return $this;
+    }
+
     /**
      * Un compte est « lié » dès qu'une identité externe y est rattachée, quel que
      * soit le provider : c'est ce qui interdit à un jeton d'invitation fuité de
@@ -133,7 +152,7 @@ trait UserSecurityTrait
     #[Ignore]
     public function isLinked(): bool
     {
-        return null !== $this->googleSub || null !== $this->appleSub;
+        return null !== $this->googleSub || null !== $this->appleSub || null !== $this->pocketIdSub;
     }
 
     #[\Deprecated]
