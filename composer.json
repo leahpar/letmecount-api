@@ -8,6 +8,7 @@
         "ext-ctype": "*",
         "ext-iconv": "*",
         "api-platform/doctrine-orm": "^4.3.17",
+        "api-platform/mcp": "4.3.x-dev",
         "api-platform/symfony": "^4.3.17",
         "doctrine/dbal": "^4.0",
         "doctrine/doctrine-bundle": "^3.3",
@@ -22,6 +23,7 @@
         "nyholm/psr7": "^1.8",
         "phpdocumentor/reflection-docblock": "^5.6.7",
         "phpstan/phpdoc-parser": "^2.3.3",
+        "psr/simple-cache": "^3.0",
         "symfony/apache-pack": ">=1.0.1",
         "symfony/asset": "8.1.*",
         "symfony/console": "8.1.*",
@@ -31,6 +33,7 @@
         "symfony/form": "8.1.*",
         "symfony/framework-bundle": "8.1.*",
         "symfony/http-client": "8.1.*",
+        "symfony/mcp-bundle": "0.12.0",
         "symfony/monolog-bundle": "^4.0",
         "symfony/property-access": "8.1.*",
         "symfony/property-info": "8.1.*",
@@ -102,7 +105,7 @@
     },
     "extra": {
         "symfony": {
-            "allow-contrib": false,
+            "allow-contrib": true,
             "require": "8.1.*"
         }
     }

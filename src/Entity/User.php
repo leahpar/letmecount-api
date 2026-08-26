@@ -9,7 +9,12 @@ use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\ApiFilter;
+use ApiPlatform\Metadata\McpTool;
+use ApiPlatform\Metadata\McpToolCollection;
 use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use App\Dto\Mcp\NoInput;
+use App\Dto\Mcp\UserListInput;
+use App\State\McpCollectionProvider;
 use App\Provider\CurrentUserProvider;
 use App\State\GenerateTokenProvider;
 use App\Repository\UserRepository;
@@ -55,6 +60,28 @@ use Symfony\Component\Serializer\Attribute\Groups;
     normalizationContext: ['groups' => ['user:read']],
 )]
 #[ApiFilter(SearchFilter::class, properties: ['username' => 'partial'])]
+// Outils MCP. Volontairement absents : POST /users, PATCH /users/{id} et
+// GET /users/{id}/token, qui fabriquent des jetons d'invitation, ainsi que tout
+// ce qui touche aux passkeys. Un outil n'existe que s'il est déclaré ici, donc
+// ne rien déclarer suffit à ne rien exposer.
+#[McpToolCollection(
+    name: 'users_list',
+    description: 'Liste les utilisateurs, pour retrouver l\'IRI d\'une personne à qui rattacher une dépense. Chacun porte son solde, de même convention que dans `user_me`.',
+    normalizationContext: ['groups' => ['user:read']],
+    input: UserListInput::class,
+    filters: ['annotated_app_entity_user_api_platform_doctrine_orm_filter_search_filter'],
+    provider: McpCollectionProvider::class,
+    security: "is_granted('IS_AUTHENTICATED_FULLY')"
+)]
+#[McpTool(
+    name: 'user_me',
+    input: NoInput::class,
+    description: 'Renvoie l\'utilisateur courant, celui au nom de qui l\'agent agit. Son `solde` vaut ce qu\'il a payé moins ce qu\'il doit, toutes dépenses confondues et tous tags confondus : négatif, il doit au groupe ; positif, le groupe lui doit. Le groupe, c\'est l\'ensemble des utilisateurs, et il n\'y en a qu\'un. Il n\'existe pas de solde par tag — un tag classe les dépenses, il ne délimite pas un périmètre comptable —, ni de solde vis-à-vis d\'une personne en particulier. `soldeIndividuel` est le même calcul sans le conjoint, quand il y en a un. Il n\'existe volontairement pas de remboursement ni de suggestion de remboursement : l\'équilibrage se fait en laissant payer la prochaine dépense à ceux dont le solde est le plus bas.',
+    uriVariables: [],
+    normalizationContext: ['groups' => ['user:read']],
+    provider: CurrentUserProvider::class,
+    security: "is_granted('IS_AUTHENTICATED_FULLY')"
+)]
 class User implements UserInterface
 {
     use UserSecurityTrait;

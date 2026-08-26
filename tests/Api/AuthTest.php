@@ -17,15 +17,36 @@ class AuthTest extends AuthenticatedApiTestCase
     }
 
     /**
-     * Le claim `aud` est posé dès maintenant en prévision de la couche MCP,
-     * qui devra valider l'audience (cf. doc/authentification-oauth.md).
+     * L'audience émise est l'URI canonique du serveur MCP, seule valeur que le
+     * spec accepte (RFC 8707, cf. doc/couche-mcp.md §3).
      */
     public function testTokenCarriesExpectedAudience(): void
     {
         $jwtManager = static::getContainer()->get(JWTTokenManagerInterface::class);
         $payload = $jwtManager->parse($jwtManager->create($this->user));
 
-        $this->assertContains('letmecount-api-test', (array) $payload['aud']);
+        $this->assertContains('http://localhost/mcp', (array) $payload['aud']);
+    }
+
+    /**
+     * Propriété de déploiement, la même que ci-dessous d'un cran plus tard : les
+     * jetons portant l'ancienne audience opaque restent acceptés le temps que le
+     * parc tourne, sinon changer la valeur déconnecte tout le monde.
+     */
+    public function testTokenWithLegacyAudienceIsStillAccepted(): void
+    {
+        $encoder = static::getContainer()->get('lexik_jwt_authentication.encoder');
+        $token = $encoder->encode([
+            'username' => $this->user->getUserIdentifier(),
+            'roles' => $this->user->getRoles(),
+            'exp' => time() + 3600,
+            'aud' => 'letmecount-api-test',
+        ]);
+
+        $this->client->setServerParameter('HTTP_Authorization', sprintf('Bearer %s', $token));
+        $this->call('GET', '/users');
+
+        $this->assertResponseIsSuccessful();
     }
 
     /**

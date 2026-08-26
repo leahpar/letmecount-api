@@ -98,6 +98,35 @@ class RefreshTokenTest extends WebTestCase
         $this->assertArrayHasKey('refresh_token_expiration', $data);
     }
 
+    /**
+     * Une connexion web est nommée comme les autres, et le repère de session
+     * qu'elle rend est le même avant et après renouvellement : c'est ce qui
+     * permet au front de reconnaître sa propre ligne dans les connexions.
+     */
+    public function testWebSessionIsNamedAndKeepsItsKeyAcrossRefresh(): void
+    {
+        $this->client->setServerParameter('HTTP_USER_AGENT', 'Mozilla/5.0 (X11; Linux x86_64) Chrome/140.0');
+        $refreshToken = $this->login('erin');
+
+        $ouverture = $this->json();
+        $this->assertArrayHasKey('session_key', $ouverture);
+
+        $this->post('/auth/refresh', ['refresh_token' => $refreshToken]);
+        $this->assertResponseIsSuccessful();
+
+        $this->assertSame($ouverture['session_key'], $this->json()['session_key']);
+
+        $this->client->request('GET', '/sessions', [], [], [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$this->json()['token'],
+            'HTTP_ACCEPT' => 'application/ld+json',
+        ]);
+        $this->assertResponseIsSuccessful();
+
+        $session = $this->json()['member'][0];
+        $this->assertSame('Chrome sur Linux', $session['label']);
+        $this->assertSame($ouverture['session_key'], $session['sessionKey']);
+    }
+
     public function testTheNewTokenAuthenticates(): void
     {
         $refreshToken = $this->login('dave');

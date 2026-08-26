@@ -1036,6 +1036,134 @@
                 ]
             }
         },
+        "/sessions": {
+            "get": {
+                "operationId": "api_sessions_get_collection",
+                "tags": [
+                    "Session"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Session collection",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "type": "object",
+                                    "description": "Session.jsonld-session.read collection.",
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/HydraCollectionBaseSchema"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "required": [
+                                                "member"
+                                            ],
+                                            "properties": {
+                                                "member": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Session.jsonld-session.read"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Retrieves the collection of Session resources.",
+                "description": "Retrieves the collection of Session resources.",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "The collection page number",
+                        "required": false,
+                        "deprecated": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        },
+                        "style": "form",
+                        "explode": true
+                    }
+                ]
+            }
+        },
+        "/sessions/{id}": {
+            "delete": {
+                "operationId": "api_sessions_id_delete",
+                "tags": [
+                    "Session"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Session resource deleted"
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error.jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "links": {}
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/ld+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error.jsonld"
+                                }
+                            },
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "links": {}
+                    }
+                },
+                "summary": "Removes the Session resource.",
+                "description": "Removes the Session resource.",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Session identifier",
+                        "required": true,
+                        "deprecated": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "style": "simple",
+                        "explode": false
+                    }
+                ]
+            }
+        },
         "/tags": {
             "get": {
                 "operationId": "api_tags_get_collection",
@@ -2006,7 +2134,7 @@
                     "details": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/Detail-depense.write"
+                            "$ref": "#/components/schemas/Detail-depense.write_noid"
                         }
                     },
                     "date": {
@@ -2026,18 +2154,18 @@
                             "parts",
                             "montants"
                         ],
-                        "description": "Mode de partage de la d\u00e9pense.<br>\n- Si \"parts\" : les parts dans les d\u00e9tails servent \u00e0 calculer la r\u00e9partition proportionnelle<br>\n- Si \"montants\" : les montants des d\u00e9tails doivent \u00eatre exacts et valides",
+                        "description": "Mode de partage de la d\u00e9pense \u2014 une indication d'intention, pas une r\u00e8gle\nde calcul : dans les deux cas le client fournit le montant de chaque\nd\u00e9tail, et la validation v\u00e9rifie seulement que leur somme vaut le montant\ntotal.<br>\n- Si \"parts\" : la r\u00e9partition a \u00e9t\u00e9 calcul\u00e9e au prorata des parts, que le\n  client a converties en montants avant l'envoi<br>\n- Si \"montants\" : les montants ont \u00e9t\u00e9 saisis un par un",
                         "type": "string"
                     },
                     "tag": {
+                        "example": "/tags/3",
                         "type": "string",
-                        "format": "iri-reference",
-                        "example": "https://example.com/"
+                        "format": "iri-reference"
                     },
                     "payePar": {
+                        "example": "/users/4",
                         "type": "string",
-                        "format": "iri-reference",
-                        "example": "https://example.com/"
+                        "format": "iri-reference"
                     }
                 },
                 "required": [
@@ -2055,7 +2183,7 @@
                     "details": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/Detail-depense.write"
+                            "$ref": "#/components/schemas/Detail-depense.write_noid"
                         }
                     },
                     "date": {
@@ -2075,18 +2203,18 @@
                             "parts",
                             "montants"
                         ],
-                        "description": "Mode de partage de la d\u00e9pense.<br>\n- Si \"parts\" : les parts dans les d\u00e9tails servent \u00e0 calculer la r\u00e9partition proportionnelle<br>\n- Si \"montants\" : les montants des d\u00e9tails doivent \u00eatre exacts et valides",
+                        "description": "Mode de partage de la d\u00e9pense \u2014 une indication d'intention, pas une r\u00e8gle\nde calcul : dans les deux cas le client fournit le montant de chaque\nd\u00e9tail, et la validation v\u00e9rifie seulement que leur somme vaut le montant\ntotal.<br>\n- Si \"parts\" : la r\u00e9partition a \u00e9t\u00e9 calcul\u00e9e au prorata des parts, que le\n  client a converties en montants avant l'envoi<br>\n- Si \"montants\" : les montants ont \u00e9t\u00e9 saisis un par un",
                         "type": "string"
                     },
                     "tag": {
+                        "example": "/tags/3",
                         "type": "string",
-                        "format": "iri-reference",
-                        "example": "https://example.com/"
+                        "format": "iri-reference"
                     },
                     "payePar": {
+                        "example": "/users/4",
                         "type": "string",
-                        "format": "iri-reference",
-                        "example": "https://example.com/"
+                        "format": "iri-reference"
                     }
                 }
             },
@@ -2105,7 +2233,7 @@
                             "details": {
                                 "type": "array",
                                 "items": {
-                                    "$ref": "#/components/schemas/Detail.jsonld"
+                                    "$ref": "#/components/schemas/Detail.jsonld_noid"
                                 }
                             },
                             "date": {
@@ -2125,18 +2253,18 @@
                                     "parts",
                                     "montants"
                                 ],
-                                "description": "Mode de partage de la d\u00e9pense.<br>\n- Si \"parts\" : les parts dans les d\u00e9tails servent \u00e0 calculer la r\u00e9partition proportionnelle<br>\n- Si \"montants\" : les montants des d\u00e9tails doivent \u00eatre exacts et valides",
+                                "description": "Mode de partage de la d\u00e9pense \u2014 une indication d'intention, pas une r\u00e8gle\nde calcul : dans les deux cas le client fournit le montant de chaque\nd\u00e9tail, et la validation v\u00e9rifie seulement que leur somme vaut le montant\ntotal.<br>\n- Si \"parts\" : la r\u00e9partition a \u00e9t\u00e9 calcul\u00e9e au prorata des parts, que le\n  client a converties en montants avant l'envoi<br>\n- Si \"montants\" : les montants ont \u00e9t\u00e9 saisis un par un",
                                 "type": "string"
                             },
                             "tag": {
+                                "example": "/tags/3",
                                 "type": "string",
-                                "format": "iri-reference",
-                                "example": "https://example.com/"
+                                "format": "iri-reference"
                             },
                             "payePar": {
+                                "example": "/users/4",
                                 "type": "string",
-                                "format": "iri-reference",
-                                "example": "https://example.com/"
+                                "format": "iri-reference"
                             }
                         },
                         "required": [
@@ -2165,7 +2293,7 @@
                             "details": {
                                 "type": "array",
                                 "items": {
-                                    "$ref": "#/components/schemas/Detail.jsonld-depense.read"
+                                    "$ref": "#/components/schemas/Detail.jsonld-depense.read_noid"
                                 }
                             },
                             "date": {
@@ -2185,18 +2313,18 @@
                                     "parts",
                                     "montants"
                                 ],
-                                "description": "Mode de partage de la d\u00e9pense.<br>\n- Si \"parts\" : les parts dans les d\u00e9tails servent \u00e0 calculer la r\u00e9partition proportionnelle<br>\n- Si \"montants\" : les montants des d\u00e9tails doivent \u00eatre exacts et valides",
+                                "description": "Mode de partage de la d\u00e9pense \u2014 une indication d'intention, pas une r\u00e8gle\nde calcul : dans les deux cas le client fournit le montant de chaque\nd\u00e9tail, et la validation v\u00e9rifie seulement que leur somme vaut le montant\ntotal.<br>\n- Si \"parts\" : la r\u00e9partition a \u00e9t\u00e9 calcul\u00e9e au prorata des parts, que le\n  client a converties en montants avant l'envoi<br>\n- Si \"montants\" : les montants ont \u00e9t\u00e9 saisis un par un",
                                 "type": "string"
                             },
                             "tag": {
+                                "example": "/tags/3",
                                 "type": "string",
-                                "format": "iri-reference",
-                                "example": "https://example.com/"
+                                "format": "iri-reference"
                             },
                             "payePar": {
+                                "example": "/users/4",
                                 "type": "string",
-                                "format": "iri-reference",
-                                "example": "https://example.com/"
+                                "format": "iri-reference"
                             }
                         },
                         "required": [
@@ -2210,7 +2338,7 @@
                     }
                 ]
             },
-            "Detail-depense.write": {
+            "Detail-depense.write_noid": {
                 "type": "object",
                 "required": [
                     "user",
@@ -2219,13 +2347,13 @@
                 ],
                 "properties": {
                     "user": {
+                        "example": "/users/4",
                         "type": "string",
-                        "format": "iri-reference",
-                        "example": "https://example.com/"
+                        "format": "iri-reference"
                     },
                     "parts": {
                         "minimum": 0,
-                        "description": "Nombre de parts pour ce d\u00e9tail.<br>\nUtilis\u00e9 uniquement pour l'affichage dans le cas la r\u00e9partition par parts.",
+                        "description": "Nombre de parts pour ce d\u00e9tail.<br>\nUtilis\u00e9 uniquement pour l'affichage dans le cas de la r\u00e9partition par\nparts. Reste obligatoire quand le partage est en montants : y mettre 0,\nqui est la valeur neutre.",
                         "type": "integer"
                     },
                     "montant": {
@@ -2234,7 +2362,31 @@
                     }
                 }
             },
-            "Detail.jsonld": {
+            "Detail.jsonld-depense.read_noid": {
+                "type": "object",
+                "required": [
+                    "user",
+                    "parts",
+                    "montant"
+                ],
+                "properties": {
+                    "user": {
+                        "example": "/users/4",
+                        "type": "string",
+                        "format": "iri-reference"
+                    },
+                    "parts": {
+                        "minimum": 0,
+                        "description": "Nombre de parts pour ce d\u00e9tail.<br>\nUtilis\u00e9 uniquement pour l'affichage dans le cas de la r\u00e9partition par\nparts. Reste obligatoire quand le partage est en montants : y mettre 0,\nqui est la valeur neutre.",
+                        "type": "integer"
+                    },
+                    "montant": {
+                        "description": "Montant r\u00e9el en euros pour ce d\u00e9tail.<br>\nLe montant est arrondi \u00e0 deux d\u00e9cimales.<br>\nLe montant est obligatoire peu importe le mode de r\u00e9partition.",
+                        "type": "number"
+                    }
+                }
+            },
+            "Detail.jsonld_noid": {
                 "type": "object",
                 "properties": {
                     "id": {
@@ -2247,13 +2399,13 @@
                         "example": "https://example.com/"
                     },
                     "user": {
+                        "example": "/users/4",
                         "type": "string",
-                        "format": "iri-reference",
-                        "example": "https://example.com/"
+                        "format": "iri-reference"
                     },
                     "parts": {
                         "minimum": 0,
-                        "description": "Nombre de parts pour ce d\u00e9tail.<br>\nUtilis\u00e9 uniquement pour l'affichage dans le cas la r\u00e9partition par parts.",
+                        "description": "Nombre de parts pour ce d\u00e9tail.<br>\nUtilis\u00e9 uniquement pour l'affichage dans le cas de la r\u00e9partition par\nparts. Reste obligatoire quand le partage est en montants : y mettre 0,\nqui est la valeur neutre.",
                         "type": "integer"
                     },
                     "montant": {
@@ -2266,30 +2418,6 @@
                     "parts",
                     "montant"
                 ]
-            },
-            "Detail.jsonld-depense.read": {
-                "type": "object",
-                "required": [
-                    "user",
-                    "parts",
-                    "montant"
-                ],
-                "properties": {
-                    "user": {
-                        "type": "string",
-                        "format": "iri-reference",
-                        "example": "https://example.com/"
-                    },
-                    "parts": {
-                        "minimum": 0,
-                        "description": "Nombre de parts pour ce d\u00e9tail.<br>\nUtilis\u00e9 uniquement pour l'affichage dans le cas la r\u00e9partition par parts.",
-                        "type": "integer"
-                    },
-                    "montant": {
-                        "description": "Montant r\u00e9el en euros pour ce d\u00e9tail.<br>\nLe montant est arrondi \u00e0 deux d\u00e9cimales.<br>\nLe montant est obligatoire peu importe le mode de r\u00e9partition.",
-                        "type": "number"
-                    }
-                }
             },
             "Error": {
                 "type": "object",
@@ -2644,13 +2772,13 @@
                         "type": "string"
                     },
                     "p256dh": {
-                        "pattern": "^([A-Za-z0-9_-]{86,88}={0,2})$",
+                        "pattern": "^([A-Za-z0-9_-]{87}={0,1})$",
                         "description": "Cl\u00e9 publique de l'abonnement (P-256, base64url), pour chiffrer la charge utile.",
                         "type": "string"
                     },
                     "auth": {
-                        "pattern": "^([A-Za-z0-9_-]{21,24}={0,2})$",
-                        "description": "Secret d'authentification de l'abonnement (base64url).",
+                        "pattern": "^([A-Za-z0-9_-]{22}={0,2})$",
+                        "description": "Secret d'authentification de l'abonnement : 16 octets, soit 22 caract\u00e8res\nen base64url. M\u00eame raison qu'au-dessus pour le contr\u00f4le de format.",
                         "type": "string"
                     }
                 }
@@ -2692,6 +2820,46 @@
                     }
                 ],
                 "description": "Un navigateur abonn\u00e9 aux notifications push, pour un utilisateur.\n\nLes trois champs techniques viennent tels quels du PushSubscription du\nnavigateur, mais \u00e0 plat : celui-ci s\u00e9rialise en {endpoint, keys: {p256dh, auth}},\net aplatir c\u00f4t\u00e9 front \u00e9vite un DTO et un denormalizer pour trois cha\u00eenes.\n\nL'endpoint est unique : le front le repousse \u00e0 chaque d\u00e9marrage (le navigateur\npeut le renouveler sans pr\u00e9venir), et le processor fait un upsert dessus."
+            },
+            "Session.jsonld-session.read": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/HydraItemBaseSchema"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "label": {
+                                "description": "Ce que l'utilisateur lit dans la liste : le nom du client OAuth pour une\nsession MCP, l'appareil d\u00e9duit du User-Agent sinon.",
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "createdAt": {
+                                "description": "Date d'\u00e9mission de *ce* jeton. Comme la rotation en remplace un par un\nautre \u00e0 chaque renouvellement, c'est la derni\u00e8re activit\u00e9 de la session,\net c'est ce qui distingue deux sessions du m\u00eame appareil.",
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "date-time"
+                            },
+                            "id": {
+                                "readOnly": true,
+                                "type": "integer"
+                            },
+                            "sessionKey": {
+                                "readOnly": true,
+                                "description": "Le rep\u00e8re par lequel un client reconna\u00eet sa propre session dans la liste.",
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "description": "Un refresh token, c'est-\u00e0-dire une session : le t\u00e9l\u00e9phone, le navigateur du\nbureau, ou un client MCP (Claude, ChatGPT\u2026).\n\nExpos\u00e9 sous le nom `Session`, qui est ce que l'utilisateur en voit. Rien du\njeton lui-m\u00eame ne sort : seuls les champs portant `session:read` sont\ns\u00e9rialis\u00e9s, et ni `refreshToken` ni `username` n'en portent.\n\nSupprimer une session coupe le renouvellement, pas l'acc\u00e8s en cours : le\njeton d'acc\u00e8s d\u00e9j\u00e0 \u00e9mis reste valable jusqu'\u00e0 son expiration, une heure au\nplus."
             },
             "Tag-tag.write": {
                 "type": "object",
@@ -3015,6 +3183,10 @@
         {
             "name": "PushSubscription",
             "description": "Un navigateur abonn\u00e9 aux notifications push, pour un utilisateur.\n\nLes trois champs techniques viennent tels quels du PushSubscription du\nnavigateur, mais \u00e0 plat : celui-ci s\u00e9rialise en {endpoint, keys: {p256dh, auth}},\net aplatir c\u00f4t\u00e9 front \u00e9vite un DTO et un denormalizer pour trois cha\u00eenes.\n\nL'endpoint est unique : le front le repousse \u00e0 chaque d\u00e9marrage (le navigateur\npeut le renouveler sans pr\u00e9venir), et le processor fait un upsert dessus."
+        },
+        {
+            "name": "Session",
+            "description": "Un refresh token, c'est-\u00e0-dire une session : le t\u00e9l\u00e9phone, le navigateur du\nbureau, ou un client MCP (Claude, ChatGPT\u2026).\n\nExpos\u00e9 sous le nom `Session`, qui est ce que l'utilisateur en voit. Rien du\njeton lui-m\u00eame ne sort : seuls les champs portant `session:read` sont\ns\u00e9rialis\u00e9s, et ni `refreshToken` ni `username` n'en portent.\n\nSupprimer une session coupe le renouvellement, pas l'acc\u00e8s en cours : le\njeton d'acc\u00e8s d\u00e9j\u00e0 \u00e9mis reste valable jusqu'\u00e0 son expiration, une heure au\nplus."
         },
         {
             "name": "Tag",

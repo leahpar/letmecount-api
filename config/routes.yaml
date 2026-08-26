@@ -10,7 +10,13 @@ controllers:
         namespace: App\Controller
     type: attribute
 
-# Routes générées par le bundle WebAuthn (recette Flex non appliquée : allow-contrib est à false)
+# Routes générées par le bundle WebAuthn (sa recette Flex ne les déclare pas)
 webauthn:
     resource: .
     type: webauthn
+
+# Endpoint MCP, déclaré par le RouteLoader de symfony/mcp-bundle.
+# Le chemin lui-même est dans config/packages/mcp.yaml.
+mcp:
+    resource: .
+    type: mcp

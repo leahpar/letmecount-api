@@ -9,7 +9,7 @@ et le document est à corriger.
 | Document | Quoi |
 |---|---|
 | [cahier_des_charges_v1.md](cahier_des_charges_v1.md) | Le produit : soldes consolidés entre amis, dépenses, groupes. Court, et toujours la référence sur l'intention. |
-| [openapi.json](openapi.json) | Contrat de l'API. **Généré** par `make doc`, qui le recopie aussi vers le front — ne pas l'éditer à la main. |
+| [openapi.json](openapi.json) | Contrat de l'API. **Généré** par `make doc`, qui le recopie aussi vers le front — ne pas l'éditer à la main. À jour au 2026-08-25 ; les opérations MCP n'y figurent pas, elles vivent hors du contrat HTTP. |
 
 ## Notes de conception, par chantier
 
@@ -19,7 +19,7 @@ Un document par chantier, écrit avant l'implémentation puis tenu à jour penda
 |---|---|
 | [authentification-oauth.md](authentification-oauth.md) | **Fait.** Connexion Google et Apple, passkeys conservés, le code à 6 chiffres devenu jeton d'invitation. Contient le montage https local, nécessaire pour tester Apple. |
 | [notifications-push.md](notifications-push.md) | **Fait** (lots 0 à 4). Web Push / VAPID, ciblage sur les utilisateurs concernés, distinction activité / notifications. Le lot 5 (solde bas) reste à cadrer. |
-| [couche-mcp.md](couche-mcp.md) | **Conception validée, rien d'implémenté.** Exposer l'API comme serveur MCP conforme, sans IdP tiers. |
+| [couche-mcp.md](couche-mcp.md) | **Lot 1 fait**, validé par un agent réel (§7, M10 — à lire avant d'exposer quoi que ce soit d'autre en MCP). Lots 2 et 3 — serveur d'autorisation — à ouvrir. |
 
 ## Sécurité et autorisations
 

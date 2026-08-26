@@ -5,7 +5,10 @@ namespace App\Entity;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\McpToolCollection;
+use App\Dto\Mcp\NoInput;
 use App\Repository\LogRepository;
+use App\State\McpCollectionProvider;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
 
@@ -18,6 +21,17 @@ use Symfony\Component\Serializer\Attribute\Groups;
             normalizationContext: ['groups' => ['log:read']]
         )
     ]
+)]
+// Lecture seule, comme la ressource : le flux d'activité est délibérément
+// global, cf. doc/taches-a-prevoir.md.
+#[McpToolCollection(
+    name: 'logs_list',
+    description: 'Liste le flux d\'activité : créations, modifications et suppressions de dépenses, les plus récentes d\'abord.',
+    order: ['date' => 'DESC'],
+    normalizationContext: ['groups' => ['log:read']],
+    input: NoInput::class,
+    provider: McpCollectionProvider::class,
+    security: "is_granted('IS_AUTHENTICATED_FULLY')"
 )]
 class Log
 {
