@@ -7,6 +7,7 @@ use App\Repository\UserRepository;
 use App\Service\OAuth\AppleOAuthProvider;
 use App\Service\OAuth\GoogleOAuthProvider;
 use App\Service\OAuth\OAuthProviderInterface;
+use App\Service\OAuth\PocketIdOAuthProvider;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -66,12 +67,18 @@ class OAuthTest extends WebTestCase
         $this->fakeProvider(AppleOAuthProvider::class, 'apple', $subject);
     }
 
-    private function createUser(string $username, ?string $googleSub = null, ?string $token = null, ?string $appleSub = null): User
+    private function fakePocketId(string $subject): void
+    {
+        $this->fakeProvider(PocketIdOAuthProvider::class, 'pocketid', $subject);
+    }
+
+    private function createUser(string $username, ?string $googleSub = null, ?string $token = null, ?string $appleSub = null, ?string $pocketIdSub = null): User
     {
         $user = new User();
         $user->setUsername($username);
         $user->setGoogleSub($googleSub);
         $user->setAppleSub($appleSub);
+        $user->setPocketIdSub($pocketIdSub);
         $user->setToken($token);
         $this->em->persist($user);
         $this->em->flush();
@@ -224,6 +231,49 @@ class OAuthTest extends WebTestCase
         $this->postOauth(['provider' => 'apple', 'code' => 'c', 'nonce' => 'n']);
 
         $this->assertResponseStatusCodeSame(403);
+    }
+
+    public function testLoginWithLinkedPocketIdAccount(): void
+    {
+        $this->fakePocketId('pocketid-sub-1');
+        $this->createUser('judy', null, null, null, 'pocketid-sub-1');
+
+        $this->postOauth(['provider' => 'pocketid', 'code' => 'c', 'code_verifier' => 'v']);
+
+        $this->assertResponseIsSuccessful();
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertArrayHasKey('token', $data);
+        $this->assertArrayHasKey('refresh_token', $data);
+    }
+
+    public function testFirstPocketIdLoginLinksAccountWithInvitationToken(): void
+    {
+        $this->fakePocketId('pocketid-sub-2');
+        $user = $this->createUser('kevin', null, '123456');
+
+        $this->postOauth(['provider' => 'pocketid', 'code' => 'c', 'code_verifier' => 'v', 'link_token' => '123456']);
+
+        $this->assertResponseIsSuccessful();
+
+        $this->em->clear();
+        $kevin = static::getContainer()->get(UserRepository::class)->find($user->id);
+        $this->assertSame('pocketid-sub-2', $kevin->getPocketIdSub());
+        $this->assertNull($kevin->getGoogleSub());
+        $this->assertNull($kevin->getToken());
+    }
+
+    /**
+     * Un compte est lié à un seul provider : un jeton d'invitation qui traînerait
+     * encore ne doit pas permettre d'y greffer une seconde identité.
+     */
+    public function testInvitationTokenCannotLinkPocketIdToAGoogleLinkedAccount(): void
+    {
+        $this->fakePocketId('pocketid-sub-3');
+        $this->createUser('laura', 'google-sub-existant', '123456');
+
+        $this->postOauth(['provider' => 'pocketid', 'code' => 'c', 'code_verifier' => 'v', 'link_token' => '123456']);
+
+        $this->assertResponseStatusCodeSame(409);
     }
 
     public function testMissingParametersAreRejected(): void
