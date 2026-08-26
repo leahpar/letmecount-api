@@ -11,7 +11,8 @@ de la répéter.
 **Mise à jour :** les tâches **1** (accès git en ssh, le 2026-08-25), **2**
 (remise au vert des tests, le 2026-08-24) et **3** (migration Symfony 8, le
 2026-08-25) sont faites, et `dette-technique.md` est fusionnée sur `dev`. Reste
-le service worker, dont le relevé d'origine est inchangé.
+le service worker, dont le relevé d'origine est inchangé. La tâche **5** a été
+ajoutée le 2026-08-26, en marge de la préparation de la mise en production.
 
 ---
 
@@ -337,6 +338,53 @@ stratégie de cache, pas après.
 notifications push. Un bug d'installation dans la partie cache empêcherait
 l'enregistrement du worker, et donc **couperait aussi les notifications**. Les
 deux responsabilités vivent dans le même fichier et partagent son cycle de vie.
+
+---
+
+## 5. Configurer le front au *runtime* plutôt qu'au build
+
+Relevé le 2026-08-26. **Rien ne presse** : ce qui est en place marche, et cette
+tâche n'a de sens que le jour où une valeur du front devra changer sans passer
+par un déploiement.
+
+**L'état actuel.** Les variables `VITE_*` sont désormais écrites en clair dans
+`front/.env.production`, versionné. C'était le choix le plus simple entre trois :
+
+| Option | Où vit la valeur | Changer une valeur |
+|---|---|---|
+| Variables de dépôt GitHub *(l'ancien montage)* | Settings > Actions > Variables | relancer le déploiement |
+| **`.env.production` versionné** *(retenu)* | le dépôt | commit + déploiement |
+| Fichier de configuration lu au démarrage | le serveur de prod | éditer le fichier |
+
+Le point commun des deux premières : Vite **inline** les valeurs dans le bundle
+au moment du build, et le build tourne sur le runner GitHub. Le serveur ne reçoit
+que le `dist/`, donc un `.env.local` déposé à côté n'est lu par personne. Les
+variables de dépôt ne protégeaient rien — tout ce qui est préfixé `VITE_` est
+lisible dans les devtools — elles dédoublaient seulement la configuration entre
+le dépôt et une interface web, avec une occasion de plus de se contredire.
+
+**Ce que la troisième option apporte.** Un `public/config.js` non versionné,
+déposé sur le serveur et chargé avant l'application, remplace les
+`import.meta.env.VITE_*` par un module de configuration lu au démarrage. C'est le
+seul montage qui permet de corriger une URL ou un `client_id` **sans rebuild**,
+et de faire diverger deux déploiements du même bundle.
+
+**Ce qu'elle coûte.** Trois choses, aucune insurmontable, aucune gratuite :
+
+- un module de configuration à écrire, et huit usages à convertir (`VITE_API_URL`,
+  `VITE_APP_BASE_URL`, `VITE_OAUTH_REDIRECT_URI`, les deux identifiants
+  PocketID, le client Google, le Services ID Apple, la clé publique VAPID) ;
+- **le fichier doit survivre au rsync.** `up9cloud/action-rsync` passe un
+  `--delete` par défaut : sans un `ARGS` portant un `--exclude`, le fichier posé
+  sur le serveur disparaît au déploiement suivant. C'est le piège qui fera
+  perdre l'après-midi si on ne le pose pas d'entrée ;
+- une requête de plus au démarrage, ou un `<script>` bloquant dans
+  `index.html` — donc un arbitrage sur le premier rendu.
+
+**Le déclencheur à guetter :** un environnement de plus (préprod), un client
+OAuth qui change sans que le code bouge, ou l'envie de tester la prod contre une
+autre API. Tant qu'il n'y a qu'un déploiement et que ces valeurs sont stables,
+le `.env.production` versionné est le bon niveau de complexité.
 
 ---
 
