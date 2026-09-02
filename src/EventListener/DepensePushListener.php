@@ -50,7 +50,7 @@ class DepensePushListener
         foreach ($this->destinataires($depense, $auteur) as $destinataire) {
             $this->queue->queue([$destinataire], [
                 'title' => $depense->titre,
-                'body' => $this->corps($depense, $auteur, $destinataire),
+                'body' => $this->corps($depense, $destinataire),
                 'url' => '/expenses/'.$depense->id,
             ]);
         }
@@ -80,10 +80,12 @@ class DepensePushListener
         return array_values($parId);
     }
 
-    private function corps(Depense $depense, User $auteur, User $destinataire): string
+    private function corps(Depense $depense, User $destinataire): string
     {
+        $payeur = $depense->payePar;
+
         if (self::TAG_TRANSFERT === $depense->tag?->libelle) {
-            return sprintf('%s t\'a remboursé %s', $auteur->getUsername(), $this->montant($depense->montant));
+            return sprintf('%s t\'a remboursé %s', $payeur->getUsername(), $this->montant($depense->montant));
         }
 
         $part = 0.0;
@@ -94,12 +96,12 @@ class DepensePushListener
         }
 
         if (0.0 === $part) {
-            return sprintf('%s a payé %s', $auteur->getUsername(), $this->montant($depense->montant));
+            return sprintf('%s a payé %s', $payeur->getUsername(), $this->montant($depense->montant));
         }
 
         return sprintf(
             '%s a payé %s · %s pour toi',
-            $auteur->getUsername(),
+            $payeur->getUsername(),
             $this->montant($depense->montant),
             $this->montant($part)
         );
