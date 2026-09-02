@@ -101,6 +101,30 @@ class DepensePushTest extends AuthenticatedApiTestCase
         $this->assertSame("testuser t'a remboursé 20,00 €", $this->envois[0][1]['body']);
     }
 
+    /**
+     * L'auteur n'est pas forcément celui qui a payé : le corps du message doit
+     * nommer le payeur, pas la personne qui a saisi la dépense.
+     */
+    public function testLeCorpsNommeLePayeurPasLauteur(): void
+    {
+        $bob = $this->createUser('bob');
+        $carole = $this->createUser('carole');
+        $tag = $this->createTag('Vacances', [$this->user, $bob, $carole]);
+
+        $this->postDepense($tag, $bob, 50.0, [[$bob, 25.0], [$carole, 25.0]]);
+
+        $this->assertResponseStatusCodeSame(201);
+        $this->assertCount(2, $this->envois);
+
+        $parDestinataire = [];
+        foreach ($this->envois as [$destinataire, $payload]) {
+            $parDestinataire[$destinataire] = $payload['body'];
+        }
+
+        $this->assertSame('bob a payé 50,00 € · 25,00 € pour toi', $parDestinataire['bob']);
+        $this->assertSame('bob a payé 50,00 € · 25,00 € pour toi', $parDestinataire['carole']);
+    }
+
     public function testUneDepenseQuiNeConcerneQueSonAuteurNeNotifiePersonne(): void
     {
         $tag = $this->createTag('Perso', [$this->user]);
